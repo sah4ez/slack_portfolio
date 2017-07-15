@@ -9,4 +9,9 @@ def capital(command):
     if stock is None:
         return format("Акция не найдена %s" % company)
     else:
-        return format(config.RSP_CAPITAL % (company, stock))
+        return format(config.RSP_CAPITAL % (
+            stock.emitent_full_name,
+            float(stock.capitalisation),
+            float(stock.volume_stock_on_market),
+            float(stock.capitalisation / stock.volume_stock_on_market)
+        ))

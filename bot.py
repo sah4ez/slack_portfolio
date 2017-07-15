@@ -1,4 +1,6 @@
 import os, sys
+
+import capital
 import config, price
 
 import time

@@ -95,7 +95,7 @@ def load_one_stock(name):
             if name.lower() in stock.emitent_full_name.lower():
                 stock.short_name = get_short_name(stock.trade_code)
                 stock.last_price = get_last_price(stock.trade_code)
-                stock.volume_stock_on_market = get_value
+                stock.volume_stock_on_market = get_volume_stock_on_market(stock.trade_code)
                 return stock
     return None
 
@@ -152,15 +152,30 @@ def get_last_price(trade_code):
     fine_line = -1
     with open(file=file, mode="rb") as f:
         for num, line in enumerate(f, 1):
-            if property.LAST_PRICE in str(line, "UTF-8"):
+            line = str(line, "UTF-8")
+            if property.LAST_PRICE in line:
                 fine_line = num + 3
             if fine_line == num:
-                return float(str(line, "UTF-8").strip().replace(',', ".").replace(' ', ''))
+                return float(line.strip().replace(',', ".").replace(' ', ''))
     return 0.0
 
-# def get_volume_stock_on_market(trade_code):
-#     directory = property.TYPE2_PATH + '/' + trade_code + '/'
-#     file = directory + property.BOARD
+
+def get_volume_stock_on_market(trade_code):
+    directory = property.TYPE2_PATH + '/' + trade_code + '/'
+    file = directory + property.BOARD
+    result = 0
+    with open(file=file, mode="rb") as f:
+        for num, line in enumerate(f, 1):
+            line = str(line, "UTF-8")
+            if property.VOLUME_ON_MARKET in line:
+                index = line.index(property.VOLUME_ON_MARKET)
+                substring = line[index + property.VOLUME_ON_MARKET.__len__() + 9:]
+                end = substring.index("</td>")
+                volume = substring[:end]
+                result = int(volume.replace(' ', '').strip())
+                print(result)
+
+    return result
 
 
 def get_short_name(code):

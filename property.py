@@ -26,3 +26,4 @@ URL_BOARD = 'http://www.moex.com/ru/issue.aspx?board=TQBR&code='
 SHORT_NAME_ATTR = 'Краткое наименование'
 
 LAST_PRICE = "Цена последней сделки, рублей"
+VOLUME_ON_MARKET = "Объем выпуска"
