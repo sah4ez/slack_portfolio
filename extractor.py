@@ -1,10 +1,5 @@
-import logging
-
 from property import *
 import loader_from_file
-
-
-# logging.basicConfig(filename='log/extractor.log', level=logging.INFO)
 
 
 def get_value_capitalization(trade_code):

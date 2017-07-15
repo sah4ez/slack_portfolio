@@ -31,6 +31,8 @@ def handle_command(command, channel):
         response(channel, message)
         return
     first_command = words[0]
+    if first_command in config.CMD_HELP:
+        response(channel, config.RSP_HELP)
     if first_command in config.CMD_PRICE:
         response(channel, config.RSP_WAIT)
         message = price.price(words)
@@ -75,6 +77,14 @@ def parse_slack_wait(msg):
                         ts=output['ts'])
 
 
+def welcome(msg):
+    output_list = msg
+    if output_list and len(output_list) > 0:
+        for output in output_list:
+            if 'text' in output and AT_BOT == output['text']:
+                response(output['channel'], config.WELCOME)
+
+
 if __name__ == "__main__":
     READ_WEBSOCKET_DELAY = 1  # 1 second delay between reading from firehose
     if slack_client.rtm_connect():
@@ -83,6 +93,7 @@ if __name__ == "__main__":
             msg = slack_client.rtm_read()
             # print(msg)
             parse_slack_wait(msg)
+            welcome(msg)
             command, channel = parse_slack_output(msg)
             if command and channel:
                 handle_command(command, channel)
