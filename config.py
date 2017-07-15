@@ -25,3 +25,5 @@ RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_CAPI
 
 WELCOME = format("Привет, чтобы узнать что я умею напиши одно из @portfolio *%s*, *%s*, *%s*" %
                  (CMD_HELP[0], CMD_HELP[1], CMD_HELP[2]))
+
+RSP_ERROR = "Ops... Some error."
