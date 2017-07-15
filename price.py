@@ -1,10 +1,15 @@
 import config
 import loader_from_file
+import my_log
+
+LOG = my_log.get_logger('price')
 
 
 def price(words):
-    company = words[1]
-    print(company)
+    company = " ".join(words[1:])
+    # print(company)
+    LOG.info(company)
+
     stock = loader_from_file.load_one_stock(company)
     if stock is None:
         return format(config.RSP_NOF_FOUND_STOCK % company)

@@ -10,12 +10,13 @@ from selenium import webdriver
 import time
 
 import extractor
+import my_log
 from Stock import Stock
 import property
 
 # from ..database import db_helper
 
-logging.basicConfig(filename='log/loader.log', level=logging.INFO)
+LOG = my_log.get_logger('loader_from_file')
 
 
 def download_file(url, file):
@@ -27,7 +28,7 @@ def download_file(url, file):
                 f.write(chunk)
                 f.flush()
     f.close()
-    logging.info('[INFO] Load from %s file %s' % (url, file))
+    LOG.info(format('Load from %s file %s' % (url, file)))
     # print('Successful. File download: %dKB' % float(os.path.getsize(file) / 1024))
 
 
@@ -41,7 +42,7 @@ def download_type2(url, name):
         download_file(url, path)
         download_file(str(url).replace('company', 'files'), path_file)
     except MissingSchema:
-        logging.info('Not found URL %s' % url)
+        LOG.info(format('Not found URL %s' % url))
         # print('Not found URL %s' % url)
     file.close()
 
@@ -55,7 +56,7 @@ def download_type3(url, name):
     try:
         download_file(url, path_file)
     except MissingSchema:
-        logging.info('Not found URL %s' % url)
+        LOG.info(format('Not found URL %s' % url))
         # print('Not found URL %s' % url)
     file.close()
 
@@ -173,7 +174,7 @@ def get_volume_stock_on_market(trade_code):
                 end = substring.index("</td>")
                 volume = substring[:end]
                 result = int(volume.replace(' ', '').strip())
-                print(result)
+                LOG.info(format("volume stock on market %d" % result))
 
     return result
 

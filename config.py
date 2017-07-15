@@ -27,3 +27,5 @@ WELCOME = format("Привет, чтобы узнать что я умею на�
                  (CMD_HELP[0], CMD_HELP[1], CMD_HELP[2]))
 
 RSP_ERROR = "Ops... Some error."
+
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

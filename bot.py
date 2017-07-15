@@ -1,18 +1,16 @@
 import os, sys
 
 import capital
-import config, price, url_board
+import config, price, url_board, my_log
 
 import time
 import loader_from_file
 from slackclient import SlackClient
-import logging
 
-logging.basicConfig(level=logging.DEBUG)
-
-LOG = logging.getLogger("__main__")
+LOG = my_log.get_logger("main")
 
 # starterbot's ID as an environment variable
+READ_WEBSOCKET_DELAY = 1  # 1 second delay between reading from firehose
 BOT_ID = os.environ.get("BOT_ID")
 TOKEN = os.environ.get('SLACK_BOT_TOKEN')
 if TOKEN is None:
@@ -22,15 +20,13 @@ if BOT_ID is None:
 
 # constants
 AT_BOT = "<@" + str(BOT_ID) + ">"
-EXAMPLE_COMMAND = "do"
 
 # instantiate Slack & Twilio clients
 slack_client = SlackClient(TOKEN)
 
 
 def handle_command(command, channel):
-    message = "Not sure what you mean. Use the *" + EXAMPLE_COMMAND + \
-              "* command with numbers, delimited by spaces."
+    message = config.WELCOME
     words = str(command).split(' ')
     if words.__len__() < 1:
         response(channel, message)
@@ -59,6 +55,8 @@ def handle_command(command, channel):
 
 
 def response(to_channel, message):
+    global READ_WEBSOCKET_DELAY
+    READ_WEBSOCKET_DELAY = 0.1
     slack_client.api_call("chat.postMessage", channel=to_channel,
                           text=message, as_user=True)
 
@@ -75,11 +73,13 @@ def parse_slack_output(slack_rtm_output):
 
 
 def parse_slack_wait(msg):
+    global READ_WEBSOCKET_DELAY
     output_list = msg
     if output_list and len(output_list) > 0:
         for output in output_list:
             if output and 'user' in output and BOT_ID in output['user']:
                 if 'text' in output and config.RSP_WAIT in output['text']:
+                    READ_WEBSOCKET_DELAY = 1
                     slack_client.api_call(
                         method="chat.delete",
                         channel=output['channel'],
@@ -95,7 +95,7 @@ def welcome(msg):
 
 
 if __name__ == "__main__":
-    READ_WEBSOCKET_DELAY = 1  # 1 second delay between reading from firehose
+
     if slack_client.rtm_connect():
         LOG.info("StarterBot connected and running!")
         while True:
