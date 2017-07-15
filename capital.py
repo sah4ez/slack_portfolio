@@ -1,13 +1,12 @@
 import config
-import parser
 import loader_from_file
 
 
-def capital(command):
-    company = parser.company_capital(command)
+def capital(words):
+    company = words[1]
     stock = loader_from_file.load_one_stock(company)
     if stock is None:
-        return format("Акция не найдена %s" % company)
+        return format(config.RSP_NOF_FOUND_STOCK % company)
     else:
         return format(config.RSP_CAPITAL % (
             stock.emitent_full_name,

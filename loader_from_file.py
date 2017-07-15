@@ -85,7 +85,7 @@ def read_to_list(file):
 def load_one_stock(name):
     action = read_to_list(property.DATA)
     for a in action:
-        if a[4] == 'Акции':
+        if a[4] == 'Акции' and name.lower() in a[11].lower():
             stock = Stock()
             stock.stock_line(line=a)
 
@@ -182,8 +182,7 @@ def get_short_name(code):
     directory = property.TYPE2_PATH + '/' + code + '/'
     file = directory + property.BOARD
     create_path(directory)
-    url = property.URL_BOARD + code
-    time.sleep(2)
+    url = url_board(trade_code=code)
     html = html_source(url)
     with open(file=file, mode="w+") as f:
         try:
@@ -202,10 +201,14 @@ def get_short_name(code):
     return name
 
 
+def url_board(trade_code):
+    return property.URL_BOARD + trade_code
+
+
 def html_source(url):
     driver = webdriver.PhantomJS(executable_path='/usr/local/bin/phantomjs')
     driver.get(url)
-    time.sleep(1)
+    # time.sleep(1)
     return driver.find_element_by_tag_name('html').get_attribute('innerHTML')
 
 

@@ -1,7 +1,7 @@
 import os, sys
 
 import capital
-import config, price
+import config, price, url_board
 
 import time
 import loader_from_file
@@ -24,19 +24,32 @@ slack_client = SlackClient(TOKEN)
 
 
 def handle_command(command, channel):
-    response = "Not sure what you mean. Use the *" + EXAMPLE_COMMAND + \
-               "* command with numbers, delimited by spaces."
-    if command.startswith(EXAMPLE_COMMAND):
-        response = "Sure...write some more code then I can do that!"
-    if command.startswith(config.CMD_PRICE) or command.startswith(config.CMD_PRICE_RU):
-        response = price.price(command)
-    if command.startswith(config.CMD_CAPITAL) or command.startswith(config.CMD_CAPITAL_RU):
-        response = capital.capital(command)
-    if command.startswith("update"):
+    message = "Not sure what you mean. Use the *" + EXAMPLE_COMMAND + \
+              "* command with numbers, delimited by spaces."
+    words = str(command).split(' ')
+    if words.__len__() < 1:
+        response(channel, message)
+        return
+    first_command = words[0]
+    if first_command in config.CMD_PRICE:
+        response(channel, config.RSP_WAIT)
+        message = price.price(words)
+        response(channel, message)
+    if first_command in config.CMD_CAPITAL:
+        response(channel, config.RSP_WAIT)
+        message = capital.capital(words)
+        response(channel, message)
+    if first_command in config.CMD_MOEX:
+        response(channel, config.RSP_WAIT)
+        response(channel, url_board.get_url(words))
+    if command.startswith(config.CMD_UPDATE):
         loader_from_file.load_all()
-        response = "Was uploaded"
-    slack_client.api_call("chat.postMessage", channel=channel,
-                          text=response, as_user=True)
+        response(channel, config.RSP_UPDATE_STOCK)
+
+
+def response(to_channel, message):
+    slack_client.api_call("chat.postMessage", channel=to_channel,
+                          text=message, as_user=True)
 
 
 def parse_slack_output(slack_rtm_output):
@@ -50,12 +63,26 @@ def parse_slack_output(slack_rtm_output):
     return None, None
 
 
+def parse_slack_wait(msg):
+    output_list = msg
+    if output_list and len(output_list) > 0:
+        for output in output_list:
+            if output and 'user' in output and BOT_ID in output['user']:
+                if 'text' in output and config.RSP_WAIT in output['text']:
+                    slack_client.api_call(
+                        method="chat.delete",
+                        channel=output['channel'],
+                        ts=output['ts'])
+
+
 if __name__ == "__main__":
     READ_WEBSOCKET_DELAY = 1  # 1 second delay between reading from firehose
     if slack_client.rtm_connect():
         print("StarterBot connected and running!")
         while True:
             msg = slack_client.rtm_read()
+            # print(msg)
+            parse_slack_wait(msg)
             command, channel = parse_slack_output(msg)
             if command and channel:
                 handle_command(command, channel)
