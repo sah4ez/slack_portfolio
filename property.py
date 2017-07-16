@@ -13,6 +13,8 @@ URL_FREE_FLOAT = 'http://www.moex.com/ru/listing/free-float.aspx?print=1'
 TYPE2_PATH = 'res/companies'
 PORTAL = 'www.e-disclosure.ru'
 
+TMP_EXTRACT = "tmp"
+
 DOWNLOAD_URL_MATCH = 'FileLoad.ashx?Fileid='
 DOWNLOAD_URL = 'e-disclosure.ru/portal/FileLoad.ashx?Fileid='
 TYPE2 = '/type.html'

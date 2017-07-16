@@ -1,8 +1,8 @@
-import logging
 import os
 from csv import *
 from datetime import datetime
 from os.path import isfile, join
+import threading
 
 from pip._vendor import requests
 from pip._vendor.requests.exceptions import MissingSchema
@@ -38,6 +38,10 @@ def download_type2(url, name):
     path = folder + property.TYPE2
     path_file = folder.replace('company', 'files') + property.FILES
     file.write(url)
+
+    # if compare_date_file(path_file):
+    #     return
+
     try:
         download_file(url, path)
         download_file(str(url).replace('company', 'files'), path_file)
@@ -53,6 +57,10 @@ def download_type3(url, name):
     path_file = folder + property.FILES2
     url = str(url).replace('company', 'files')
     file.write(url)
+
+    # if compare_date_file(path_file):
+    #     return
+
     try:
         download_file(url, path_file)
     except MissingSchema:
@@ -90,15 +98,37 @@ def load_one_stock(name):
             stock = Stock()
             stock.stock_line(line=a)
 
-            stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + '/archives/')
 
             # stock.finame_em = get_finam_code(stock.short_name)
             if name.lower() in stock.emitent_full_name.lower():
                 stock.short_name = get_short_name(stock.trade_code)
                 stock.last_price = get_last_price(stock.trade_code)
                 stock.volume_stock_on_market = get_volume_stock_on_market(stock.trade_code)
+
+                download = threading.Thread(load_files(a[7], a[38]))
+                download.start()
+                download.join()
+                stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + '/archives/')
                 return stock
     return None
+
+
+def is_today(file):
+    date_now = datetime.now()
+    if not os.path.isfile(file):
+        return False
+    date_file = datetime.fromtimestamp(os.stat(file).st_birthtime)
+    return datetime(date_now.year, date_now.month, date_now.day) <= datetime(date_file.year, date_file.month,
+                                                                             date_file.day)
+
+
+def load_files(trade_code, link):
+    files = list()
+    files.append(extractor.extract_files(property.TYPE2_PATH + '/' + trade_code, property.FILES))
+    create_path(property.TYPE2_PATH + '/' + trade_code)
+    create_path(property.TYPE2_PATH + '/' + trade_code + '/archives')
+    download_type2(link + '&type=2', trade_code)
+    download_type3(link + '&type=3', trade_code)
 
 
 def load_stocks():
@@ -116,11 +146,8 @@ def load_stocks():
 
             sort_action.append(stock)
             # db_helper.add_stock(stock)
+            load_files(a[7], a[38])
 
-            # loader.create_path(TYPE2_PATH + '/' + a[7])
-            # loader.create_path(TYPE2_PATH + '/' + a[7] + '/archives')
-            # loader.download_type2(a[38] + '&type=2', a[7])
-            # loader.download_type3(a[38] + '&type=3', a[7])
     return sort_action
 
 
@@ -209,7 +236,7 @@ def url_board(trade_code):
 def html_source(url):
     driver = webdriver.PhantomJS(executable_path='/usr/local/bin/phantomjs')
     driver.get(url)
-    # time.sleep(1)
+    time.sleep(1)
     return driver.find_element_by_tag_name('html').get_attribute('innerHTML')
 
 

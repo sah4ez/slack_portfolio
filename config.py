@@ -10,9 +10,9 @@ HELP_CAPITAL = format(
 
 RSP_WAIT = "Подождите... Я уже ищу"
 
-CMD_UPDATE = "update"
+CMD_UPDATE = ["update"]
 RSP_UPDATE_STOCK = "Загружены последнии версии файлов"
-HELP_UPDATE = format("*%s* - обновить файлы с метаданными\n" % CMD_UPDATE)
+HELP_UPDATE = format("*%s* - обновить файлы с метаданными\n" % CMD_UPDATE[0])
 
 RSP_NOF_FOUND_STOCK = "Не найдена акция %s"
 
@@ -21,11 +21,17 @@ HELP_MOEX = format("*%s* (*%s*) - получить ссылку акции на 
 
 CMD_HELP = ["help", "помогите", "помощь"]
 
-RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_CAPITAL + HELP_MOEX + HELP_UPDATE
+CMD_FILES = ["file", "файл", "files", "файлы"]
+RSP_FILES = "Найдено %d файлов"
+RSP_FILES_NOT_FOUND = "Я не нашел файлы... ¯\_(ツ)_/¯"
+HELP_FILES = format("*%s*, *%s*, *%s*, *%s* _<имя_компании>_ - получить файлы раскрытия информации\n" %
+                    (CMD_FILES[0], CMD_FILES[1], CMD_FILES[2], CMD_FILES[3]))
+
+RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_CAPITAL + HELP_MOEX + HELP_UPDATE + HELP_FILES
 
 WELCOME = format("Привет, чтобы узнать что я умею напиши одно из @portfolio *%s*, *%s*, *%s*" %
                  (CMD_HELP[0], CMD_HELP[1], CMD_HELP[2]))
 
 RSP_ERROR = "Ops... Some error."
 
-LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+LOG_FORMAT = "%(asctime)s |%(name)s:%(lineno)d|[%(levelname)s]: %(message)s"

@@ -1,7 +1,12 @@
 import os, sys
+import threading
+
+import traceback
+
+import requests
 
 import capital
-import config, price, url_board, my_log
+import config, price, url_board, my_log, sender_file
 
 import time
 import loader_from_file
@@ -26,6 +31,7 @@ slack_client = SlackClient(TOKEN)
 
 
 def handle_command(command, channel):
+    global READ_WEBSOCKET_DELAY
     message = config.WELCOME
     words = str(command).split(' ')
     if words.__len__() < 1:
@@ -46,19 +52,36 @@ def handle_command(command, channel):
         if first_command in config.CMD_MOEX:
             response(channel, config.RSP_WAIT)
             response(channel, url_board.get_url(words))
-        if command.startswith(config.CMD_UPDATE):
+        if command in config.CMD_UPDATE:
             loader_from_file.load_all()
             response(channel, config.RSP_UPDATE_STOCK)
-    except:
+        if first_command in config.CMD_FILES:
+            list_extracted_files = list()
+            message, list_extracted_files = sender_file.send_file(words)
+            response(channel, message)
+            for filename in list_extracted_files:
+                post_file(channel, filename)
+    except Exception:
+        reset_delay()
         LOG.error(config.RSP_ERROR + " %s" % words)
+        traceback.print_exc(file=sys.stdout)
         response(channel, config.RSP_ERROR)
 
 
 def response(to_channel, message):
-    global READ_WEBSOCKET_DELAY
-    READ_WEBSOCKET_DELAY = 0.1
+    shor_delay()
     slack_client.api_call("chat.postMessage", channel=to_channel,
                           text=message, as_user=True)
+
+
+def post_file(channels, filename):
+    f = {'file': (filename, open(filename, 'rb'), 'application/octet-stream', {'Expires': '0'})}
+    requests.post(url='https://slack.com/api/files.upload',
+                  data={'token': TOKEN, 'channels': channels, 'media': f},
+                  headers={'Accept': 'application/json'}, files=f)
+    rm = threading.Thread(os.remove(filename))
+    rm.start()
+    reset_delay()
 
 
 def parse_slack_output(slack_rtm_output):
@@ -73,13 +96,12 @@ def parse_slack_output(slack_rtm_output):
 
 
 def parse_slack_wait(msg):
-    global READ_WEBSOCKET_DELAY
     output_list = msg
     if output_list and len(output_list) > 0:
         for output in output_list:
             if output and 'user' in output and BOT_ID in output['user']:
                 if 'text' in output and config.RSP_WAIT in output['text']:
-                    READ_WEBSOCKET_DELAY = 1
+                    reset_delay()
                     slack_client.api_call(
                         method="chat.delete",
                         channel=output['channel'],
@@ -92,6 +114,16 @@ def welcome(msg):
         for output in output_list:
             if 'text' in output and AT_BOT == output['text']:
                 response(output['channel'], config.WELCOME)
+
+
+def reset_delay():
+    global READ_WEBSOCKET_DELAY
+    READ_WEBSOCKET_DELAY = 1
+
+
+def shor_delay():
+    global READ_WEBSOCKET_DELAY
+    READ_WEBSOCKET_DELAY = 0.1
 
 
 if __name__ == "__main__":

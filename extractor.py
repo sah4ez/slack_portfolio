@@ -1,5 +1,9 @@
 from property import *
 import loader_from_file
+import my_log
+
+
+LOG = my_log.get_logger("extractor")
 
 
 def get_value_capitalization(trade_code):
@@ -37,20 +41,23 @@ def get_free_float(short_name):
 
 
 def extract_files(path, file):
+    files = list()
     try:
         with open(path + file) as f:
             try:
                 for line in f:
                     if DOWNLOAD_URL in line:
-                        args = get_id_and_ext_file(line)
-                        loader_from_file.download_file(HTTP_WWW + DOWNLOAD_URL + args[0],
-                                                       path + ARCHIVES + args[0] + '.' + args[1])
+                        id, extension, = get_id_and_ext_file(line)
+                        download_file = path + ARCHIVES + '/' + id + '.' + extension
+                        if loader_from_file.is_today(download_file):
+                            return
+                        loader_from_file.download_file(HTTP_WWW + DOWNLOAD_URL + id, download_file)
+                        files.append(download_file)
+                return files
             except UnicodeDecodeError:
-                # logging.info('[INFO] Cannot read lines in file: %s' % (path + file))
-                print('[INFO] Cannot read lines in file: %s' % (path + file))
+                LOG.info('Cannot read lines in file: %s' % (path + file))
     except FileNotFoundError:
-        # logging.info('Not found file %s' % (path + file))
-        print('Not found file %s' % (path + file))
+        LOG.info('Not found file %s' % (path + file))
 
 
 def get_id_and_ext_file(line):
@@ -63,10 +70,10 @@ def get_id_and_ext_file(line):
     if id_file == '':
         RuntimeError()
     else:
-        return [id_file, get_extention_file(line, pos)]
+        return id_file, get_extension_file(line, pos)
 
 
-def get_extention_file(line, pos):
+def get_extension_file(line, pos):
     ext = ''
     pos += 2
     while line[pos] != ',':
