@@ -1,3 +1,5 @@
+import datetime
+
 import loader_from_file
 import property
 import zipfile
@@ -18,7 +20,8 @@ def send_file(words):
             for unzip_file in unzip(path_to_file):
                 valid, ext = validate_file_name(unzip_file)
                 if valid:
-                    new_file_name = property.TMP_EXTRACT + '/' + 'File' + str(list_file.__len__() + 1) + '.' + ext
+                    new_file_name = property.TMP_EXTRACT + '/' + stock.trade_code + '_File' +\
+                                    str(datetime.datetime.now()) + '.' + ext
                     os.rename(unzip_file, new_file_name)
                     list_file.append(new_file_name)
                 else:
