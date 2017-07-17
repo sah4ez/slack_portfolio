@@ -1,7 +1,6 @@
-from property import *
 import loader_from_file
 import my_log
-
+from property import *
 
 LOG = my_log.get_logger("extractor")
 

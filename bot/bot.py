@@ -1,16 +1,19 @@
-import os, sys
+import os
+import sys
 import threading
-
+import time
 import traceback
 
 import requests
+from slackclient import SlackClient
 
 import capital
-import config, price, url_board, my_log, sender_file
-
-import time
+import config
 import loader_from_file
-from slackclient import SlackClient
+import my_log
+import price
+import sender_file
+import url_board
 
 LOG = my_log.get_logger("main")
 
@@ -38,6 +41,7 @@ def handle_command(command, channel):
         response(channel, message)
         return
     first_command = words[0]
+    list_extracted_files = list()
     try:
         if first_command in config.CMD_HELP:
             response(channel, config.RSP_HELP)
@@ -56,7 +60,6 @@ def handle_command(command, channel):
             loader_from_file.load_all()
             response(channel, config.RSP_UPDATE_STOCK)
         if first_command in config.CMD_FILES:
-            list_extracted_files = list()
             message, list_extracted_files = sender_file.send_file(words)
             response(channel, message)
             for filename in list_extracted_files:

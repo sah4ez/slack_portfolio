@@ -1,18 +1,18 @@
 import os
+import threading
+import time
 from csv import *
 from datetime import datetime
 from os.path import isfile, join
-import threading
 
 from pip._vendor import requests
 from pip._vendor.requests.exceptions import MissingSchema
 from selenium import webdriver
-import time
 
 import extractor
 import my_log
-from Stock import Stock
 import property
+from Stock import Stock
 
 # from ..database import db_helper
 

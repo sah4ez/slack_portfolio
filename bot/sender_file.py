@@ -1,14 +1,15 @@
 import datetime
-
-import loader_from_file
-import property
+import os
+import re
 import zipfile
+
 import py7zlib
 import rarfile
+
 import config
-import re
-import os
+import loader_from_file
 import my_log
+import property
 
 LOG = my_log.get_logger("sender_file")
 
@@ -25,7 +26,7 @@ def send_file(words):
                 not_valid, ext = validate_file_name(extracted)
                 if not_valid:
                     if ext != '':
-                        new_file_name = property.TMP_EXTRACT + '/' + stock.trade_code + '_File' +\
+                        new_file_name = property.TMP_EXTRACT + '/' + stock.trade_code + '_File' + \
                                         str(datetime.datetime.now()) + '.' + ext
                         os.rename(extracted, new_file_name)
                         list_file.append(new_file_name)
