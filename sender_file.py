@@ -3,10 +3,14 @@ import datetime
 import loader_from_file
 import property
 import zipfile
+import py7zlib
+import rarfile
 import config
 import re
 import os
+import my_log
 
+LOG = my_log.get_logger("sender_file")
 
 def send_file(words):
     company = " ".join(words[1:])
@@ -17,35 +21,67 @@ def send_file(words):
         list_file = list()
         for file in stock.files_name:
             path_to_file = property.TYPE2_PATH + '/' + stock.trade_code + property.ARCHIVES + '/' + file
-            for unzip_file in unzip(path_to_file):
-                valid, ext = validate_file_name(unzip_file)
-                if valid:
-                    new_file_name = property.TMP_EXTRACT + '/' + stock.trade_code + '_File' +\
-                                    str(datetime.datetime.now()) + '.' + ext
-                    os.rename(unzip_file, new_file_name)
-                    list_file.append(new_file_name)
+            for extracted in extractr_archive(path_to_file):
+                not_valid, ext = validate_file_name(extracted)
+                if not_valid:
+                    if ext != '':
+                        new_file_name = property.TMP_EXTRACT + '/' + stock.trade_code + '_File' +\
+                                        str(datetime.datetime.now()) + '.' + ext
+                        os.rename(extracted, new_file_name)
+                        list_file.append(new_file_name)
                 else:
-                    list_file.append(unzip_file)
+                    list_file.append(extracted)
 
-        return format(config.RSP_FILES % stock.files_name.__len__()), list_file
+        return format(config.RSP_FILES % list_file.__len__()), list_file
 
 
 def validate_file_name(filename):
     pattern = r"[a-zA-Z0-9-_а-яА-Я]"
     pure_name = filename.replace(property.TMP_EXTRACT + '/', '')
-    point = str(pure_name).index('.')
+    try:
+        point = str(pure_name).index('.')
+    except ValueError:
+        return True, ''
     name = pure_name[:point]
     ext = pure_name[point + 1:]
     findall = re.findall(pattern, name)
     return findall.__len__() < name.replace(' ', '').__len__(), ext
 
 
-def unzip(path_to_file):
+def extractr_archive(path_to_file):
     extracted = list()
-    zip = zipfile.ZipFile(path_to_file, 'r')
-    for f in zip.filelist:
-        zip.extract(f.filename, property.TMP_EXTRACT)
-        path_extract = property.TMP_EXTRACT + '/' + f.filename
-        extracted.append(str(path_extract))
-    zip.close()
+    ext = re.findall(property.ZIP, path_to_file)
+    if ext.__len__() > 0:
+        zip = zipfile.ZipFile(path_to_file, 'r')
+        for f in zip.filelist:
+            zip.extract(f.filename, property.TMP_EXTRACT)
+            path_extract = property.TMP_EXTRACT + '/' + f.filename
+            extracted.append(str(path_extract))
+        zip.close()
+    ext = re.findall(property.RAR, path_to_file)
+    if ext.__len__() > 0:
+        try:
+            rar = rarfile.RarFile(path_to_file)
+            for f in rar.namelist():
+                rar.extract(f, property.TMP_EXTRACT)
+                path_extract = property.TMP_EXTRACT + '/' + f
+                extracted.append(str(path_extract))
+            rar.close()
+        except rarfile.BadRarFile:
+            LOG.error("Bad RarFile... path: %s" % path_to_file)
+
+    ext = re.findall(property.SEVEN_Z, path_to_file)
+    if ext.__len__() > 0:
+        file = open(path_to_file, 'rb')
+        seven_zip = py7zlib.Archive7z(file)
+        for name in seven_zip.getnames():
+            path_extract = os.path.join(property.TMP_EXTRACT, name)
+            outdir = os.path.dirname(path_extract)
+            if not os.path.exists(outdir):
+                os.makedirs(outdir)
+            outfile = open(path_extract, 'wb')
+            outfile.write(seven_zip.getmember(name).read())
+            outfile.close()
+            extracted.append(str(path_extract))
+        file.close()
     return extracted

@@ -29,3 +29,7 @@ SHORT_NAME_ATTR = 'Краткое наименование'
 
 LAST_PRICE = "Цена последней сделки, рублей"
 VOLUME_ON_MARKET = "Объем выпуска"
+
+ZIP = r".zip$"
+RAR = r".rar$"
+SEVEN_Z = r".7z$"

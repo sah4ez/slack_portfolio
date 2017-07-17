@@ -66,6 +66,8 @@ def handle_command(command, channel):
         LOG.error(config.RSP_ERROR + " %s" % words)
         traceback.print_exc(file=sys.stdout)
         response(channel, config.RSP_ERROR)
+        for file in list_extracted_files:
+            threading.Thread(os.remove(file)).start()
 
 
 def response(to_channel, message):
@@ -79,6 +81,7 @@ def post_file(channels, filename):
     requests.post(url='https://slack.com/api/files.upload',
                   data={'token': TOKEN, 'channels': channels, 'media': f},
                   headers={'Accept': 'application/json'}, files=f)
+    LOG.info("Send file %s to channel: %s" %(filename, channels))
     rm = threading.Thread(os.remove(filename))
     rm.start()
     reset_delay()
