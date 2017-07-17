@@ -35,4 +35,4 @@ WELCOME = format("Привет, чтобы узнать что я умею на�
 RSP_ERROR = "Ops... Some error."
 
 LOG_FORMAT = "%(asctime)s |%(name)s:%(lineno)d|[%(levelname)s]: %(message)s"
-LOG_ALL_FILE = "bot/log/all.log"
+LOG_ALL_FILE = "log/all.log"

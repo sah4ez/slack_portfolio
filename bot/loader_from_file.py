@@ -179,12 +179,17 @@ def get_last_price(trade_code):
     file = directory + property.BOARD
     fine_line = -1
     with open(file=file, mode="rb") as f:
+        LOG.info('Open file:  %s' % file)
         for num, line in enumerate(f, 1):
             line = str(line, "UTF-8")
             if property.LAST_PRICE in line:
+                LOG.info("Found last price")
                 fine_line = num + 3
             if fine_line == num:
-                return float(line.strip().replace(',', ".").replace(' ', ''))
+                last_price = float(line.strip().replace(',', ".").replace(' ', ''))
+                LOG.info("Last price is: %.2f" % last_price)
+                return last_price
+    f.close()
     return 0.0
 
 
@@ -236,7 +241,7 @@ def url_board(trade_code):
 def html_source(url):
     driver = webdriver.PhantomJS(executable_path='/usr/local/bin/phantomjs')
     driver.get(url)
-    time.sleep(1)
+    time.sleep(10)
     return driver.find_element_by_tag_name('html').get_attribute('innerHTML')
 
 

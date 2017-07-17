@@ -3,5 +3,18 @@ version: '3.0'
 services:
   db:
     image: mongo
+    ports:
+     - "27017:27017"
+    volumes:
+     - ./db:/data/db
 
   bot:
+    image: bot:1.0
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    links:
+     - db
+    #command: ['top']
+    command: ['python3', '/home/bot/bot/bot.py', '${SLACK_BOT_TOKEN}', '${BOT_ID}']
+
