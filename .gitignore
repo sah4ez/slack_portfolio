@@ -1,0 +1,9 @@
+# Created by .ignore support plugin (hsz.mobi)
+.idea/
+bot/slackportfolio/
+__pycache__/
+bot/log/
+bot/res/companies/*/archives/*
+bot/tmp
+ghostdriver.log
+/.env
