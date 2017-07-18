@@ -7,5 +7,4 @@ bot/res/companies/*/archives/*
 bot/tmp
 ghostdriver.log
 /.env
-/.env_2
 
