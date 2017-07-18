@@ -33,3 +33,4 @@ VOLUME_ON_MARKET = "Объем выпуска"
 ZIP = r".zip$"
 RAR = r".rar$"
 SEVEN_Z = r".7z$"
+PATH_PHANTOMJS = '/usr/local/bin/phantomjs'

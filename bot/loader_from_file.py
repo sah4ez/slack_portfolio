@@ -239,7 +239,7 @@ def url_board(trade_code):
 
 
 def html_source(url):
-    driver = webdriver.PhantomJS(executable_path='/usr/local/bin/phantomjs')
+    driver = webdriver.PhantomJS(executable_path=property.PATH_PHANTOMJS)
     driver.get(url)
     time.sleep(10)
     return driver.find_element_by_tag_name('html').get_attribute('innerHTML')

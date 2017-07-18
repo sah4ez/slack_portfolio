@@ -2,7 +2,7 @@
 .idea/
 bot/slackportfolio/
 __pycache__/
-bot/log/
+bot/log/*
 bot/res/companies/*/archives/*
 bot/tmp
 ghostdriver.log
