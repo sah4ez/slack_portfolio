@@ -7,4 +7,10 @@ bot/res/companies/*/archives/*
 bot/tmp
 ghostdriver.log
 /.env
+/bin
+/lib
+/lib64
+/include
+pip-selfcheck.json
+selenium
 

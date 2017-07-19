@@ -43,6 +43,7 @@ def extract_files(path, file):
     files = list()
     try:
         with open(path + file) as f:
+            LOG.info('Extract files from: %s' % path + file)
             try:
                 for line in f:
                     if DOWNLOAD_URL in line:

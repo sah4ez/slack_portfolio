@@ -13,6 +13,7 @@ import property
 
 LOG = my_log.get_logger("sender_file")
 
+
 def send_file(words):
     company = " ".join(words[1:])
     stock = loader_from_file.load_one_stock(company)
@@ -33,7 +34,10 @@ def send_file(words):
                 else:
                     list_file.append(extracted)
 
-        return format(config.RSP_FILES % list_file.__len__()), list_file
+        if list_file.__len__() > 0:
+            return format(config.RSP_FILES % list_file.__len__()), list_file
+        else:
+            return config.RSP_FILES_NOT_FOUND, list_file
 
 
 def validate_file_name(filename):

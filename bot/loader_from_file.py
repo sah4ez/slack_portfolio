@@ -20,16 +20,21 @@ LOG = my_log.get_logger('loader_from_file')
 
 
 def download_file(url, file):
-    u = requests.get(url=url)
+    try:
+        u = requests.get(url=url)
 
-    with open(file=file, mode='wb') as f:
-        for chunk in u.iter_content(chunk_size=1024):
-            if chunk:
-                f.write(chunk)
-                f.flush()
-    f.close()
-    LOG.info(format('Load from %s file %s' % (url, file)))
-    # print('Successful. File download: %dKB' % float(os.path.getsize(file) / 1024))
+        with open(file=file, mode='wb') as f:
+            for chunk in u.iter_content(chunk_size=1024):
+                if chunk:
+                    f.write(chunk)
+                    f.flush()
+        f.close()
+        LOG.info(format('Load from %s file %s' % (url, file)))
+    except MissingSchema:
+        LOG.info(format('Not found URL %s' % url))
+        # print('Not found URL %s' % url)
+    except requests.exceptions.SSLError:
+        LOG.info('Bad SLL of url: %s' % url)
 
 
 def download_type2(url, name):
@@ -38,16 +43,8 @@ def download_type2(url, name):
     path = folder + property.TYPE2
     path_file = folder.replace('company', 'files') + property.FILES
     file.write(url)
-
-    # if compare_date_file(path_file):
-    #     return
-
-    try:
-        download_file(url, path)
-        download_file(str(url).replace('company', 'files'), path_file)
-    except MissingSchema:
-        LOG.info(format('Not found URL %s' % url))
-        # print('Not found URL %s' % url)
+    download_file(url, path)
+    download_file(str(url).replace('company', 'files'), path_file)
     file.close()
 
 
@@ -57,15 +54,7 @@ def download_type3(url, name):
     path_file = folder + property.FILES2
     url = str(url).replace('company', 'files')
     file.write(url)
-
-    # if compare_date_file(path_file):
-    #     return
-
-    try:
-        download_file(url, path_file)
-    except MissingSchema:
-        LOG.info(format('Not found URL %s' % url))
-        # print('Not found URL %s' % url)
+    download_file(url, path_file)
     file.close()
 
 
@@ -97,8 +86,6 @@ def load_one_stock(name):
         if a[4] == 'Акции' and name.lower() in a[11].lower():
             stock = Stock()
             stock.stock_line(line=a)
-
-
             # stock.finame_em = get_finam_code(stock.short_name)
             if name.lower() in stock.emitent_full_name.lower():
                 stock.short_name = get_short_name(stock.trade_code)
@@ -108,7 +95,7 @@ def load_one_stock(name):
                 download = threading.Thread(load_files(a[7], a[38]))
                 download.start()
                 download.join()
-                stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + '/archives/')
+                stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
                 return stock
     return None
 
@@ -117,7 +104,7 @@ def is_today(file):
     date_now = datetime.now()
     if not os.path.isfile(file):
         return False
-    date_file = datetime.fromtimestamp(os.stat(file).st_birthtime)
+    date_file = datetime.fromtimestamp(os.stat(file).st_ctime)
     return datetime(date_now.year, date_now.month, date_now.day) <= datetime(date_file.year, date_file.month,
                                                                              date_file.day)
 
@@ -126,7 +113,7 @@ def load_files(trade_code, link):
     files = list()
     files.append(extractor.extract_files(property.TYPE2_PATH + '/' + trade_code, property.FILES))
     create_path(property.TYPE2_PATH + '/' + trade_code)
-    create_path(property.TYPE2_PATH + '/' + trade_code + '/archives')
+    create_path(property.TYPE2_PATH + '/' + trade_code + property.ARCHIVES)
     download_type2(link + '&type=2', trade_code)
     download_type3(link + '&type=3', trade_code)
 
@@ -139,7 +126,7 @@ def load_stocks():
             stock = Stock()
             stock.stock_line(line=a)
 
-            stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + '/archives/')
+            stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
 
             stock.short_name = get_short_name(stock.trade_code)
             stock.finame_em = get_finam_code(stock.short_name)
@@ -241,8 +228,11 @@ def url_board(trade_code):
 def html_source(url):
     driver = webdriver.PhantomJS(executable_path=property.PATH_PHANTOMJS)
     driver.get(url)
-    time.sleep(10)
-    return driver.find_element_by_tag_name('html').get_attribute('innerHTML')
+    time.sleep(5)
+    html_inner = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
+    # html_inner = driver.find_element_by_tag_name('html').get_attribute('innerHTML')
+    driver.close()
+    return html_inner
 
 
 def get_finam_code(short_name):
