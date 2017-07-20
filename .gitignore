@@ -13,4 +13,5 @@ ghostdriver.log
 /include
 pip-selfcheck.json
 selenium
+res/selected.csv
 

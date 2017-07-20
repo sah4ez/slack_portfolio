@@ -27,7 +27,19 @@ RSP_FILES_NOT_FOUND = "Я не нашел файлы... ¯\_(ツ)_/¯"
 HELP_FILES = format("*%s*, *%s*, *%s*, *%s* _<имя_компании>_ - получить файлы раскрытия информации\n" %
                     (CMD_FILES[0], CMD_FILES[1], CMD_FILES[2], CMD_FILES[3]))
 
-RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_CAPITAL + HELP_MOEX + HELP_UPDATE + HELP_FILES
+CMD_SELECT_FOR_PORTFOLIO = ["запомнить", "добавить", "add", "select"]
+RSP_SELECT_FOR_PORTFOLIO = "%s добавлено в портфель: \n"
+HELP_SELECT_FOR_PORTFOLIO = format(
+    "*%s*, *%s*, *%s*, *%s* _<имя_компании>_ - запомнить компанию для дальнейшей аналитики" %
+    (CMD_SELECT_FOR_PORTFOLIO[0], CMD_SELECT_FOR_PORTFOLIO[1],
+     CMD_SELECT_FOR_PORTFOLIO[2], CMD_SELECT_FOR_PORTFOLIO[3]))
+
+CMD_GET_LIST_SELECTED = ["selected", "выбранные"]
+RSP_GET_LIST_SELECTED = "Вот запомненные компании: \n %s"
+HELP_GET_LIST_SELECTED = "*%s*, *%s* - выведет список запомненных компаний"
+
+RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_CAPITAL + HELP_MOEX + \
+           HELP_UPDATE + HELP_FILES + HELP_SELECT_FOR_PORTFOLIO + HELP_GET_LIST_SELECTED
 
 WELCOME = format("Привет, чтобы узнать что я умею напиши одно из @portfolio *%s*, *%s*, *%s*" %
                  (CMD_HELP[0], CMD_HELP[1], CMD_HELP[2]))

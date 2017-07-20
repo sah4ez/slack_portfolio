@@ -14,6 +14,7 @@ import my_log
 import price
 import sender_file
 import url_board
+import select_for_portfolio
 
 LOG = my_log.get_logger("main")
 
@@ -64,6 +65,12 @@ def handle_command(command, channel):
             response(channel, message)
             for filename in list_extracted_files:
                 post_file(channel, filename)
+        if first_command in config.CMD_SELECT_FOR_PORTFOLIO:
+            message = select_for_portfolio.select(words)
+            response(channel, message)
+        if first_command in config.CMD_GET_LIST_SELECTED:
+            message = select_for_portfolio.get_list_selected()
+            response(channel, message)
     except Exception:
         reset_delay()
         LOG.error(config.RSP_ERROR + " %s" % words)

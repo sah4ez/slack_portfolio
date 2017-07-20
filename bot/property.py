@@ -17,11 +17,21 @@ TMP_EXTRACT = "tmp"
 
 DOWNLOAD_URL_MATCH = 'FileLoad.ashx?Fileid='
 DOWNLOAD_URL = 'e-disclosure.ru/portal/FileLoad.ashx?Fileid='
+DOWNLOAD_SITE_DISCLOSURE = 'disclosure.skrin.ru'
+DOWNLOAD_URL_DISCLOSURE = r'/docs/[0-9a-zA-Z]/'
+
 TYPE2 = '/type.html'
 FILES = '/files.html'
 FILES2 = '/files2.html'
+FILES3 = '/files3.html'
+FILES4 = '/files4.html'
+FILES5 = '/files5.html'
 ARCHIVES = '/archives'
 HTTP_WWW = 'http://www.'
+
+DISCLOSURE_ALL = '/?DTI=7'
+DISCLOSURE_FIN = '/?DTI=8'
+DISCLOSURE_CONSOLIDATION_FIN = '/?DTI=9'
 
 BOARD = 'board.html'
 URL_BOARD = 'http://www.moex.com/ru/issue.aspx?board=TQBR&code='
@@ -34,3 +44,5 @@ ZIP = r".zip$"
 RAR = r".rar$"
 SEVEN_Z = r".7z$"
 PATH_PHANTOMJS = '/usr/local/bin/phantomjs'
+
+SELECTED_STOCS = 'res/selected.csv'

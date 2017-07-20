@@ -109,13 +109,35 @@ def is_today(file):
                                                                              date_file.day)
 
 
+def download_from_disclosure(url, name):
+    folder = property.TYPE2_PATH + '/' + name
+    file = open(folder + '/url.txt', 'w+')
+    url = str(url).replace('company', 'files')
+    file.write(url)
+
+    path_file = folder + property.FILES3
+    download_file(url + property.DISCLOSURE_ALL, path_file)
+    path_file = folder + property.FILES4
+    download_file(url + property.DISCLOSURE_FIN, path_file)
+    path_file = folder + property.FILES5
+    download_file(url + property.DISCLOSURE_CONSOLIDATION_FIN, path_file)
+
+    file.close()
+
+
 def load_files(trade_code, link):
     files = list()
-    files.append(extractor.extract_files(property.TYPE2_PATH + '/' + trade_code, property.FILES))
     create_path(property.TYPE2_PATH + '/' + trade_code)
     create_path(property.TYPE2_PATH + '/' + trade_code + property.ARCHIVES)
     download_type2(link + '&type=2', trade_code)
+    files.extend(extractor.extract_files(property.TYPE2_PATH + '/' + trade_code, property.FILES))
     download_type3(link + '&type=3', trade_code)
+    files.extend(extractor.extract_files(property.TYPE2_PATH + '/' + trade_code, property.FILES2))
+    download_from_disclosure(link, trade_code)
+    if files.__len__() == 0:
+        files.extend(extractor.extract_files(property.TYPE2_PATH + '/' + trade_code, property.FILES3))
+        files.extend(extractor.extract_files(property.TYPE2_PATH + '/' + trade_code, property.FILES4))
+        files.extend(extractor.extract_files(property.TYPE2_PATH + '/' + trade_code, property.FILES5))
 
 
 def load_stocks():
