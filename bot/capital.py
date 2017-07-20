@@ -6,6 +6,16 @@ def capital(words):
     company = " ".join(words[1:])
 
     stock = loader_from_file.load_one_stock(company)
+    return response(stock, company)
+
+
+def capital_p(words):
+    company = " ".join(words[1:])
+    stock = loader_from_file.load_one_stock_p(company)
+    return response(stock, company)
+
+
+def response(stock, company):
     if stock is None:
         return format(config.RSP_NOF_FOUND_STOCK % company)
     else:

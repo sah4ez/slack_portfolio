@@ -1,4 +1,5 @@
 import os
+import re
 import threading
 import time
 from csv import *
@@ -80,24 +81,47 @@ def read_to_list(file):
     return arr
 
 
+def get_stock(name, line):
+    stock = Stock()
+    stock.stock_line(line=line)
+    # stock.finame_em = get_finam_code(stock.short_name)
+    if name.lower() in stock.emitent_full_name.lower():
+        stock.short_name = get_short_name(stock.trade_code)
+        stock.last_price = get_last_price(stock.trade_code)
+        stock.volume_stock_on_market = get_volume_stock_on_market(stock.trade_code)
+
+        download = threading.Thread(load_files(line[7], line[38]))
+        download.start()
+        download.join()
+        stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
+        return stock
+    return None
+
+
 def load_one_stock(name):
     action = read_to_list(property.DATA)
+    stock = None
     for a in action:
         if a[4] == 'Акции' and name.lower() in a[11].lower():
-            stock = Stock()
-            stock.stock_line(line=a)
-            # stock.finame_em = get_finam_code(stock.short_name)
-            if name.lower() in stock.emitent_full_name.lower():
-                stock.short_name = get_short_name(stock.trade_code)
-                stock.last_price = get_last_price(stock.trade_code)
-                stock.volume_stock_on_market = get_volume_stock_on_market(stock.trade_code)
+            stock = get_stock(name, a)
+    return stock
 
-                download = threading.Thread(load_files(a[7], a[38]))
-                download.start()
-                download.join()
-                stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
-                return stock
+
+def load_one_stock_p(name):
+    action = read_to_list(property.DATA)
+    for a in action:
+        if a[4] == 'Акции' and name.lower() in a[11].lower() and re.compile(property.PRIVELEDGED).match(a[7]):
+            return get_stock(name, a)
     return None
+
+
+def get_stocks_contains(company):
+    action = read_to_list(property.DATA)
+    found = list()
+    for a in action:
+        if a[4] == 'Акции' and company.lower() in a[11].lower():
+            found.append(a[11] + ' | ' + a[7])
+    return found
 
 
 def is_today(file):

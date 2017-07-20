@@ -6,20 +6,29 @@ import loader_from_file
 LOG = my_log.get_logger("select_for_portfolio")
 
 
-def select(words):
-    company = " ".join(words[1:])
-    LOG.info("Select: %s" % company)
-    stock = loader_from_file.load_one_stock(company)
+def save_stock(stock):
     with open(file=property.SELECTED_STOCS, mode='a+', encoding='UTF-8') as file:
         string = ';'.join(get_parameters_stock(stock))
         file.write(string + '\n')
         file.flush()
-        selected = ''
-        for line in file:
-            selected += line
         file.close()
     LOG.info("Company was added.")
-    return format(config.RSP_SELECT_FOR_PORTFOLIO % company) + selected
+
+
+def select(words):
+    company = " ".join(words[1:])
+    LOG.info("Select: %s" % company)
+    stock = loader_from_file.load_one_stock(company)
+    save_stock(stock)
+    return format(config.RSP_SELECT_FOR_PORTFOLIO % company)
+
+
+def select_p(words):
+    company = " ".join(words[1:])
+    LOG.info("Select: %s" % company)
+    stock = loader_from_file.load_one_stock_p(company)
+    save_stock(stock)
+    return format(config.RSP_SELECT_FOR_PORTFOLIO % company)
 
 
 def get_parameters_stock(stock):
@@ -36,9 +45,11 @@ def get_parameters_stock(stock):
 def get_list_selected():
     selected = 'Name | Trade Code | Price | Volume | Capitalization | Cap/Volume \n'
     LOG.info("Get list selected companies")
+    lines = 0
     with open(file=property.SELECTED_STOCS, mode='r', encoding='UTF-8') as file:
         for num, line in enumerate(file, 1):
             selected += line.replace(';', ' | ')
+            lines = num
         file.close()
-    LOG.info("Found %d selected companies")
+    LOG.info("Found %d selected companies" % lines)
     return format(config.RSP_GET_LIST_SELECTED % selected)

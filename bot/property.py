@@ -46,3 +46,4 @@ SEVEN_Z = r".7z$"
 PATH_PHANTOMJS = '/usr/local/bin/phantomjs'
 
 SELECTED_STOCS = 'res/selected.csv'
+PRIVELEDGED = r'[a-zA-Z]{4}P$'
