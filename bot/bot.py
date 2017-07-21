@@ -3,6 +3,7 @@ import sys
 import threading
 import time
 import traceback
+import websocket._exceptions as we
 
 import requests
 from slackclient import SlackClient
@@ -173,9 +174,8 @@ def shor_delay():
     READ_WEBSOCKET_DELAY = 0.1
 
 
-if __name__ == "__main__":
-
-    if slack_client.rtm_connect():
+def listen():
+    try:
         LOG.info("StarterBot connected and running!")
         while True:
             msg = slack_client.rtm_read()
@@ -186,5 +186,18 @@ if __name__ == "__main__":
             if command and channel:
                 handle_command(command, channel)
             time.sleep(READ_WEBSOCKET_DELAY)
+    except BrokenPipeError:
+        LOG.error("BrokenPipeError")
+        slack_client.rtm_connect()
+        listen()
+    except we.WebSocketConnectionClosedException:
+        LOG.error("WebSocketConnectionClosedException")
+        slack_client.rtm_connect()
+        listen()
+
+if __name__ == "__main__":
+
+    if slack_client.rtm_connect():
+        listen()
     else:
         LOG.error("Connection failed. Invalid Slack token or bot ID?")
