@@ -15,14 +15,21 @@ LOG = my_log.get_logger("sender_file")
 
 
 def send_file(words):
-    company = " ".join(words[1:])
+    num = words[1]
+    if re.compile(r'[0-9]').match(num):
+        company = " ".join(words[2:])
+    else:
+        company = " ".join(words[1:])
+
     stock = loader_from_file.load_one_stock(company)
     if stock.files_name.__len__ == 0:
         return config.RSP_FILES_NOT_FOUND, list()
     else:
         list_file = list()
-        for file in stock.files_name:
+        for count, file in enumerate(stock.files_name):
             path_to_file = property.TYPE2_PATH + '/' + stock.trade_code + property.ARCHIVES + '/' + file
+            if num and num != '' and int(num) == count:
+                break
             for extracted in extractr_archive(path_to_file):
                 not_valid, ext = validate_file_name(extracted)
                 if not_valid:

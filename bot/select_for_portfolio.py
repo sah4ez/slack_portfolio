@@ -20,7 +20,7 @@ def select(words):
     LOG.info("Select: %s" % company)
     stock = loader_from_file.load_one_stock(company)
     save_stock(stock)
-    return format(config.RSP_SELECT_FOR_PORTFOLIO % company)
+    return get_response(stock)
 
 
 def select_p(words):
@@ -28,7 +28,11 @@ def select_p(words):
     LOG.info("Select: %s" % company)
     stock = loader_from_file.load_one_stock_p(company)
     save_stock(stock)
-    return format(config.RSP_SELECT_FOR_PORTFOLIO % company)
+    return get_response(stock)
+
+
+def get_response(stock):
+    return format(config.RSP_SELECT_FOR_PORTFOLIO % (stock.emitent_full_name, stock.trade_code, stock.last_price))
 
 
 def get_parameters_stock(stock):

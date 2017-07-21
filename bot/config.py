@@ -40,12 +40,13 @@ CMD_HELP = ["help", "помогите", "помощь"]
 CMD_FILES = ["file", "файл", "files", "файлы"]
 RSP_FILES = "Найдено %d файлов"
 RSP_FILES_NOT_FOUND = "Я не нашел файлы... ¯\_(ツ)_/¯"
-HELP_FILES = format("*%s*, *%s*, *%s*, *%s* _<имя_компании>_ - получить файлы раскрытия информации\n" %
+HELP_FILES = format("*%s*, *%s*, *%s*, *%s* [количество] _<имя_компании>_ - получить файлы раскрытия информации"
+                    ", если количество не указано, то пришлет все найденные\n" %
                     (CMD_FILES[0], CMD_FILES[1], CMD_FILES[2], CMD_FILES[3]))
 
 CMD_SELECT_FOR_PORTFOLIO_P = ["запомнить_п", "добавить_п", "add_p", "select_p"]
 CMD_SELECT_FOR_PORTFOLIO = ["запомнить", "добавить", "add", "select"]
-RSP_SELECT_FOR_PORTFOLIO = "%s добавлено в портфель: \n"
+RSP_SELECT_FOR_PORTFOLIO = "Добавлено в портфель %s | %s | %.2f: \n"
 HELP_SELECT_FOR_PORTFOLIO = format(
     "*%s*, *%s*, *%s*, *%s* _<имя_компании>_ - запомнить компанию для дальнейшей аналитики \n" %
     (CMD_SELECT_FOR_PORTFOLIO[0], CMD_SELECT_FOR_PORTFOLIO[1],
@@ -63,14 +64,14 @@ HELP_GET_LIST_SELECTED = format(
 CMD_FIND = ["find", "найти"]
 RSP_FIND = "Найдено: %s\n"
 RSP_NOT_FOUND = "Я ничего не нашел... ¯\_(ツ)_/¯"
-HELP_FIND = format("*%s*, *%s* _<имя_компании>_ - вернет список компаний, имена которых содеражать _<имя_компании>_" %
+HELP_FIND = format("*%s*, *%s* _<имя_компании>_ - вернет список компаний, имена которых содеражать _<имя_компании>_\n" %
                    (CMD_FIND[0], CMD_FIND[1]))
 
 RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_PRICE_P + HELP_CAPITAL + HELP_CAPITAL_P + \
            HELP_MOEX + HELP_MOEX_P + \
            HELP_UPDATE + HELP_FILES + HELP_SELECT_FOR_PORTFOLIO + HELP_GET_LIST_SELECTED + HELP_FIND
 
-WELCOME = format("Привет, чтобы узнать что я умею напиши одно из @portfolio *%s*, *%s*, *%s*" %
+WELCOME = format("Привет, чтобы узнать что я умею напиши одно из @portfolio *%s*, *%s*, *%s*\n" %
                  (CMD_HELP[0], CMD_HELP[1], CMD_HELP[2]))
 
 RSP_ERROR = "Ops... Some error."

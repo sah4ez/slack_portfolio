@@ -22,3 +22,6 @@ virtualenv==15.1.0
 websocket-client==0.44.0
 xvfbwrapper==0.2.9
 robobrowser>=0.5
+pyfolio
+theano
+pymc3
