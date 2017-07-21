@@ -16,6 +16,7 @@ import sender_file
 import url_board
 import select_for_portfolio
 import finder
+import updater
 
 LOG = my_log.get_logger("main")
 
@@ -97,6 +98,12 @@ def handle_command(command, channel):
         if first_command in config.CMD_FIND:
             message = finder.find(words)
             response(channel, message)
+
+        if first_command in ['test']:
+            response(channel, config.RSP_WAIT)
+            updater.update(words)
+            response(channel, '(All oK!)>^_^')
+
 
     except Exception:
         reset_delay()

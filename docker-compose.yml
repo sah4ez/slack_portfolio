@@ -1,7 +1,7 @@
 version: '3.0'
 
 services:
-  db:
+  mongodb:
     image: mongo
     ports:
      - "27017:27017"
@@ -14,7 +14,7 @@ services:
       context: ./
       dockerfile: Dockerfile
     links:
-     - db
+     - mongodb
     #command: ['top']
     command: ['python3', '/home/bot/bot/bot.py', '${SLACK_BOT_TOKEN}', '${BOT_ID}']
 

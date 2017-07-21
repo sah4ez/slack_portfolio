@@ -47,3 +47,7 @@ PATH_PHANTOMJS = '/usr/local/bin/phantomjs'
 
 SELECTED_STOCS = 'res/selected.csv'
 PRIVELEDGED = r'[a-zA-Z]{4}P$'
+
+DB_HOST = "mongodb"
+DB_PORT = 27017
+DB_COLLECT = 'stocks'

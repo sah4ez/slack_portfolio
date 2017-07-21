@@ -14,6 +14,8 @@ import extractor
 import my_log
 import property
 from Stock import Stock
+import mongo.Stock as s
+import mongo.mongo as db
 
 # from ..database import db_helper
 
@@ -164,12 +166,27 @@ def load_files(trade_code, link):
         files.extend(extractor.extract_files(property.TYPE2_PATH + '/' + trade_code, property.FILES5))
 
 
-def load_stocks():
+def load_stocks(count):
     action = read_to_list(property.DATA)
     sort_action = []
+    num = 0
     for a in action:
         if a[4] == 'Акции':
-            stock = Stock()
+            if count is not None and count == num:
+                break
+            num += 1
+            trade_code = a[7]
+            stocks = db.contains(trade_code)
+
+            if stocks.count() == 0:
+                stock = s.Stock()
+            elif stocks.count() == 1:
+                stock = stocks.first()
+            else:
+                LOG.error("Collection contains %d the same document" % stocks.count())
+                return
+
+            # stock = s.Stock()
             stock.stock_line(line=a)
 
             stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
@@ -179,8 +196,10 @@ def load_stocks():
 
             sort_action.append(stock)
             # db_helper.add_stock(stock)
-            load_files(a[7], a[38])
-
+            load_files(stock.trade_code, stock.url)
+            LOG.info("Save stock %s" % str(s))
+            stock.save()
+    LOG.info("Updated %d" % num)
     return sort_action
 
 
@@ -204,7 +223,7 @@ def get_list(path):
     only_files = ""
     if os.path.isdir(path):
         only_files = [f for f in os.listdir(path) if isfile(join(path, f)) and str(f).__getitem__(0) != '.']
-    return only_files
+    return list(only_files)
 
 
 def get_last_price(trade_code):
