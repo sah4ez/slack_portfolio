@@ -49,58 +49,63 @@ def handle_command(command, channel):
         if first_command in config.CMD_HELP:
             response(channel, config.RSP_HELP)
 
-        if first_command in config.CMD_PRICE:
+        elif first_command in config.CMD_PRICE:
             response(channel, config.RSP_WAIT)
             message = price.price(words)
             response(channel, message)
-        if first_command in config.CMD_PRICE_P:
+        elif first_command in config.CMD_PRICE_P:
             response(channel, config.RSP_WAIT)
             message = price.price_p(words)
             response(channel, message)
 
-        if first_command in config.CMD_CAPITAL:
+        elif first_command in config.CMD_CAPITAL:
             response(channel, config.RSP_WAIT)
             message = capital.capital(words)
             response(channel, message)
-        if first_command in config.CMD_CAPITAL_P:
+        elif first_command in config.CMD_CAPITAL_P:
             response(channel, config.RSP_WAIT)
             message = capital.capital_p(words)
             response(channel, message)
 
-        if first_command in config.CMD_MOEX:
+        elif first_command in config.CMD_MOEX:
             response(channel, config.RSP_WAIT)
             response(channel, url_board.get_url(words))
-        if first_command in config.CMD_MOEX_P:
+        elif first_command in config.CMD_MOEX_P:
             response(channel, config.RSP_WAIT)
             response(channel, url_board.get_url_p(words))
 
-        if first_command in config.CMD_UPDATE:
+        elif first_command in config.CMD_UPDATE or first_command in config.CMD_UPDATE_P:
             response(channel, config.RSP_WAIT)
             updater.update(words)
             response(channel, config.RSP_UPDATE_STOCK)
 
-        if first_command in config.CMD_FILES:
+        elif first_command in config.CMD_FILES:
             message, list_extracted_files = sender_file.send_file(words)
             response(channel, message)
             for filename in list_extracted_files:
                 post_file(channel, filename)
 
-        if first_command in config.CMD_SELECT_FOR_PORTFOLIO:
+        elif first_command in config.CMD_SELECT_FOR_PORTFOLIO:
             message = select_for_portfolio.select(words)
             response(channel, message)
-        if first_command in config.CMD_SELECT_FOR_PORTFOLIO_P:
+        elif first_command in config.CMD_SELECT_FOR_PORTFOLIO_P:
             message = select_for_portfolio.select_p(words)
             response(channel, message)
 
-        if first_command in config.CMD_GET_LIST_SELECTED:
+        elif first_command in config.CMD_GET_LIST_SELECTED:
             message = select_for_portfolio.get_list_selected()
             response(channel, message)
 
-        if first_command in config.CMD_FIND:
+        elif first_command in config.CMD_FIND:
             message = finder.find(words)
             response(channel, message)
-        if first_command in config.CMD_FINAM_CODE:
+        elif first_command in config.CMD_FINAM_CODE:
             message = finam.loader(words)
+            response(channel, message)
+        elif first_command in config.CMD_UPDATE_METAINFO:
+            message = updater.update_metainfo()
+            response(channel, message)
+        else:
             response(channel, message)
 
     except Exception:

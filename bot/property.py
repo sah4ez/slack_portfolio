@@ -53,6 +53,6 @@ DB_HOST = "mongodb"
 DB_PORT = 27017
 DB_COLLECT = 'stocks'
 
-DB_CONTAINS_MORE_ONE = 'Found %d stocks, should be one the stock. Specify the name company.'
+DB_CONTAINS_MORE_ONE = 'Found %d stocks[%s], should be one the stock. Specify the name company.'
 DB_NOT_FOUNT_STOCK = 'Stock for [%s] not found'
 

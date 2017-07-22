@@ -110,10 +110,9 @@ def stock_from_line(name, line, is_download=True):
         return get_stock_from_file(name, line, is_download)
 
 
-
-def update_stock_from_file(name, download):
+def update_stock_from_file(name, download, is_priviledged=False):
     try:
-        stock = db.stock_by_emitet_name(name)
+        stock = db.stock_by_emitet_name(name, is_priviledged)
         action = read_to_list(property.DATA)
         stock_file = None
         for a in action:

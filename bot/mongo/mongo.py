@@ -14,7 +14,7 @@ def connect():
 
 def extract_stock(stocks, parameter):
     if stocks.count() > 1:
-        message = property.DB_CONTAINS_MORE_ONE % stocks.count()
+        message = property.DB_CONTAINS_MORE_ONE % (stocks.count(), parameter)
         LOG.error(message)
         raise FoundMoreThanOneStock(message)
     elif stocks.count() == 1:
