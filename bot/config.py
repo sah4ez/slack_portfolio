@@ -82,7 +82,8 @@ HELP_FINAM_CODE = format(
 
 RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_PRICE_P + HELP_CAPITAL + HELP_CAPITAL_P + \
            HELP_MOEX + HELP_MOEX_P + \
-           HELP_UPDATE + HELP_FILES + HELP_SELECT_FOR_PORTFOLIO + \
+           HELP_UPDATE + HELP_FILES +\
+           HELP_SELECT_FOR_PORTFOLIO + HELP_SELECT_FOR_PORTFOLIO_P +\
            HELP_GET_LIST_SELECTED + HELP_FIND + HELP_FINAM_CODE
 
 WELCOME = format("Привет, чтобы узнать что я умею напиши одно из @portfolio *%s*, *%s*, *%s*\n" %

@@ -47,7 +47,12 @@ PATH_PHANTOMJS = '/usr/local/bin/phantomjs'
 
 SELECTED_STOCS = 'res/selected.csv'
 PRIVELEDGED = r'[a-zA-Z]{4}P$'
+STOCKS = 'Акции'
 
 DB_HOST = "mongodb"
 DB_PORT = 27017
 DB_COLLECT = 'stocks'
+
+DB_CONTAINS_MORE_ONE = 'Found %d stocks, should be one the stock. Specify the name company.'
+DB_NOT_FOUNT_STOCK = 'Stock for [%s] not found'
+

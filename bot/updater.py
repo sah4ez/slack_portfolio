@@ -8,14 +8,22 @@ LOG = my_log.get_logger('update')
 
 def update(words):
     num = None
-
-    if words.__len__() > 1 and re.compile(r'[0-9]').match(words[1]):
-        num = int(words[1])
-
+    company = None
     download = False
-    if words.__len__() > 2:
-        download = words[2] in config.CMD_DOWNLOAD_FILES
+
+    count_words = words.__len__()
+    if count_words > 1:
+        if re.compile(r'[0-9]').match(words[1]):
+            num = int(words[1])
+        elif words[count_words-1] in config.CMD_DOWNLOAD_FILES:
+            company = ' '.join(words[1:count_words-2])
+            download = True
+        else:
+            company = ' '.join(words[1:count_words-1])
 
     LOG.info("Update %s files and %s download" %
-             (str(num) if num is not None else 'all', str(download)))
-    lfl.load_stocks(num, download)
+             (str(num) if num is not None else company, str(download)))
+    if company is None:
+        lfl.load_stocks(num, download)
+    else:
+        lfl.update_stock_from_file(company, download)

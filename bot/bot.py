@@ -107,7 +107,8 @@ def handle_command(command, channel):
         reset_delay()
         LOG.error(config.RSP_ERROR + " %s" % words)
         traceback.print_exc(file=sys.stdout)
-        response(channel, config.RSP_ERROR + '\n' + str(traceback._cause_message))
+        message = traceback.format_exc().split('\n')[traceback.format_exc().split('\n').__len__() - 2]
+        response(channel, config.RSP_ERROR + '\n' + message)
         for file in list_extracted_files:
             threading.Thread(os.remove(file)).start()
 

@@ -85,38 +85,80 @@ def read_to_list(file):
     return arr
 
 
-def get_stock(name, line):
-    stock = Stock()
+def get_stock_from_file(name, line, is_download):
+    stock = s.Stock()
     stock.stock_line(line=line)
-    if name.lower() in stock.emitent_full_name.lower():
-        stock.short_name = get_short_name(stock.trade_code)
-        stock.finame_em = finam.code(stock.short_name)
-        stock.last_price = get_last_price(stock.trade_code)
-        stock.volume_stock_on_market = get_volume_stock_on_market(stock.trade_code)
+    stock.short_name = get_short_name(stock.trade_code)
+    stock.finame_em = finam.code(stock.short_name)
+    stock.last_price = get_last_price(stock.trade_code)
+    stock.volume_stock_on_market = get_volume_stock_on_market(stock.trade_code)
 
+    if is_download:
         download = threading.Thread(load_files(line[7], line[38]))
         download.start()
         download.join()
-        stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
-        return stock
-    return None
+    stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
+    return stock
+
+
+def stock_from_db(name, is_privileged):
+    return db.stock_by_emitet_name(name, is_privileged)
+
+
+def stock_from_line(name, line, is_download=True):
+    if line[4] == property.STOCKS and name.lower() in line[11].lower():
+        return get_stock_from_file(name, line, is_download)
+
+
+
+def update_stock_from_file(name, download):
+    try:
+        stock = db.stock_by_emitet_name(name)
+        action = read_to_list(property.DATA)
+        stock_file = None
+        for a in action:
+            stock_file = stock_from_line(name, a, download)
+            if stock_file is not None:
+                break
+        stock.update_file(stock_file)
+        stock.save()
+    except db.NotFoundStock:
+        action = read_to_list(property.DATA)
+        stock_file = None
+        for a in action:
+            stock_file = stock_from_line(name, a, download)
+            if stock_file is not None:
+                break
+        stock_file.save()
 
 
 def load_one_stock(name):
-    action = read_to_list(property.DATA)
     stock = None
-    for a in action:
-        if a[4] == 'Акции' and name.lower() in a[11].lower():
-            stock = get_stock(name, a)
+    try:
+        stock = stock_from_db(name, False)
+    except db.NotFoundStock:
+        action = read_to_list(property.DATA)
+        for a in action:
+            stock = stock_from_line(name, a)
+            if stock is not None:
+                break
+    stock.save()
     return stock
 
 
 def load_one_stock_p(name):
-    action = read_to_list(property.DATA)
-    for a in action:
-        if a[4] == 'Акции' and name.lower() in a[11].lower() and re.compile(property.PRIVELEDGED).match(a[7]):
-            return get_stock(name, a)
-    return None
+    stock = None
+    try:
+        stock = stock_from_db(name, True)
+    except db.NotFoundStock:
+        action = read_to_list(property.DATA)
+        for a in action:
+            if re.compile(property.PRIVELEDGED).match(a[7]):
+                stock = stock_from_line(name, a)
+                if stock is not None:
+                    break
+    stock.save()
+    return stock
 
 
 def get_stocks_contains(company):
@@ -173,12 +215,15 @@ def load_stocks(count, upload_files):
     sort_action = []
     num = 0
     for a in action:
-        if a[4] == 'Акции':
+        if a[4] == property.STOCKS:
             if count is not None and count == num:
                 break
             num += 1
             trade_code = a[7]
-            stock = db.stock_by_trade_code(trade_code)
+            try:
+                stock = db.stock_by_trade_code(trade_code)
+            except db.NotFoundStock:
+                stock = s.Stock()
             stock.stock_line(line=a)
             stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
             stock.short_name = get_short_name(stock.trade_code)
@@ -192,7 +237,6 @@ def load_stocks(count, upload_files):
             stock.save()
     LOG.info("Updated %d" % num)
     return sort_action
-
 
 
 def get_list(path):

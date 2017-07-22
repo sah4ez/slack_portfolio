@@ -4,7 +4,6 @@ import loader_from_file
 
 def capital(words):
     company = " ".join(words[1:])
-
     stock = loader_from_file.load_one_stock(company)
     return response(stock, company)
 
