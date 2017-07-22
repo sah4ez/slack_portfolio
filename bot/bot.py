@@ -3,14 +3,12 @@ import sys
 import threading
 import time
 import traceback
-import websocket._exceptions as we
 
 import requests
 from slackclient import SlackClient
 
 import capital
 import config
-import loader_from_file
 import my_log
 import price
 import sender_file
@@ -18,6 +16,7 @@ import url_board
 import select_for_portfolio
 import finder
 import updater
+import finam.finam as finam
 
 LOG = my_log.get_logger("main")
 
@@ -99,6 +98,9 @@ def handle_command(command, channel):
 
         if first_command in config.CMD_FIND:
             message = finder.find(words)
+            response(channel, message)
+        if first_command in config.CMD_FINAM_CODE:
+            message = finam.loader(words)
             response(channel, message)
 
     except Exception:
