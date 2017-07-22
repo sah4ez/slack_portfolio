@@ -3,6 +3,7 @@ FROM python:3.6
 RUN mkdir -p -m 750 /home/bot/bot
 WORKDIR /home/bot/bot
 ADD requirements.txt /home/bot
+ADD scripts /home/bot/
 
 RUN pip3 install -r /home/bot/requirements.txt
 

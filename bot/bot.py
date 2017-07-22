@@ -186,13 +186,9 @@ def listen():
             if command and channel:
                 handle_command(command, channel)
             time.sleep(READ_WEBSOCKET_DELAY)
-    except BrokenPipeError:
-        LOG.error("BrokenPipeError")
+    except Exception:
         slack_client.rtm_connect()
-        listen()
-    except we.WebSocketConnectionClosedException:
-        LOG.error("WebSocketConnectionClosedException")
-        slack_client.rtm_connect()
+        traceback.print_exc(file=sys.stdout)
         listen()
 
 if __name__ == "__main__":
