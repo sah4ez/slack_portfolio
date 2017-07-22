@@ -107,7 +107,7 @@ def handle_command(command, channel):
         reset_delay()
         LOG.error(config.RSP_ERROR + " %s" % words)
         traceback.print_exc(file=sys.stdout)
-        response(channel, config.RSP_ERROR)
+        response(channel, config.RSP_ERROR + '\n' + str(traceback._cause_message))
         for file in list_extracted_files:
             threading.Thread(os.remove(file)).start()
 
@@ -187,6 +187,7 @@ def listen():
         slack_client.rtm_connect()
         traceback.print_exc(file=sys.stdout)
         listen()
+
 
 if __name__ == "__main__":
 

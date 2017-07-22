@@ -34,6 +34,7 @@ class Stock(Document):
     finame_em = IntField()
     last_price = FloatField()
     volume_stock_on_market = IntField()
+    month_history = ListField()
 
     def stock_line(self, line):
         self.datestamp = datetime.datetime.utcnow()

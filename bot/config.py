@@ -71,14 +71,18 @@ HELP_FIND = format("*%s*, *%s* _<имя_компании>_ - вернет спи
                    (CMD_FIND[0], CMD_FIND[1]))
 
 CMD_FINAM_CODE = ["finam", "финам"]
+ARG_FINAM_CODE_ALL = ["all", "все"]
 RSP_FINAM_CODE = "Для %s с финам кодом %s обновлена история"
+RSP_FINAM_CODE_ALL = "Все акции обновлены"
 HELP_FINAM_CODE = format(
-    "*%s* (*%s*) _<код_с_биржи>_ - загрузить историю по месяцам для _<код_с_биржи>_ (ex.: ALFT)\n" %
-    (CMD_FINAM_CODE[0], CMD_FINAM_CODE[1]))
+    "*%s* (*%s*) _<код_с_биржи>_ - загрузить историю по месяцам для _<код_с_биржи>_ (ex.: ALFT) или \n "
+    "*%s* (*%s*)  *%s* (*%s*) - загрузить история цен по месяцам для всех компаний" %
+    (CMD_FINAM_CODE[0], CMD_FINAM_CODE[1], CMD_FINAM_CODE[0], CMD_FINAM_CODE[1],
+     ARG_FINAM_CODE_ALL[0], ARG_FINAM_CODE_ALL[1]))
 
 RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_PRICE_P + HELP_CAPITAL + HELP_CAPITAL_P + \
            HELP_MOEX + HELP_MOEX_P + \
-           HELP_UPDATE + HELP_FILES + HELP_SELECT_FOR_PORTFOLIO +\
+           HELP_UPDATE + HELP_FILES + HELP_SELECT_FOR_PORTFOLIO + \
            HELP_GET_LIST_SELECTED + HELP_FIND + HELP_FINAM_CODE
 
 WELCOME = format("Привет, чтобы узнать что я умею напиши одно из @portfolio *%s*, *%s*, *%s*\n" %
