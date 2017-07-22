@@ -22,8 +22,11 @@ HELP_CAPITAL = format(
 RSP_WAIT = "Подождите... Я уже ищу"
 
 CMD_UPDATE = ["update"]
+CMD_DOWNLOAD_FILES = ["download"]
 RSP_UPDATE_STOCK = "Загружены последнии версии файлов"
-HELP_UPDATE = format("*%s* - обновить файлы с метаданными\n" % CMD_UPDATE[0])
+HELP_UPDATE = format(
+    "*%s* [n] [%s] - обновить n файлов, если указано *%s*, то будут загружены документы отчетности\n" %
+    (CMD_UPDATE[0], CMD_DOWNLOAD_FILES[0], CMD_DOWNLOAD_FILES[0]))
 
 RSP_NOF_FOUND_STOCK = "Не найдена акция %s...¯\_(ツ)_/¯"
 RSP_NOF_FOUND_STOCK_P = "Не найдена привелигированная акция %s...¯\_(ツ)_/¯"

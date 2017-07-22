@@ -46,3 +46,12 @@ class Stock(Document):
         self.official_url = line[37]
         self.url = line[38]
         return self
+
+    def __str__(self):
+        return format("{"
+                      "_id: %s,\n datestamp: %s,\n trade_code: %s,\n emitent_full_name: %s,\n"
+                      "curency: %s,\n capitalisation: %s,\n free_float: %s,\n official_url: %s,\n"
+                      "url: %s,\n short_name: %s,\n finame_em: %s\n}" %
+                      (str(self._id), str(self.datestamp), self.trade_code, self.emitent_full_name,
+                       str(self.currency), str(self.capitalisation), str(self.free_float), self.official_url,
+                       self.url, self.short_name, self.finame_em))

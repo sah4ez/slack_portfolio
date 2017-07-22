@@ -166,7 +166,7 @@ def load_files(trade_code, link):
         files.extend(extractor.extract_files(property.TYPE2_PATH + '/' + trade_code, property.FILES5))
 
 
-def load_stocks(count):
+def load_stocks(count, upload_files):
     action = read_to_list(property.DATA)
     sort_action = []
     num = 0
@@ -186,7 +186,6 @@ def load_stocks(count):
                 LOG.error("Collection contains %d the same document" % stocks.count())
                 return
 
-            # stock = s.Stock()
             stock.stock_line(line=a)
 
             stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
@@ -195,8 +194,9 @@ def load_stocks(count):
             stock.finame_em = get_finam_code(stock.short_name)
 
             sort_action.append(stock)
-            # db_helper.add_stock(stock)
-            load_files(stock.trade_code, stock.url)
+            if upload_files:
+                LOG.info("Will updated finance document company %s" % stock.short_name)
+                load_files(stock.trade_code, stock.url)
             LOG.info("Save stock %s" % str(s))
             stock.save()
     LOG.info("Updated %d" % num)

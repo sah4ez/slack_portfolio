@@ -75,8 +75,9 @@ def handle_command(command, channel):
             response(channel, config.RSP_WAIT)
             response(channel, url_board.get_url_p(words))
 
-        if command in config.CMD_UPDATE:
-            loader_from_file.load_all()
+        if first_command in config.CMD_UPDATE:
+            response(channel, config.RSP_WAIT)
+            updater.update(words)
             response(channel, config.RSP_UPDATE_STOCK)
 
         if first_command in config.CMD_FILES:
@@ -99,12 +100,6 @@ def handle_command(command, channel):
         if first_command in config.CMD_FIND:
             message = finder.find(words)
             response(channel, message)
-
-        if first_command in ['test']:
-            response(channel, config.RSP_WAIT)
-            updater.update(words)
-            response(channel, '(All oK!)>^_^')
-
 
     except Exception:
         reset_delay()
