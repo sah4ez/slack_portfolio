@@ -13,7 +13,6 @@ from selenium import webdriver
 import extractor
 import my_log
 import property
-from Stock import Stock
 import mongo.Stock as s
 import mongo.mongo as db
 import finam.finam as finam
@@ -37,7 +36,6 @@ def download_file(url, file):
         return os.stat(file).st_size
     except MissingSchema:
         LOG.info(format('Not found URL %s' % url))
-        # print('Not found URL %s' % url)
     except requests.exceptions.SSLError:
         LOG.info('Bad SLL of url: %s' % url)
 
@@ -232,7 +230,7 @@ def load_stocks(count, upload_files):
             if upload_files:
                 LOG.info("Will updated finance document company %s" % stock.short_name)
                 load_files(stock.trade_code, stock.url)
-            LOG.info("Save stock %s" % str(s))
+            LOG.info("Save stock %s" % str(stock))
             stock.save()
     LOG.info("Updated %d" % num)
     return sort_action

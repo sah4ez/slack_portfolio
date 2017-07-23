@@ -25,16 +25,17 @@ def extract_stock(stocks, parameter):
         raise NotFoundStock(message)
 
 
-def stock_by_trade_code(trade_code):
-    stocks = s.Stock.objects(trade_code=str(trade_code).upper())
+def stock_by_trade_code(trade_code, is_privileged=False):
+    regex_trade_code = re.compile(r'(?i)^'+trade_code+'$')
+    stocks = s.Stock.objects(trade_code=regex_trade_code)
     return extract_stock(stocks, trade_code)
 
 
-def stock_by_emitet_name(name, is_priviliged=False):
-    if is_priviliged:
-        regex_trade_code = re.compile(r'^[A-Z]{5}$')
-    else:
-        regex_trade_code = re.compile(r'^[A-Z]{4}$')
-
+def stock_by_emitet_name(name, is_privileged=False):
+    regex_trade_code = get_regex_trade_code(is_privileged)
     stocks = s.Stock.objects(emitent_full_name__icontains=name, trade_code=regex_trade_code)
     return extract_stock(stocks, name)
+
+
+def get_regex_trade_code(is_privileged):
+    return re.compile(r'^[A-Z]{5}$') if is_privileged else re.compile(r'^[A-Z]{4}$')
