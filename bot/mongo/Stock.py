@@ -1,7 +1,9 @@
-from mongoengine import (Document, IntField, FloatField, StringField, DateTimeField, ListField, ObjectIdField)
+from mongoengine import (EmbeddedDocumentField, Document, IntField, FloatField, StringField, DateTimeField, ListField,
+                         ObjectIdField)
 import datetime
 import extractor
 import mongo.mongo as m
+import mongo.Price as price
 
 conn = m.connect()
 
@@ -34,7 +36,7 @@ class Stock(Document):
     finame_em = IntField()
     last_price = FloatField()
     volume_stock_on_market = FloatField()
-    month_history = ListField()
+    month_history = ListField(EmbeddedDocumentField(price.Price))
 
     def stock_line(self, line):
         self.datestamp = datetime.datetime.utcnow()

@@ -11,23 +11,27 @@ LOG = my_log.get_logger("Finam Loader")
 
 
 def loader(words):
+    LOG.info('Start loading from Finam history [%s]' % " ".join(words))
+    count = None
+    if words.__len__() == 3:
+        count = words[2]
     if words[1] in config.ARG_FINAM_CODE_ALL:
-        return history_all_stocks()
+        return history_all_stocks(count) if count is not None else history_all_stocks()
     else:
         trade_code = str(words[1]).upper()
-        return load_history(trade_code)
+        return load_history(trade_code, count) if count is not None else load_history(trade_code)
 
 
-def history_all_stocks():
+def history_all_stocks(count=None):
     LOG.info("Load all stocks")
     stocks = s.Stock.objects()
     for num, stock in enumerate(stocks):
         LOG.info("Load [%d/%d] %s" % (num, stocks.count(), stock.trade_code))
-        load_history(stock.trade_code)
+        load_history(stock.trade_code, count)
     return config.RSP_FINAM_CODE_ALL
 
 
-def save_to_db(stock, path):
+def save_to_db(stock, path, count):
     LOG.info("Save history %s to DB" % stock.trade_code)
     stock.month_history = list()
     stock.save()
@@ -40,17 +44,20 @@ def save_to_db(stock, path):
                 date = words[2] + ' ' + words[3]
                 value = words[7]
                 date_time = datetime.datetime.strptime(date, '%d/%m/%y %H:%M:%S')
-                price = p.Price(date_time, float(value))
-                price.save()
+                price = p.Price()
+                price.value = float(value)
+                price.date = date_time
                 stock.month_history.append(price)
         except UnicodeDecodeError:
             LOG.error('Bad file %s' % path)
         finally:
             file.close()
+            if count is not None:
+                stock.month_history = stock.month_history[int(stock.month_history.__len__() - int(count)):]
             stock.save()
 
 
-def load_history(trade_code):
+def load_history(trade_code, count=None):
     LOG.info('[%s]' % trade_code)
     stock = db.stock_by_trade_code(trade_code)
     now = datetime.datetime.now()
@@ -63,7 +70,7 @@ def load_history(trade_code):
     LOG.info('Start loading hystory for %s from %s' % (trade_code, url))
     size_download = loader_from_file.download_file(url, path) / 1024
     LOG.info('Load %.2f Кб' % size_download)
-    save_to_db(stock, path)
+    save_to_db(stock, path, count)
     return format(config.RSP_FINAM_CODE % (stock.trade_code, str(stock.finame_em)))
 
 

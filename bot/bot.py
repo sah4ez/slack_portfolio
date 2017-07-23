@@ -17,6 +17,7 @@ import select_for_portfolio
 import finder
 import updater
 import finam.finam as finam
+import analyser
 
 LOG = my_log.get_logger("main")
 
@@ -104,6 +105,9 @@ def handle_command(command, channel):
             response(channel, message)
         elif first_command in config.CMD_UPDATE_METAINFO:
             message = updater.update_metainfo()
+            response(channel, message)
+        elif first_command in config.CMD_ANALYSE:
+            message = analyser.analyse(words)
             response(channel, message)
         else:
             response(channel, message)

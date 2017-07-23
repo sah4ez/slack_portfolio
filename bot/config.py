@@ -87,11 +87,17 @@ RSP_UPDATE_METAINFO = "Справочная информация обновле�
 HELP_UPDATE_METAINFO = format("*%s* (*%s) - обновить список компаний MOEX, free-float, capitalization" %
                               (CMD_UPDATE_METAINFO[0], CMD_UPDATE_METAINFO[1]))
 
+CMD_ANALYSE = ["анализ", "analyse"]
+RSP_ANALYSE = "Анализ пакате акций из команды selected"
+HELP_ANALYSE = format("*%s* (*%s*) [_<trade_code>_] - проанализировать текущее состояние порфтеля "
+                      "или выбарнной акции trade_code" % (CMD_ANALYSE[0], CMD_ANALYSE[1]))
+
 RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_PRICE_P + HELP_CAPITAL + HELP_CAPITAL_P + \
            HELP_MOEX + HELP_MOEX_P + \
-           HELP_UPDATE + HELP_FILES +\
-           HELP_SELECT_FOR_PORTFOLIO + HELP_SELECT_FOR_PORTFOLIO_P +\
-           HELP_GET_LIST_SELECTED + HELP_FIND + HELP_FINAM_CODE + HELP_UPDATE_METAINFO
+           HELP_UPDATE + HELP_FILES + \
+           HELP_SELECT_FOR_PORTFOLIO + HELP_SELECT_FOR_PORTFOLIO_P + \
+           HELP_GET_LIST_SELECTED + HELP_FIND + HELP_FINAM_CODE + HELP_UPDATE_METAINFO + \
+           HELP_ANALYSE
 
 WELCOME = format("Привет, чтобы узнать что я умею напиши одно из @portfolio *%s*, *%s*, *%s*\n" %
                  (CMD_HELP[0], CMD_HELP[1], CMD_HELP[2]))

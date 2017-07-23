@@ -7,7 +7,7 @@ LOG = my_log.get_logger("select_for_portfolio")
 
 
 def save_stock(stock):
-    with open(file=property.SELECTED_STOCS, mode='a+', encoding='UTF-8') as file:
+    with open(file=property.SELECTED_STOCKS, mode='a+', encoding='UTF-8') as file:
         string = ';'.join(get_parameters_stock(stock))
         file.write(string + '\n')
         file.flush()
@@ -50,7 +50,7 @@ def get_list_selected():
     selected = 'Name | Trade Code | Price | Volume | Capitalization | Cap/Volume \n'
     LOG.info("Get list selected companies")
     lines = 0
-    with open(file=property.SELECTED_STOCS, mode='r', encoding='UTF-8') as file:
+    with open(file=property.SELECTED_STOCKS, mode='r', encoding='UTF-8') as file:
         for num, line in enumerate(file, 1):
             selected += line.replace(';', ' | ')
             lines = num

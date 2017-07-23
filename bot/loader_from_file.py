@@ -150,7 +150,7 @@ def load_one_stock_p(name):
     except db.NotFoundStock:
         action = read_to_list(property.DATA)
         for a in action:
-            if re.compile(property.PRIVELEDGED).match(a[7]):
+            if re.compile(property.PRIVILEGED).match(a[7]):
                 stock = stock_from_line(name, a)
                 if stock is not None:
                     break

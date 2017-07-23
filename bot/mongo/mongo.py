@@ -38,4 +38,4 @@ def stock_by_emitet_name(name, is_privileged=False):
 
 
 def get_regex_trade_code(is_privileged):
-    return re.compile(r'^[A-Z]{5}$') if is_privileged else re.compile(r'^[A-Z]{4}$')
+    return re.compile(property.PRIVILEGED) if is_privileged else re.compile(property.NOT_PRIVILEGED)

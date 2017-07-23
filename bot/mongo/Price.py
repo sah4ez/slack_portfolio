@@ -1,16 +1,11 @@
-from mongoengine import (Document, FloatField, DateTimeField)
+from mongoengine import (EmbeddedDocument, FloatField, DateTimeField)
 
 import mongo.mongo as m
 
 conn = m.connect()
 
 
-class Price(Document):
-    def __init__(self, datetime, value, *args, **values):
-        super().__init__(*args, **values)
-        self.date = datetime
-        self.value = value
-
+class Price(EmbeddedDocument):
     date = DateTimeField(required=True)
     value = FloatField(required=True)
 
