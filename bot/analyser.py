@@ -5,6 +5,7 @@ import property
 import numpy as np
 
 LOG = my_log.get_logger("analyzer")
+np.set_printoptions(formatter={'float': '{: 0.4f}'.format})
 
 
 def analyse(words):
@@ -63,17 +64,39 @@ def response(companies, count):
         risks.append(risk_by_one)
         incomes.append(income_by_one)
         lines.append(format(pattern % (company.trade_code, risk_by_one, income_by_one)))
-    part = np.ndarray([companies.__len__()])
-    for i in part:
-        i = 1 / companies.__len__()
 
     covariance_m = covariance_matrix(companies, count)
-    print(np.sqrt(
-        np.multiply(np.multiply(np.asscalar(covariance_m),
-                                          np.asscalar(part)),
-                              np.asscalar(part))))
+    part, t_part = get_parts(companies)
+    m_c_p = mmult(companies.__len__(), covariance_m, part)
+    m_c_p_t = mmult(1, m_c_p, t_part)
+    risks_all = np.sqrt(m_c_p_t[0][0])
+    incomes_all = get_all_incomes(incomes, part)
+    return header + "\n".join(lines) + format('\nRisk: %.3f%% Income: %.3f%%' % (risks_all, incomes_all))
 
-    return header + "\n".join(lines)
+def get_all_incomes(incomes, part):
+    sum_i = 0
+    for i, income in enumerate(incomes):
+        sum_i += income * part[0][i]
+    return sum_i
+
+
+def mmult(size, left, right):
+    m_c_p = np.ndarray((1, size))
+    for i, el in enumerate(left):
+        sum_line = 0
+        for j in el:
+            sum_line += j * right[0][i]
+        m_c_p[0][i] = sum_line
+    return m_c_p
+
+def get_parts(companies):
+    count = companies.__len__()
+    part = np.ndarray((1, count))
+    t_part = np.ndarray((count, 1))
+    for i in range(count):
+        part[0][i] = 1 / count
+        t_part[i][0] = 1 / count
+    return part, t_part
 
 
 def income(stock, count):
@@ -89,8 +112,7 @@ def covariance_matrix(stocks, count):
     for stock in stocks:
         incomes.append(income_by_item(stock, count))
     c = np.vstack(incomes)
-    covar_matrix = np.corrcoef(c)
-    return covar_matrix
+    return np.ma.cov(c)
 
 
 def income_by_item(stock, count):
