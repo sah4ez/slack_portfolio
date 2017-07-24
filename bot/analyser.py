@@ -64,13 +64,16 @@ def response(companies, count):
         risks.append(risk_by_one)
         incomes.append(income_by_one)
         lines.append(format(pattern % (company.trade_code, risk_by_one, income_by_one)))
-
-    covariance_m = covariance_matrix(companies, count)
-    part, t_part = get_parts(companies)
-    m_c_p = mmult(companies.__len__(), covariance_m, part)
-    m_c_p_t = mmult(1, m_c_p, t_part)
-    risks_all = np.sqrt(m_c_p_t[0][0])
-    incomes_all = get_all_incomes(incomes, part)
+    try:
+        covariance_m = covariance_matrix(companies, count)
+        part, t_part = get_parts(companies)
+        m_c_p = mmult(companies.__len__(), covariance_m, part)
+        m_c_p_t = mmult(1, m_c_p, t_part)
+        risks_all = np.sqrt(m_c_p_t[0][0])
+        incomes_all = get_all_incomes(incomes, part)
+    except ValueError:
+        risks_all = 0
+        incomes_all = 0
     return header + "\n".join(lines) + format('\nRisk: %.3f%% Income: %.3f%%' % (risks_all, incomes_all))
 
 def get_all_incomes(incomes, part):
@@ -112,7 +115,10 @@ def covariance_matrix(stocks, count):
     for stock in stocks:
         incomes.append(income_by_item(stock, count))
     c = np.vstack(incomes)
-    return np.ma.cov(c)
+    covariance = np.ma.cov(c)
+    if type(covariance) is np.ma.MaskedArray:
+        covariance = [[covariance]]
+    return covariance
 
 
 def income_by_item(stock, count):
