@@ -116,7 +116,7 @@ def covariance_matrix(stocks, count):
         incomes.append(income_by_item(stock, count))
     c = np.vstack(incomes)
     covariance = np.ma.cov(c)
-    if type(covariance) is np.ma.MaskedArray:
+    if stocks.__len__() == 1:
         covariance = [[covariance]]
     return covariance
 
