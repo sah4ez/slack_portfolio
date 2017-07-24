@@ -50,9 +50,10 @@ def stocks_from_file():
 
 
 def response(companies, count):
-    header = "Trade code | Risk | Income \n"
+    header = "Short Name| Trade code | Risk | Income \n"
+    lines_pattern = list()
     lines = list()
-    pattern = "%s | %.2f%% | %.2f%%"
+    pattern = "%s | %s | %.2f%% | %.2f%%"
     risks = []
     incomes = []
     for company in companies:
@@ -63,7 +64,14 @@ def response(companies, count):
         income_by_one = income(company, count)
         risks.append(risk_by_one)
         incomes.append(income_by_one)
-        lines.append(format(pattern % (company.trade_code, risk_by_one, income_by_one)))
+        if not re.compile(r'[0-9.-]').match(str(risk_by_one)) or\
+                not re.compile(r'[0-9.-]').match(str(income_by_one)):
+            continue
+        line = [company.short_name, company.trade_code, risk_by_one, income_by_one]
+        lines.append(line)
+
+    lines.sort(key=lambda x: x[3])
+
     try:
         covariance_m = covariance_matrix(companies, count)
         part, t_part = get_parts(companies)
@@ -74,7 +82,10 @@ def response(companies, count):
     except ValueError:
         risks_all = 0
         incomes_all = 0
-    return header + "\n".join(lines) + format('\nRisk: %.3f%% Income: %.3f%%' % (risks_all, incomes_all))
+    for line in lines:
+        lines_pattern.append(format(pattern % (line[0], line[1], line[2], line[3])))
+    return header + "\n".join(lines_pattern) + format('\nRisk: %.3f%% Income: %.3f%%' % (risks_all, incomes_all))
+
 
 def get_all_incomes(incomes, part):
     sum_i = 0
@@ -91,6 +102,7 @@ def mmult(size, left, right):
             sum_line += j * right[0][i]
         m_c_p[0][i] = sum_line
     return m_c_p
+
 
 def get_parts(companies):
     count = companies.__len__()

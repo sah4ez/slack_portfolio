@@ -255,9 +255,12 @@ def get_last_price(trade_code):
                 LOG.info("Found last price")
                 fine_line = num + 3
             if fine_line == num:
-                last_price = float(line.strip().replace(',', ".").replace(' ', ''))
+                last_price = line.strip().replace(',', ".").replace(' ', '')
+                if last_price == '-':
+                    LOG.warn("Last price is: %s" % last_price)
+                    return 0
                 LOG.info("Last price is: %.2f" % last_price)
-                return last_price
+                return float(last_price)
     f.close()
     return 0.0
 
