@@ -10,8 +10,6 @@ import time
 
 LOG = my_log.get_logger("Finam Loader")
 
-periods = [property.FINAM_P_MONTH, property.FINAM_P_WEEK, property.FINAM_P_DAY, property.FINAM_P_HOUR]
-
 
 def loader(words):
     LOG.info('Start loading from Finam history [%s]' % " ".join(words))
@@ -75,7 +73,7 @@ def load_history(trade_code, count=None):
     stock.hour_history = list()
     now = datetime.datetime.now()
 
-    for period in periods:
+    for period in property.FINAM_PERIODS:
         history_file_name = stock.trade_code + '_' + \
                             str(now.year) + '-' + \
                             str(now.month) + '-' + \

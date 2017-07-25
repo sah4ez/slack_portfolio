@@ -50,41 +50,65 @@ def stocks_from_file():
 
 
 def response(companies, count):
-    header = "Short Name| Trade code | Risk | Income \n"
+    header = "Short Name| Trade code | Risk_M | Income_M | " + \
+             "Risk_W | Income_W | Risk_D | Income_D | Risk_H | Income_H |  \n"
     lines_pattern = list()
     lines = list()
-    pattern = "%s | %s | %.2f%% | %.2f%%"
-    risks = []
-    incomes = []
+    pattern = "%s | %s | %.2f%% | %.2f%% | %.2f%% | %.2f%% | %.2f%% | %.2f%% | %.2f%% | %.2f%% "
+    risks = {
+        property.FINAM_P_MONTH: list(),
+        property.FINAM_P_WEEK: list(),
+        property.FINAM_P_DAY: list(),
+        property.FINAM_P_HOUR: list(),
+    }
+    incomes = {
+        property.FINAM_P_MONTH: list(),
+        property.FINAM_P_WEEK: list(),
+        property.FINAM_P_DAY: list(),
+        property.FINAM_P_HOUR: list(),
+    }
     for company in companies:
         if count is None:
             count = company.month_history.__len__()
-
-        risk_by_one = risk(company, count)
-        income_by_one = income(company, count)
-        risks.append(risk_by_one)
-        incomes.append(income_by_one)
-        if not re.compile(r'[0-9.-]').match(str(risk_by_one)) or\
-                not re.compile(r'[0-9.-]').match(str(income_by_one)):
-            continue
-        line = [company.short_name, company.trade_code, risk_by_one, income_by_one]
+        line = [company.short_name, company.trade_code]
+        for period in property.FINAM_PERIODS:
+            risk_by_one = risk(count, history_by_period(period, company))
+            income_by_one = income(count, history_by_period(period, company))
+            risks[period].append(risk_by_one)
+            incomes[period].append(income_by_one)
+            if not re.compile(r'[0-9.-]').match(str(risk_by_one)) or \
+                    not re.compile(r'[0-9.-]').match(str(income_by_one)):
+                continue
+            line.append(risk_by_one)
+            line.append(income_by_one)
         lines.append(line)
 
     lines.sort(key=lambda x: x[3])
 
+    risk_periods = []
+    incomes_periods = []
     try:
-        covariance_m = covariance_matrix(companies, count)
-        part, t_part = get_parts(companies)
-        m_c_p = mmult(companies.__len__(), covariance_m, part)
-        m_c_p_t = mmult(1, m_c_p, t_part)
-        risks_all = np.sqrt(m_c_p_t[0][0])
-        incomes_all = get_all_incomes(incomes, part)
+        for period in property.FINAM_PERIODS:
+            covariance_m = covariance_matrix(companies, count, period)
+            part, t_part = get_parts(companies)
+            m_c_p = mmult(companies.__len__(), covariance_m, part)
+            m_c_p_t = mmult(1, m_c_p, t_part)
+            risk_periods.append(np.sqrt(m_c_p_t[0][0]))
+            incomes_periods.append(get_all_incomes(incomes[period], part))
     except ValueError:
-        risks_all = 0
-        incomes_all = 0
+        LOG.error('ValueError')
     for line in lines:
-        lines_pattern.append(format(pattern % (line[0], line[1], line[2], line[3])))
-    return header + "\n".join(lines_pattern) + format('\nRisk: %.3f%% Income: %.3f%%' % (risks_all, incomes_all))
+        lines_pattern.append(format(pattern % (line[0], line[1], line[2], line[3], line[4],
+                                               line[5], line[6], line[7], line[8], line[9])))
+    amount = '\nRisk_M: %.3f%% Income_M: %.3f%% ' \
+             'Risk_W: %.3f%% Income_W: %.3f%% ' \
+             'Risk_D: %.3f%% Income_D: %.3f%% ' \
+             'Risk_H: %.3f%% Income_H: %.3f%% '
+    return header + "\n".join(lines_pattern) + format(amount % (risk_periods[0], incomes_periods[0],
+                                                                risk_periods[1], incomes_periods[1],
+                                                                risk_periods[2], incomes_periods[2],
+                                                                risk_periods[3], incomes_periods[3]
+                                                                ))
 
 
 def get_all_incomes(incomes, part):
@@ -114,18 +138,18 @@ def get_parts(companies):
     return part, t_part
 
 
-def income(stock, count):
-    return np.mean(income_by_item(stock, count))
+def income(count, history):
+    return np.mean(income_by_item(count, history))
 
 
-def risk(stock, count):
-    return np.std(income_by_item(stock, count))
+def risk(count, history):
+    return np.std(income_by_item(count, history))
 
 
-def covariance_matrix(stocks, count):
+def covariance_matrix(stocks, count, period):
     incomes = []
     for stock in stocks:
-        incomes.append(income_by_item(stock, count))
+        incomes.append(income_by_item(count, history_by_period(period, stock)))
     c = np.vstack(incomes)
     covariance = np.ma.cov(c)
     if stocks.__len__() == 1:
@@ -133,10 +157,21 @@ def covariance_matrix(stocks, count):
     return covariance
 
 
-def income_by_item(stock, count):
+def history_by_period(period, stock):
+    if period == property.FINAM_P_MONTH:
+        return stock.month_history
+    elif period == property.FINAM_P_WEEK:
+        return stock.week_history
+    elif period == property.FINAM_P_DAY:
+        return stock.day_history
+    elif period == property.FINAM_P_HOUR:
+        return stock.hour_history
+
+
+def income_by_item(count, history):
     percent_by_item = list()
     prev = None
-    for price in stock.month_history[int(stock.month_history.__len__() - int(count)):]:
+    for price in history[int(history.__len__() - int(count)):]:
         if prev is not None:
             percent_by_item.append(percent(prev, price.value))
         prev = price.value
