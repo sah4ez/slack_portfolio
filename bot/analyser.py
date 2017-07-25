@@ -81,9 +81,10 @@ def response(companies, count):
                 continue
             line.append(risk_by_one)
             line.append(income_by_one)
-        lines.append(line)
+        if line.__len__() == 10:
+            lines.append(line)
 
-    lines.sort(key=lambda x: x[3])
+    lines.sort(key=lambda x: x[7])
 
     risk_periods = []
     incomes_periods = []
@@ -96,7 +97,9 @@ def response(companies, count):
             risk_periods.append(np.sqrt(m_c_p_t[0][0]))
             incomes_periods.append(get_all_incomes(incomes[period], part))
     except ValueError:
-        LOG.error('ValueError')
+        LOG.warn('ValueError in covariance matrix')
+        risk_periods = [0, 0, 0, 0]
+        incomes_periods = [0, 0, 0, 0]
     for line in lines:
         lines_pattern.append(format(pattern % (line[0], line[1], line[2], line[3], line[4],
                                                line[5], line[6], line[7], line[8], line[9])))

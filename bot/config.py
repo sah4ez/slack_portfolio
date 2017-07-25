@@ -84,13 +84,13 @@ HELP_FINAM_CODE = format(
 
 CMD_UPDATE_METAINFO = ["meta", "мета"]
 RSP_UPDATE_METAINFO = "Справочная информация обновлена"
-HELP_UPDATE_METAINFO = format("*%s* (*%s) - обновить список компаний MOEX, free-float, capitalization" %
+HELP_UPDATE_METAINFO = format("*%s* (*%s) - обновить список компаний MOEX, free-float, capitalization\n" %
                               (CMD_UPDATE_METAINFO[0], CMD_UPDATE_METAINFO[1]))
 
 CMD_ANALYSE = ["анализ", "analyse"]
 RSP_ANALYSE = "Анализ пакате акций из команды selected"
 HELP_ANALYSE = format("*%s* (*%s*) [_<trade_code>_] - проанализировать текущее состояние порфтеля "
-                      "или выбарнной акции trade_code" % (CMD_ANALYSE[0], CMD_ANALYSE[1]))
+                      "или выбарнных акции trade_code\n" % (CMD_ANALYSE[0], CMD_ANALYSE[1]))
 
 RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_PRICE_P + HELP_CAPITAL + HELP_CAPITAL_P + \
            HELP_MOEX + HELP_MOEX_P + \

@@ -17,8 +17,6 @@ import mongo.Stock as s
 import mongo.mongo as db
 import finam.finam as finam
 
-# from ..database import db_helper
-
 LOG = my_log.get_logger('loader_from_file')
 
 
@@ -139,7 +137,10 @@ def load_one_stock(name):
             stock = stock_from_line(name, a)
             if stock is not None:
                 break
-    stock.save()
+    if stock is None:
+        raise db.NotFoundStock(name)
+    else:
+        stock.save()
     return stock
 
 
