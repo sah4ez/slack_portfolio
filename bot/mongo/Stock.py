@@ -37,6 +37,9 @@ class Stock(Document):
     last_price = FloatField()
     volume_stock_on_market = FloatField()
     month_history = ListField(EmbeddedDocumentField(price.Price))
+    week_history = ListField(EmbeddedDocumentField(price.Price))
+    day_history = ListField(EmbeddedDocumentField(price.Price))
+    hour_history = ListField(EmbeddedDocumentField(price.Price))
 
     def stock_line(self, line):
         self.datestamp = datetime.datetime.utcnow()
@@ -87,3 +90,6 @@ class Stock(Document):
         self.last_price = stock_file.last_price
         self.volume_stock_on_market = stock_file.volume_stock_on_market
         self.month_history = stock_file.month_history
+        self.week_history = stock_file.week_history
+        self.day_history = stock_file.day_history
+        self.hour_history = stock_file.hour_history

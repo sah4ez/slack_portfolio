@@ -259,7 +259,7 @@ def get_last_price(trade_code):
                 if last_price == '-':
                     LOG.warn("Last price is: %s" % last_price)
                     return 0
-                LOG.info("Last price is: %.2f" % last_price)
+                LOG.info("Last price is: %.2f" % float(last_price))
                 return float(last_price)
     f.close()
     return 0.0

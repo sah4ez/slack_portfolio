@@ -57,3 +57,12 @@ DB_COLLECT = 'stocks'
 DB_CONTAINS_MORE_ONE = 'Found %d stocks[%s], should be one the stock. Specify the name company.'
 DB_NOT_FOUNT_STOCK = 'Stock for [%s] not found'
 
+FINAM_P_MONTH = '10'
+FINAM_P_WEEK = '9'
+FINAM_P_DAY = '8'
+FINAM_P_HOUR = '7'
+
+FINAM_SHIFT_MONTH = 365 * 5  # days
+FINAM_SHIFT_WEEK = 7 * 50  # days
+FINAM_SHIFT_DAY = 60  # days
+FINAM_SHIFT_HOUR = 12 * 20  # hours
