@@ -25,3 +25,4 @@ robobrowser>=0.5
 pyfolio
 theano
 pymc3
+yahoo-finance>=1.4.0
