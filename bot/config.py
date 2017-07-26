@@ -1,11 +1,6 @@
-CMD_PRICE_P = ["price_p", "цена_п"]
-RSP_PRICE_P = "%s (%s) - %.2f"
-HELP_PRICE_P = format(
-    "*%s* (*%s*) _<имя_компании>_ - поиск цены привелигированной акции на MOEX\n" % (CMD_PRICE_P[0], CMD_PRICE_P[1]))
-
-CMD_PRICE = ["price", "цена"]
+CMD_PRICE = ["price", "цена", "price_p", "цена_п"]
 RSP_PRICE = "%s (%s) - %.2f"
-HELP_PRICE = format("*%s* (*%s*) _<имя_компании>_ - поиск цены акции на MOEX\n" % (CMD_PRICE[0], CMD_PRICE[1]))
+HELP_PRICE = format("*%s*[_p] (*%s*[_п]) _<имя_компании>_ - поиск цены акции на MOEX\n" % (CMD_PRICE[0], CMD_PRICE[1]))
 
 CMD_CAPITAL_P = ["capital_p", "капитал_п"]
 RSP_CAPITAL_P = "%s : CAP %.2f : VOLUME %.2f : CAP/VOLUME %.2f"
@@ -92,7 +87,7 @@ RSP_ANALYSE = "Анализ пакате акций из команды selected
 HELP_ANALYSE = format("*%s* (*%s*) [_<trade_code>_] - проанализировать текущее состояние порфтеля "
                       "или выбарнных акции trade_code\n" % (CMD_ANALYSE[0], CMD_ANALYSE[1]))
 
-RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_PRICE_P + HELP_CAPITAL + HELP_CAPITAL_P + \
+RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_CAPITAL + HELP_CAPITAL_P + \
            HELP_MOEX + HELP_MOEX_P + \
            HELP_UPDATE + HELP_FILES + \
            HELP_SELECT_FOR_PORTFOLIO + HELP_SELECT_FOR_PORTFOLIO_P + \

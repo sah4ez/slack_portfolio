@@ -10,7 +10,7 @@ from slackclient import SlackClient
 import capital
 import config
 import my_log
-import price
+import yahoo.price as price
 import sender_file
 import url_board
 import select_for_portfolio
@@ -53,10 +53,6 @@ def handle_command(command, channel):
         elif first_command in config.CMD_PRICE:
             response(channel, config.RSP_WAIT)
             message = price.price(words)
-            response(channel, message)
-        elif first_command in config.CMD_PRICE_P:
-            response(channel, config.RSP_WAIT)
-            message = price.price_p(words)
             response(channel, message)
 
         elif first_command in config.CMD_CAPITAL:

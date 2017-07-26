@@ -84,7 +84,7 @@ def response(companies, count):
         if line.__len__() == 10:
             lines.append(line)
 
-    lines.sort(key=lambda x: x[7])
+    lines.sort(key=lambda x: x[9])
 
     risk_periods = []
     incomes_periods = []

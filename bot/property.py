@@ -48,6 +48,7 @@ PATH_PHANTOMJS = '/usr/local/bin/phantomjs'
 SELECTED_STOCKS = 'res/selected.csv'
 PRIVILEGED = r'^[a-zA-Z]{4}P$'
 NOT_PRIVILEGED = r'^[a-zA-Z]{4}$'
+PRIVILEGED_CMD = r'([a-zA-Z]+_p$|[а-яА-Я]+_п$)'
 STOCKS = 'Акции'
 
 DB_HOST = "mongodb"
