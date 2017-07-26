@@ -101,6 +101,7 @@ def handle_command(command, channel):
             message = finder.find(words)
             response(channel, message)
         elif first_command in config.CMD_FINAM_CODE:
+            response(channel, config.RSP_WAIT)
             message = finam.loader(words)
             response(channel, message)
         elif first_command in config.CMD_UPDATE_METAINFO:
