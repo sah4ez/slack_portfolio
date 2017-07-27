@@ -2,6 +2,7 @@ import my_log
 import config
 import property
 import loader_from_file
+import parser_command.command as p
 
 LOG = my_log.get_logger("select_for_portfolio")
 
@@ -16,9 +17,9 @@ def save_stock(stock):
 
 
 def select(words):
-    company = " ".join(words[1:])
+    company, privileged = p.name_and_priviledget(words)
     LOG.info("Select: %s" % company)
-    stock = loader_from_file.load_one_stock(company)
+    stock = loader_from_file.load_one_stock(company, privileged)
     save_stock(stock)
     return get_response(stock)
 

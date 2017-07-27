@@ -97,10 +97,6 @@ def get_stock_from_file(name, line, is_download):
     return stock
 
 
-def stock_from_db(name, is_privileged):
-    return db.stock_by_emitet_name(name, is_privileged)
-
-
 def stock_from_line(name, line, is_download=True):
     if line[4] == property.STOCKS and name.lower() in line[11].lower():
         return get_stock_from_file(name, line, is_download)
@@ -127,35 +123,27 @@ def update_stock_from_file(name, download, is_priviledged=False):
         stock_file.save()
 
 
-def load_one_stock(name):
+def load_one_stock(name, is_privileged=False):
+    LOG.info('Load stock with name %s and privileged is %s' % (name, str(is_privileged)))
     stock = None
     try:
-        stock = stock_from_db(name, False)
+        stock = db.stock_by_emitet_name(name, is_privileged)
     except db.NotFoundStock:
         action = read_to_list(property.DATA)
         for a in action:
-            stock = stock_from_line(name, a)
-            if stock is not None:
-                break
+            if is_privileged:
+                if re.compile(property.PRIVILEGED).match(a[7]):
+                    stock = stock_from_line(name, a)
+                    if stock is not None:
+                        break
+            else:
+                stock = stock_from_line(name, a)
+                if stock is not None:
+                    break
     if stock is None:
         raise db.NotFoundStock(name)
     else:
         stock.save()
-    return stock
-
-
-def load_one_stock_p(name):
-    stock = None
-    try:
-        stock = stock_from_db(name, True)
-    except db.NotFoundStock:
-        action = read_to_list(property.DATA)
-        for a in action:
-            if re.compile(property.PRIVILEGED).match(a[7]):
-                stock = stock_from_line(name, a)
-                if stock is not None:
-                    break
-    stock.save()
     return stock
 
 
