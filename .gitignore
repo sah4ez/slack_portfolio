@@ -18,5 +18,6 @@ bot/res/selected.csv
 bot/res/companies/*/*.csv
 bot/res/companies/*/*.html
 bot/res/companies/*.html
-bot/res/*
+bot/res/*.html
 bot/res/companies/*.csv
+!/bot/res/finam_em.csv
