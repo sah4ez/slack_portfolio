@@ -10,7 +10,7 @@ from slackclient import SlackClient
 import capital
 import config
 import my_log
-import price
+import yahoo.price as price
 import sender_file
 import url_board
 import select_for_portfolio
@@ -54,26 +54,14 @@ def handle_command(command, channel):
             response(channel, config.RSP_WAIT)
             message = price.price(words)
             response(channel, message)
-        elif first_command in config.CMD_PRICE_P:
-            response(channel, config.RSP_WAIT)
-            message = price.price_p(words)
-            response(channel, message)
-
         elif first_command in config.CMD_CAPITAL:
             response(channel, config.RSP_WAIT)
             message = capital.capital(words)
-            response(channel, message)
-        elif first_command in config.CMD_CAPITAL_P:
-            response(channel, config.RSP_WAIT)
-            message = capital.capital_p(words)
             response(channel, message)
 
         elif first_command in config.CMD_MOEX:
             response(channel, config.RSP_WAIT)
             response(channel, url_board.get_url(words))
-        elif first_command in config.CMD_MOEX_P:
-            response(channel, config.RSP_WAIT)
-            response(channel, url_board.get_url_p(words))
 
         elif first_command in config.CMD_UPDATE or first_command in config.CMD_UPDATE_P:
             response(channel, config.RSP_WAIT)
@@ -89,9 +77,6 @@ def handle_command(command, channel):
         elif first_command in config.CMD_SELECT_FOR_PORTFOLIO:
             message = select_for_portfolio.select(words)
             response(channel, message)
-        elif first_command in config.CMD_SELECT_FOR_PORTFOLIO_P:
-            message = select_for_portfolio.select_p(words)
-            response(channel, message)
 
         elif first_command in config.CMD_GET_LIST_SELECTED:
             message = select_for_portfolio.get_list_selected()
@@ -101,6 +86,7 @@ def handle_command(command, channel):
             message = finder.find(words)
             response(channel, message)
         elif first_command in config.CMD_FINAM_CODE:
+            response(channel, config.RSP_WAIT)
             message = finam.loader(words)
             response(channel, message)
         elif first_command in config.CMD_UPDATE_METAINFO:
