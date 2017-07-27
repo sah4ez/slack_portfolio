@@ -18,4 +18,5 @@ bot/res/selected.csv
 bot/res/companies/*/*.csv
 bot/res/companies/*/*.html
 bot/res/companies/*.html
+bot/res/*
 bot/res/companies/*.csv
