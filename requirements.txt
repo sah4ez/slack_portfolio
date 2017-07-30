@@ -27,3 +27,6 @@ theano
 pymc3
 numpy
 yahoo-finance>=1.4.0
+prettytable
+tabulate
+

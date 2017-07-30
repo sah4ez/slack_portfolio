@@ -15,7 +15,7 @@ def update(words):
 
     count_words = words.__len__()
     if count_words > 1:
-        if re.compile(r'[0-9]').match(words[1]):
+        if re.compile(r'[0-9]+').match(words[1]):
             num = int(words[1])
         elif words[count_words - 1] in config.CMD_DOWNLOAD_FILES:
             company = ' '.join(words[1:count_words - 1])
