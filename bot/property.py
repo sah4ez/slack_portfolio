@@ -45,9 +45,26 @@ RAR = r".rar$"
 SEVEN_Z = r".7z$"
 PATH_PHANTOMJS = '/usr/local/bin/phantomjs'
 
-SELECTED_STOCS = 'res/selected.csv'
-PRIVELEDGED = r'[a-zA-Z]{4}P$'
+SELECTED_STOCKS = 'res/selected.csv'
+PRIVILEGED = r'^[a-zA-Z]{4}P$'
+NOT_PRIVILEGED = r'^[a-zA-Z]{4}$'
+PRIVILEGED_CMD = r'([a-zA-Z]+_p$|[а-яА-Я]+_п$)'
+STOCKS = 'Акции'
 
 DB_HOST = "mongodb"
 DB_PORT = 27017
 DB_COLLECT = 'stocks'
+
+DB_CONTAINS_MORE_ONE = 'Found %d stocks[%s], should be one the stock. Specify the name company.'
+DB_NOT_FOUNT_STOCK = 'Stock for [%s] not found'
+
+FINAM_P_MONTH = '10'
+FINAM_P_WEEK = '9'
+FINAM_P_DAY = '8'
+FINAM_P_HOUR = '7'
+
+FINAM_SHIFT_MONTH = 365 * 5  # days
+FINAM_SHIFT_WEEK = 7 * 50  # days
+FINAM_SHIFT_DAY = 60  # days
+FINAM_SHIFT_HOUR = 12 * 20  # hours
+FINAM_PERIODS = [FINAM_P_MONTH, FINAM_P_WEEK, FINAM_P_DAY, FINAM_P_HOUR]

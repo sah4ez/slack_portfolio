@@ -3,21 +3,21 @@ import sys
 import threading
 import time
 import traceback
-import websocket._exceptions as we
 
 import requests
 from slackclient import SlackClient
 
 import capital
 import config
-import loader_from_file
 import my_log
-import price
+import yahoo.price as price
 import sender_file
 import url_board
 import select_for_portfolio
 import finder
 import updater
+import finam.finam as finam
+import analyser
 
 LOG = my_log.get_logger("main")
 
@@ -50,67 +50,60 @@ def handle_command(command, channel):
         if first_command in config.CMD_HELP:
             response(channel, config.RSP_HELP)
 
-        if first_command in config.CMD_PRICE:
+        elif first_command in config.CMD_PRICE:
             response(channel, config.RSP_WAIT)
             message = price.price(words)
             response(channel, message)
-        if first_command in config.CMD_PRICE_P:
-            response(channel, config.RSP_WAIT)
-            message = price.price_p(words)
-            response(channel, message)
-
-        if first_command in config.CMD_CAPITAL:
+        elif first_command in config.CMD_CAPITAL:
             response(channel, config.RSP_WAIT)
             message = capital.capital(words)
             response(channel, message)
-        if first_command in config.CMD_CAPITAL_P:
-            response(channel, config.RSP_WAIT)
-            message = capital.capital_p(words)
-            response(channel, message)
 
-        if first_command in config.CMD_MOEX:
+        elif first_command in config.CMD_MOEX:
             response(channel, config.RSP_WAIT)
             response(channel, url_board.get_url(words))
-        if first_command in config.CMD_MOEX_P:
-            response(channel, config.RSP_WAIT)
-            response(channel, url_board.get_url_p(words))
 
-        if command in config.CMD_UPDATE:
-            loader_from_file.load_all()
+        elif first_command in config.CMD_UPDATE or first_command in config.CMD_UPDATE_P:
+            response(channel, config.RSP_WAIT)
+            updater.update(words)
             response(channel, config.RSP_UPDATE_STOCK)
 
-        if first_command in config.CMD_FILES:
+        elif first_command in config.CMD_FILES:
             message, list_extracted_files = sender_file.send_file(words)
             response(channel, message)
             for filename in list_extracted_files:
                 post_file(channel, filename)
 
-        if first_command in config.CMD_SELECT_FOR_PORTFOLIO:
+        elif first_command in config.CMD_SELECT_FOR_PORTFOLIO:
             message = select_for_portfolio.select(words)
             response(channel, message)
-        if first_command in config.CMD_SELECT_FOR_PORTFOLIO_P:
-            message = select_for_portfolio.select_p(words)
-            response(channel, message)
 
-        if first_command in config.CMD_GET_LIST_SELECTED:
+        elif first_command in config.CMD_GET_LIST_SELECTED:
             message = select_for_portfolio.get_list_selected()
             response(channel, message)
 
-        if first_command in config.CMD_FIND:
+        elif first_command in config.CMD_FIND:
             message = finder.find(words)
             response(channel, message)
-
-        if first_command in ['test']:
+        elif first_command in config.CMD_FINAM_CODE:
             response(channel, config.RSP_WAIT)
-            updater.update(words)
-            response(channel, '(All oK!)>^_^')
-
+            message = finam.loader(words)
+            response(channel, message)
+        elif first_command in config.CMD_UPDATE_METAINFO:
+            message = updater.update_metainfo()
+            response(channel, message)
+        elif first_command in config.CMD_ANALYSE:
+            message = analyser.analyse(words)
+            response(channel, message)
+        else:
+            response(channel, message)
 
     except Exception:
         reset_delay()
         LOG.error(config.RSP_ERROR + " %s" % words)
         traceback.print_exc(file=sys.stdout)
-        response(channel, config.RSP_ERROR)
+        message = traceback.format_exc().split('\n')[traceback.format_exc().split('\n').__len__() - 2]
+        response(channel, config.RSP_ERROR + '\n' + message)
         for file in list_extracted_files:
             threading.Thread(os.remove(file)).start()
 
@@ -186,14 +179,11 @@ def listen():
             if command and channel:
                 handle_command(command, channel)
             time.sleep(READ_WEBSOCKET_DELAY)
-    except BrokenPipeError:
-        LOG.error("BrokenPipeError")
+    except Exception:
         slack_client.rtm_connect()
+        traceback.print_exc(file=sys.stdout)
         listen()
-    except we.WebSocketConnectionClosedException:
-        LOG.error("WebSocketConnectionClosedException")
-        slack_client.rtm_connect()
-        listen()
+
 
 if __name__ == "__main__":
 

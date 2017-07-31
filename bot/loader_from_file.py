@@ -13,11 +13,9 @@ from selenium import webdriver
 import extractor
 import my_log
 import property
-from Stock import Stock
 import mongo.Stock as s
 import mongo.mongo as db
-
-# from ..database import db_helper
+import finam.finam as finam
 
 LOG = my_log.get_logger('loader_from_file')
 
@@ -33,9 +31,9 @@ def download_file(url, file):
                     f.flush()
         f.close()
         LOG.info(format('Load from %s file %s' % (url, file)))
+        return os.stat(file).st_size
     except MissingSchema:
         LOG.info(format('Not found URL %s' % url))
-        # print('Not found URL %s' % url)
     except requests.exceptions.SSLError:
         LOG.info('Bad SLL of url: %s' % url)
 
@@ -83,38 +81,70 @@ def read_to_list(file):
     return arr
 
 
-def get_stock(name, line):
-    stock = Stock()
+def get_stock_from_file(name, line, is_download):
+    stock = s.Stock()
     stock.stock_line(line=line)
-    # stock.finame_em = get_finam_code(stock.short_name)
-    if name.lower() in stock.emitent_full_name.lower():
-        stock.short_name = get_short_name(stock.trade_code)
-        stock.last_price = get_last_price(stock.trade_code)
-        stock.volume_stock_on_market = get_volume_stock_on_market(stock.trade_code)
+    stock.short_name = get_short_name(stock.trade_code)
+    stock.finame_em = finam.code(stock.short_name)
+    stock.last_price = get_last_price(stock.trade_code)
+    stock.volume_stock_on_market = get_volume_stock_on_market(stock.trade_code)
 
+    if is_download:
         download = threading.Thread(load_files(line[7], line[38]))
         download.start()
         download.join()
-        stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
-        return stock
-    return None
-
-
-def load_one_stock(name):
-    action = read_to_list(property.DATA)
-    stock = None
-    for a in action:
-        if a[4] == 'Акции' and name.lower() in a[11].lower():
-            stock = get_stock(name, a)
+    stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
     return stock
 
 
-def load_one_stock_p(name):
-    action = read_to_list(property.DATA)
-    for a in action:
-        if a[4] == 'Акции' and name.lower() in a[11].lower() and re.compile(property.PRIVELEDGED).match(a[7]):
-            return get_stock(name, a)
-    return None
+def stock_from_line(name, line, is_download=True):
+    if line[4] == property.STOCKS and name.lower() in line[11].lower():
+        return get_stock_from_file(name, line, is_download)
+
+
+def update_stock_from_file(name, download, is_priviledged=False):
+    try:
+        stock = db.stock_by_emitet_name(name, is_priviledged)
+        action = read_to_list(property.DATA)
+        stock_file = None
+        for a in action:
+            stock_file = stock_from_line(name, a, download)
+            if stock_file is not None:
+                break
+        stock.update_file(stock_file)
+        stock.save()
+    except db.NotFoundStock:
+        action = read_to_list(property.DATA)
+        stock_file = None
+        for a in action:
+            stock_file = stock_from_line(name, a, download)
+            if stock_file is not None:
+                break
+        stock_file.save()
+
+
+def load_one_stock(name, is_privileged=False):
+    LOG.info('Load stock with name %s and privileged is %s' % (name, str(is_privileged)))
+    stock = None
+    try:
+        stock = db.stock_by_emitet_name(name, is_privileged)
+    except db.NotFoundStock:
+        action = read_to_list(property.DATA)
+        for a in action:
+            if is_privileged:
+                if re.compile(property.PRIVILEGED).match(a[7]):
+                    stock = stock_from_line(name, a)
+                    if stock is not None:
+                        break
+            else:
+                stock = stock_from_line(name, a)
+                if stock is not None:
+                    break
+    if stock is None:
+        raise db.NotFoundStock(name)
+    else:
+        stock.save()
+    return stock
 
 
 def get_stocks_contains(company):
@@ -166,57 +196,33 @@ def load_files(trade_code, link):
         files.extend(extractor.extract_files(property.TYPE2_PATH + '/' + trade_code, property.FILES5))
 
 
-def load_stocks(count):
+def load_stocks(count, upload_files):
     action = read_to_list(property.DATA)
     sort_action = []
     num = 0
     for a in action:
-        if a[4] == 'Акции':
+        if a[4] == property.STOCKS:
             if count is not None and count == num:
                 break
             num += 1
             trade_code = a[7]
-            stocks = db.contains(trade_code)
-
-            if stocks.count() == 0:
+            try:
+                stock = db.stock_by_trade_code(trade_code)
+            except db.NotFoundStock:
                 stock = s.Stock()
-            elif stocks.count() == 1:
-                stock = stocks.first()
-            else:
-                LOG.error("Collection contains %d the same document" % stocks.count())
-                return
-
-            # stock = s.Stock()
             stock.stock_line(line=a)
-
             stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
-
             stock.short_name = get_short_name(stock.trade_code)
-            stock.finame_em = get_finam_code(stock.short_name)
+            stock.finame_em = finam.code(stock.short_name)
 
             sort_action.append(stock)
-            # db_helper.add_stock(stock)
-            load_files(stock.trade_code, stock.url)
-            LOG.info("Save stock %s" % str(s))
+            if upload_files:
+                LOG.info("Will updated finance document company %s" % stock.short_name)
+                load_files(stock.trade_code, stock.url)
+            LOG.info("Save stock %s" % str(stock))
             stock.save()
     LOG.info("Updated %d" % num)
     return sort_action
-
-
-# def update_history_stocks():
-#     action = db_helper.get_stocks()
-#     now = datetime.now()
-#     for stock in action:
-#         history_file_name = stock.trade_code + '_' + \
-#                             str(now.year) + '-' + \
-#                             str(now.month) + '-' + \
-#                             str(now.day)
-#         url = url_download_history_stock_price(stock.trade_code, stock.finame_em, history_file_name)
-#         path = TYPE2_PATH + '/' + stock.trade_code + '/' + history_file_name + '.csv'
-#         print('URL: %s' % url)
-#         download_file(url, path)
-#
-#     return action.__sizeof__()
 
 
 def get_list(path):
@@ -238,9 +244,12 @@ def get_last_price(trade_code):
                 LOG.info("Found last price")
                 fine_line = num + 3
             if fine_line == num:
-                last_price = float(line.strip().replace(',', ".").replace(' ', ''))
-                LOG.info("Last price is: %.2f" % last_price)
-                return last_price
+                last_price = line.strip().replace(',', ".").replace(' ', '')
+                if last_price == '-':
+                    LOG.warn("Last price is: %s" % last_price)
+                    return 0
+                LOG.info("Last price is: %.2f" % float(last_price))
+                return float(last_price)
     f.close()
     return 0.0
 
@@ -298,46 +307,3 @@ def html_source(url):
     # html_inner = driver.find_element_by_tag_name('html').get_attribute('innerHTML')
     driver.close()
     return html_inner
-
-
-def get_finam_code(short_name):
-    with (open(file='./res/finam_em.csv', mode='rb')) as f:
-        for r in f:
-            line = str(r, 'UTF-8').split(';')
-            if short_name in line[1]:
-                return line[0]
-
-
-def url_download_history_stock_price(trade_code, finam_em, file_name, from_day=1, from_month=1, from_year=2000,
-                                     extention='.csv'):
-    now = datetime.now()
-    cur_day = now.day
-    cur_month = now.month
-    cur_year = now.year
-    history_stock = 'http://export.finam.ru/' + file_name + extention + \
-                    '?market=1' \
-                    '&em=' + str(finam_em) + \
-                    '&code=' + str(trade_code) + \
-                    '&apply=0' \
-                    '&df=' + str(from_day) + \
-                    '&mf=' + str(from_month) + \
-                    '&yf=' + str(from_year) + \
-                    '&from=' + str(from_day) + '.' + str(from_month) + '.' + str(from_year) + \
-                    '&dt=' + str(cur_day) + \
-                    '&mt=' + str(cur_month) + \
-                    '&yt=' + str(cur_year) + \
-                    '&to=' + str(cur_day) + '.' + str(cur_month) + '.' + str(cur_year) + \
-                    '&p=10' \
-                    '&f=' + str(file_name) + \
-                    '&e=' + str(extention) + \
-                    '&cn=' + str(trade_code) + \
-                    '&dtf=4' \
-                    '&tmf=3' \
-                    '&MSOR=1' \
-                    '&mstime=on' \
-                    '&mstimever=1' \
-                    '&sep=1' \
-                    '&sep2=1' \
-                    '&datf=1' \
-                    '&at=1'
-    return history_stock
