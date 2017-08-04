@@ -18,6 +18,7 @@ import finder
 import updater
 import finam.finam as finam
 import analyser
+import nsga
 
 LOG = my_log.get_logger("main")
 
@@ -95,6 +96,10 @@ def handle_command(command, channel):
         elif first_command in config.CMD_ANALYSE:
             message = analyser.analyse(words)
             response(channel, message)
+        elif first_command in ['ga']:
+            nsga_ga = threading.Thread(nsga.ga(slack_client, channel))
+            nsga_ga.start()
+            response(channel, 'Finish GA!')
         else:
             response(channel, message)
 
