@@ -1,3 +1,4 @@
+matplotlib
 certifi==2017.4.17
 chardet==3.0.4
 dateutils==0.6.6
@@ -29,5 +30,7 @@ numpy
 yahoo-finance>=1.4.0
 prettytable
 tabulate
-platypus
+Platypus
+fix_yahoo_finance
+pandas_datareader==0.5.0
 
