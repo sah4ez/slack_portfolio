@@ -7,7 +7,8 @@ from mongo.Stock import Stock
 import random
 import datetime
 from slackclient import SlackClient
-
+import bot
+import shutil
 
 # list of stocks in portfolio
 def ga(slack_client: SlackClient, channel, count=150):
@@ -46,8 +47,8 @@ def ga(slack_client: SlackClient, channel, count=150):
         for stock in stocks:
             resp.append(stock.shape())
 
-        slack_client.api_call("chat.postMessage", channel=channel,
-                              text=", ".join(resp), as_user=True)
+        #slack_client.api_call("chat.postMessage", channel=channel,
+        #                      text=", ".join(resp), as_user=True)
 
         # i = 0
         # ex = True
@@ -93,9 +94,9 @@ def ga(slack_client: SlackClient, channel, count=150):
             # iterate through the weight vector and add data to results array
             for j in range(len(weights)):
                 results[j + 3, i] = weights[j]
-            if i in [100_000 - 1, 200_000 - 1, 300_000 - 1]:
-                slack_client.api_call("chat.postMessage", channel=channel,
-                                      text='i: ' + str(i) + 'portfolio' + str(portfolio), as_user=True)
+            #if i in [100_000 - 1, 200_000 - 1, 300_000 - 1]:
+            #    slack_client.api_call("chat.postMessage", channel=channel,
+            #                          text='i: ' + str(i) + 'portfolio' + str(portfolio), as_user=True)
 
         # convert results array to Pandas DataFrame
         cols = ['ret', 'stdev', 'sharpe']
@@ -138,3 +139,5 @@ def ga(slack_client: SlackClient, channel, count=150):
         #     file.flush()
         #     file.close()
         print('')
+    shutil.copyfile('res/output.txt','res/output_back.txt')
+    bot.post_file(channel, 'res/output_back.txt')

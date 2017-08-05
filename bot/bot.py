@@ -98,7 +98,7 @@ def handle_command(command, channel):
             response(channel, message)
         elif first_command in ['ga']:
             if len(words) == 2:
-                nsga_ga = threading.Thread(nsga.ga(slack_client, channel, count=words[1]))
+                nsga_ga = threading.Thread(nsga.ga(slack_client, channel, count=int(words[1])))
             else:
                 nsga_ga = threading.Thread(nsga.ga(slack_client, channel))
             nsga_ga.start()
