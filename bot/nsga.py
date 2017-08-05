@@ -10,12 +10,12 @@ from slackclient import SlackClient
 
 
 # list of stocks in portfolio
-def ga(slack_client: SlackClient, channel):
+def ga(slack_client: SlackClient, channel, count=150):
     all_stocks = []
     for s in Stock.objects():
         all_stocks.append(s)
     print(len(all_stocks))
-    portfolios = 50
+    portfolios = count
     for portfolio in range(portfolios):
         range_stock = len(all_stocks)
         number = list()
@@ -69,7 +69,7 @@ def ga(slack_client: SlackClient, channel):
         cov_matrix = returns.cov()
 
         # set number of runs of random portfolio weights
-        num_portfolios = 300_000
+        num_portfolios = 400_000
 
         # set up array to hold results
         # We have increased the size of the array to hold the weight values for each stock
@@ -122,10 +122,11 @@ def ga(slack_client: SlackClient, channel):
         print(min_vol_port)
         slack_client.api_call("chat.postMessage", channel=channel,
                               text=str(max_sharpe_port) + '\n' + str(min_vol_port), as_user=True)
-        with open('res/output.txt', 'w+') as file:
-            file.write(str(datetime.datetime.now()))
+        with open('res/output.txt', 'a') as file:
             file.write(str(max_sharpe_port))
+            file.write('----------')
             file.write(str(min_vol_port))
+            file.write('==========')
             file.flush()
             file.close()
         # with open('res/max_output_table.txt', 'w+') as file:
