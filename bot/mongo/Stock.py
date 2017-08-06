@@ -1,9 +1,11 @@
 from mongoengine import (EmbeddedDocumentField, Document, IntField, FloatField, StringField, DateTimeField, ListField,
                          ObjectIdField)
 import datetime
+from datetime import timedelta
 import extractor
 import mongo.mongo as m
 import mongo.Price as price
+from mongo import exception
 
 conn = m.connect()
 
@@ -96,3 +98,13 @@ class Stock(Document):
 
     def shape(self):
         return self.trade_code.upper() + '.ME'
+
+    def get_day_price(self, date: datetime.datetime) -> float:
+        for price in self.day_history:
+            if date.date().weekday() == 5:
+                date = date - timedelta(days=1)
+            if date.date().weekday() == 6:
+                date = date - timedelta(days=2)
+            if price.date.date() == date.date():
+                return price.value
+        raise exception.NotFoundPrice('For stock %s not found price on %s' % (self.trade_code, str(date)))

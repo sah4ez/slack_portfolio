@@ -5,6 +5,7 @@ import time
 import traceback
 
 import analyse.nsga as nsga
+import analyse.income_portfolio as ip
 import requests
 from slackclient import SlackClient
 
@@ -102,11 +103,14 @@ def handle_command(command, channel):
             nsga_ga = threading.Thread(nsga.ga(slack_client, channel))
             nsga_ga.start()
             response(channel, 'Finish GA!')
-        elif first_command in ['test']:
+        elif first_command in ['storage_portfolio']:
             response(channel, config.RSP_WAIT)
             portfolio.string_portfolios(path='res/output.txt')
             response(channel, 'All portfolios saved')
-
+        elif first_command in ['test']:
+            response(channel, config.RSP_WAIT)
+            message = ip.for_portfolio(int(words[1]))
+            response(channel, message)
         else:
             response(channel, message)
 

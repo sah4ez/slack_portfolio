@@ -4,3 +4,7 @@ class NotFoundStock(Exception):
 
 class FoundMoreThanOneStock(Exception):
     pass
+
+
+class NotFoundPrice(Exception):
+    pass

@@ -25,7 +25,7 @@ def extract_stock(stocks, parameter):
         raise NotFoundStock(message)
 
 
-def stock_by_trade_code(trade_code, is_privileged=False):
+def stock_by_trade_code(trade_code):
     regex_trade_code = re.compile(r'(?i)^'+trade_code+'$')
     stocks = s.Stock.objects(trade_code=regex_trade_code)
     return extract_stock(stocks, trade_code)
