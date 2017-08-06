@@ -4,21 +4,23 @@ import threading
 import time
 import traceback
 
+import analyse.nsga as nsga
 import requests
 from slackclient import SlackClient
 
 import capital
 import config
-import my_log
-import yahoo.price as price
-import sender_file
-import url_board
-import select_for_portfolio
-import finder
-import updater
 import finam.finam as finam
-import analyser
-import nsga
+import finder
+import my_log
+import select_for_portfolio
+import sender_file
+import updater
+import url_board
+import yahoo.price as price
+from analyse import analyser
+from parse import portfolio
+
 
 LOG = my_log.get_logger("main")
 
@@ -100,6 +102,11 @@ def handle_command(command, channel):
             nsga_ga = threading.Thread(nsga.ga(slack_client, channel))
             nsga_ga.start()
             response(channel, 'Finish GA!')
+        elif first_command in ['test']:
+            response(channel, config.RSP_WAIT)
+            portfolio.string_portfolios(path='res/output.txt')
+            response(channel, 'All portfolios saved')
+
         else:
             response(channel, message)
 
