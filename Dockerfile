@@ -16,5 +16,6 @@ RUN wget --no-check-certificate -q -O - \
    ln -s /opt/phantomjs-$PHANTOMJS_VERSION-linux-x86_64/bin/phantomjs /usr/bin/phantomjs &&\
    ln -s /opt/phantomjs-$PHANTOMJS_VERSION-linux-x86_64/bin/phantomjs /usr/local/bin/phantomjs
 
+RUN mkdir /home/bot/bot/log && pip3 install texttable
 #CMD ["/bin/bash"]
 CMD ['python3', '/home/bot/bot/bot.py', '${SLACK_BOT_TOKEN}', '${BOT_ID}']

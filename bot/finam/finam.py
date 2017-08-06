@@ -5,7 +5,7 @@ import mongo.mongo as db
 import loader_from_file
 import config
 import mongo.Price as p
-import mongo.Stock as s
+from mongo import Stock as s
 import time
 
 LOG = my_log.get_logger("Finam Loader")

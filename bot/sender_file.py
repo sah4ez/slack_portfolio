@@ -16,7 +16,7 @@ LOG = my_log.get_logger("sender_file")
 
 def send_file(words):
     num = words[1]
-    if re.compile(r'[0-9]').match(num):
+    if re.compile(r'[0-9]+').match(num):
         company = " ".join(words[2:])
     else:
         company = " ".join(words[1:])

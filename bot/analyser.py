@@ -3,6 +3,7 @@ import my_log
 import mongo.mongo as db
 import property
 import numpy as np
+import texttable as tt
 
 LOG = my_log.get_logger("analyzer")
 np.set_printoptions(formatter={'float': '{: 0.4f}'.format})
@@ -28,7 +29,7 @@ def analyse(words):
 
 
 def get_count(to, words):
-    if re.compile(r'[0-9]').match(words[to - 1]):
+    if re.compile(r'[0-9]+').match(words[to - 1]):
         return words[to - 1], to - 1
     return None, to
 
@@ -50,11 +51,15 @@ def stocks_from_file():
 
 
 def response(companies, count):
-    header = "Short Name| Trade code | Risk_M | Income_M | " + \
-             "Risk_W | Income_W | Risk_D | Income_D | Risk_H | Income_H |  \n"
-    lines_pattern = list()
+    header = ['Trade code',
+              ' R_M ', ' I_M ',
+              ' R_W ', ' I_W ',
+              ' R_D ', ' I_D ',
+              ' R_H ', ' I_H ']
+    count_column = header.__len__()
+    formatter = tt.Texttable(max_width=240)
+    formatter.add_row(header)
     lines = list()
-    pattern = "%s | %s | %.2f%% | %.2f%% | %.2f%% | %.2f%% | %.2f%% | %.2f%% | %.2f%% | %.2f%% "
     risks = {
         property.FINAM_P_MONTH: list(),
         property.FINAM_P_WEEK: list(),
@@ -70,21 +75,11 @@ def response(companies, count):
     for company in companies:
         if count is None:
             count = company.month_history.__len__()
-        line = [company.short_name, company.trade_code]
-        for period in property.FINAM_PERIODS:
-            risk_by_one = risk(count, history_by_period(period, company))
-            income_by_one = income(count, history_by_period(period, company))
-            risks[period].append(risk_by_one)
-            incomes[period].append(income_by_one)
-            if not re.compile(r'[0-9.-]').match(str(risk_by_one)) or \
-                    not re.compile(r'[0-9.-]').match(str(income_by_one)):
-                continue
-            line.append(risk_by_one)
-            line.append(income_by_one)
-        if line.__len__() == 10:
+            line = calculate_stock(company, count, risks, incomes)
+        if line.__len__() == count_column:
             lines.append(line)
 
-    lines.sort(key=lambda x: x[9])
+    lines.sort(key=lambda x: x[count_column - 1])
 
     risk_periods = []
     incomes_periods = []
@@ -94,24 +89,36 @@ def response(companies, count):
             part, t_part = get_parts(companies)
             m_c_p = mmult(companies.__len__(), covariance_m, part)
             m_c_p_t = mmult(1, m_c_p, t_part)
-            risk_periods.append(np.sqrt(m_c_p_t[0][0]))
-            incomes_periods.append(get_all_incomes(incomes[period], part))
+            risk_periods.append(format('%.3f' % np.sqrt(m_c_p_t[0][0])))
+            incomes_periods.append(format('%.3f' % get_all_incomes(incomes[period], part)))
     except ValueError:
         LOG.warn('ValueError in covariance matrix')
         risk_periods = [0, 0, 0, 0]
         incomes_periods = [0, 0, 0, 0]
     for line in lines:
-        lines_pattern.append(format(pattern % (line[0], line[1], line[2], line[3], line[4],
-                                               line[5], line[6], line[7], line[8], line[9])))
-    amount = '\nRisk_M: %.3f%% Income_M: %.3f%% ' \
-             'Risk_W: %.3f%% Income_W: %.3f%% ' \
-             'Risk_D: %.3f%% Income_D: %.3f%% ' \
-             'Risk_H: %.3f%% Income_H: %.3f%% '
-    return header + "\n".join(lines_pattern) + format(amount % (risk_periods[0], incomes_periods[0],
-                                                                risk_periods[1], incomes_periods[1],
-                                                                risk_periods[2], incomes_periods[2],
-                                                                risk_periods[3], incomes_periods[3]
-                                                                ))
+        formatter.add_row(line)
+    amount = ['Amount']
+    for num, risk_p in enumerate(risk_periods):
+        amount.append(risk_p)
+        amount.append(incomes_periods[num])
+
+    formatter.add_row(amount)
+    return formatter.draw()
+
+
+def calculate_stock(company, count, risks, incomes):
+    line = [company.trade_code]
+    for period in property.FINAM_PERIODS:
+        risk_by_one = risk(count, history_by_period(period, company))
+        income_by_one = income(count, history_by_period(period, company))
+        risks[period].append(risk_by_one)
+        incomes[period].append(income_by_one)
+        if not re.compile(r'[0-9.-]+').match(str(risk_by_one)) or \
+                not re.compile(r'[0-9.-]+').match(str(income_by_one)):
+            continue
+        line.append(format('%.4f' % risk_by_one))
+        line.append(format('%.4f' % income_by_one))
+        return line
 
 
 def get_all_incomes(incomes, part):
