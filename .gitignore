@@ -21,3 +21,12 @@ bot/res/companies/*.html
 bot/res/*.html
 bot/res/companies/*.csv
 !/bot/res/finam_em.csv
+bot/log/
+bot/res/ListingSecurityList.csv
+bot/res/companies/
+bot/res/description.xlsx
+bot/res/output.txt
+db/
+docs/
+find/
+tmp/
