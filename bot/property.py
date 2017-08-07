@@ -18,7 +18,7 @@ TMP_EXTRACT = "tmp"
 DOWNLOAD_URL_MATCH = 'FileLoad.ashx?Fileid='
 DOWNLOAD_URL = 'e-disclosure.ru/portal/FileLoad.ashx?Fileid='
 DOWNLOAD_SITE_DISCLOSURE = 'disclosure.skrin.ru'
-DOWNLOAD_URL_DISCLOSURE = r'/docs/[0-9a-zA-Z]/'
+DOWNLOAD_URL_DISCLOSURE = r'/docs/[0-9a-zA-Z]+/'
 
 TYPE2 = '/type.html'
 FILES = '/files.html'

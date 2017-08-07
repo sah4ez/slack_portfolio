@@ -13,7 +13,7 @@ from selenium import webdriver
 import extractor
 import my_log
 import property
-import mongo.Stock as s
+from mongo import Stock as s
 import mongo.mongo as db
 import finam.finam as finam
 
@@ -196,7 +196,7 @@ def load_files(trade_code, link):
         files.extend(extractor.extract_files(property.TYPE2_PATH + '/' + trade_code, property.FILES5))
 
 
-def load_stocks(count, upload_files):
+def load_stocks(count=None, upload_files=False):
     action = read_to_list(property.DATA)
     sort_action = []
     num = 0

@@ -24,14 +24,6 @@ def select(words):
     return get_response(stock)
 
 
-def select_p(words):
-    company = " ".join(words[1:])
-    LOG.info("Select: %s" % company)
-    stock = loader_from_file.load_one_stock_p(company)
-    save_stock(stock)
-    return get_response(stock)
-
-
 def get_response(stock):
     return format(config.RSP_SELECT_FOR_PORTFOLIO % (stock.emitent_full_name, stock.trade_code, stock.last_price))
 
