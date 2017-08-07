@@ -104,6 +104,8 @@ def stock_from_line(name, line, is_download=True):
 
 def update_stock_from_file(name, download, is_priviledged=False):
     try:
+        if name == "":
+            raise db.NotFoundStock
         stock = db.stock_by_emitet_name(name, is_priviledged)
         action = read_to_list(property.DATA)
         stock_file = None

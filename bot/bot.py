@@ -4,7 +4,7 @@ import threading
 import time
 import traceback
 
-from analyse import nsga as nsga, income_portfolio as ip
+from analyse import nsga as nsga, income_portfolio as ip, nsga_platypus as npt
 from slackclient import SlackClient
 
 import capital
@@ -115,6 +115,10 @@ def handle_command(command, channel):
         elif first_command in ['test_min']:
             response(channel, config.RSP_WAIT)
             message = ip.for_portfolio(int(words[1]), is_max=False)
+            response(channel, message)
+        elif first_command in ['platypus']:
+            response(channel, config.RSP_WAIT)
+            message = npt.solve(int(words[1]))
             response(channel, message)
         else:
             response(channel, message)

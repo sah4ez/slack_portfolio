@@ -68,9 +68,6 @@ def solve(all_stocks, slack_client, channel, curr, all_items):
 
     data = pd.DataFrame(data_list)
     returns = data.transpose().pct_change()
-    resp = list()
-    for stock in stocks:
-        resp.append(stock.shape())
 
     # convert daily stock prices into daily returns
     # returns = data.pct_change()
