@@ -4,6 +4,7 @@ import pandas_datareader.data as web
 import matplotlib.pyplot as plt
 from pandas_datareader._utils import RemoteDataError
 from mongo.Stock import Stock
+from mongo import mongo as db
 import random
 import datetime
 from slackclient import SlackClient
@@ -15,21 +16,27 @@ def ga(slack_client: SlackClient, channel):
     for s in Stock.objects():
         all_stocks.append(s)
     print(len(all_stocks))
-    portfolios = 50
+    portfolios = 1
     for portfolio in range(portfolios):
         range_stock = len(all_stocks)
         number = list()
         stocks = []
-        for position in range(15):
-            pos = random.randint(0, range_stock)
-            while pos in number:
-                pos = random.randint(0, range_stock)
-            stock = all_stocks[pos - 1]
-            while len(stock.day_history) < 44:
-                pos = random.randint(0, range_stock)
-                stock = all_stocks[pos - 1]
-            stocks.append(stock)
 
+        # for position in range(15):
+        #     pos = random.randint(0, range_stock)
+        #     while pos in number:
+        #         pos = random.randint(0, range_stock)
+        #     stock = all_stocks[pos - 1]
+        #     while len(stock.day_history) < 44:
+        #         pos = random.randint(0, range_stock)
+        #         stock = all_stocks[pos - 1]
+        #     stocks.append(stock)
+
+        trade_codes = ['FESH', 'RTKMP', 'GMKN', 'OPIN', 'RUGR', 'VSMO', 'NMTP', 'MGNT', 'LNZLP', 'TUCH', 'IRKT',
+                       'PRTK', 'TGKB', 'BANEP', 'ROSN']
+
+        for code in trade_codes:
+            stocks.append(db.stock_by_trade_code(code))
         # stocks = ['LKOH.ME', 'SBER.ME', 'HYDR.ME', 'ALRS.ME', 'TATNP.ME', 'IRAO.ME']
         # stocks = ['AAPL', 'MSFT', 'AMZN']
         # download daily price data for each of the stocks in the portfolio
@@ -45,6 +52,7 @@ def ga(slack_client: SlackClient, channel):
         resp = list()
         for stock in stocks:
             resp.append(stock.shape())
+
 
         slack_client.api_call("chat.postMessage", channel=channel,
                               text=", ".join(resp), as_user=True)
