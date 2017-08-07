@@ -100,7 +100,10 @@ def handle_command(command, channel):
             message = analyser.analyse(words)
             response(channel, message)
         elif first_command in ['ga']:
-            nsga_ga = threading.Thread(nsga.ga(slack_client, channel))
+            if len(words) == 2:
+                nsga_ga = threading.Thread(nsga.ga(slack_client, channel, count=int(words[1])))
+            else:
+                nsga_ga = threading.Thread(nsga.ga(slack_client, channel))
             nsga_ga.start()
             response(channel, 'Finish GA!')
         elif first_command in ['storage_portfolio']:
