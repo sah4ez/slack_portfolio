@@ -107,9 +107,13 @@ def handle_command(command, channel):
             response(channel, config.RSP_WAIT)
             portfolio.string_portfolios(path='res/output.txt')
             response(channel, 'All portfolios saved')
-        elif first_command in ['test']:
+        elif first_command in ['test_max']:
             response(channel, config.RSP_WAIT)
             message = ip.for_portfolio(int(words[1]))
+            response(channel, message)
+        elif first_command in ['test_min']:
+            response(channel, config.RSP_WAIT)
+            message = ip.for_portfolio(int(words[1]), is_max=False)
             response(channel, message)
         else:
             response(channel, message)

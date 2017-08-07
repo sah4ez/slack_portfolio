@@ -6,21 +6,22 @@ import my_log
 LOG = my_log.get_logger('income_portfolio')
 
 
-def for_portfolio(position: int = 0):
+def for_portfolio(position: int = 0, is_max=True):
     LOG.info('Start calculate for %d' % position)
     for num, ordered in enumerate(pf.Portfolio.objects.order_by('-max_item.sharpe_ratio')):
         if num == position:
-            LOG.info('Predict for %s' % ordered)
-            return predict(porftolio=ordered, money=100000)
+            item = ordered.max_item if is_max else ordered.min_item
+            LOG.info('Predict for %s' % item)
+            return predict(porftolio=item, money=100000)
 
 
-def predict(porftolio: pf.Portfolio, money: int, from_date=(datetime.today() - timedelta(days=43)),
+def predict(porftolio: pf.ItemPortfolio, money: int, from_date=(datetime.today() - timedelta(days=43)),
             to_date=datetime.today() - timedelta(days=14)):
     db.connect()
     stocks = dict()
     income = list()
 
-    for stock in porftolio.max_item.stocks:
+    for stock in porftolio.stocks:
         part = float(stock.value)
         trade_code = str(stock.trade_code)
         stock_orm = db.stock_by_trade_code(trade_code)
