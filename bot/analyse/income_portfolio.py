@@ -8,7 +8,8 @@ LOG = my_log.get_logger('income_portfolio')
 
 def for_portfolio(position: int = 0, is_max=True):
     LOG.info('Start calculate for %d' % position)
-    for num, ordered in enumerate(pf.Portfolio.objects.order_by('-max_item.sharpe_ratio')):
+    for num, ordered in enumerate(
+            pf.Portfolio.objects(date__gte=datetime.today().date()).order_by('-max_item.sharpe_ratio')):
         if num == position:
             item = ordered.max_item if is_max else ordered.min_item
             LOG.info('Predict for %s' % item)
@@ -16,7 +17,7 @@ def for_portfolio(position: int = 0, is_max=True):
 
 
 def predict(porftolio: pf.ItemPortfolio, money: int, from_date=(datetime.today() - timedelta(days=43)),
-            to_date=datetime.today() - timedelta(days=14)):
+            to_date=datetime.today()):
     db.connect()
     stocks = dict()
     income = list()
