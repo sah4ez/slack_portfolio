@@ -20,6 +20,7 @@ import yahoo.price as price
 from analyse import analyser
 from parse import portfolio
 from bot_impl.bot_api import Bot
+from mongo import mongo as db
 
 LOG = my_log.get_logger("main")
 
@@ -174,6 +175,7 @@ def welcome(msg):
 def listen():
     try:
         LOG.info("StarterBot connected and running!")
+        db.connect()
         while True:
             msg = slack_client.rtm_read()
             # print(msg)

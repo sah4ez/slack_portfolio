@@ -83,3 +83,6 @@ RSP_ERROR = "Ops... Some error."
 
 LOG_FORMAT = "%(asctime)s |%(name)s:%(lineno)d|[%(levelname)s]: %(message)s"
 LOG_ALL_FILE = "log/all.log"
+
+GA_SIMPLE = "nsga"
+GA_NSGAII = "nsgaii"

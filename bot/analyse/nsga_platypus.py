@@ -1,15 +1,13 @@
 import platypus as pt
 import numpy as np
 import pandas as pd
-
 import random
-
 import my_log
+from mongo import mongo as db
+from mongo.Stock import Stock
 
 LOG = my_log.get_logger('platypus')
-from mongo.Stock import Stock
-from mongo.Portfolio import Portfolio, Item, ItemPortfolio
-
+db.connect()
 all_stocks = list()
 for s in Stock.objects():
     all_stocks.append(s)
@@ -27,6 +25,8 @@ class ProblemPortfolio(pt.Problem):
 
     def evaluate(self, solution):
         parts = np.array(solution.variables)
+        parts /= np.sum(parts)
+
         solution.objectives[:] = [np.sum(self.mean_daily_returns * parts) * self.days,
                                   np.sqrt(np.dot(parts.T, np.dot(self.cov_matrix, parts))) * np.sqrt(self.days)]
         solution.constraints[:] = sum(parts)
@@ -61,24 +61,43 @@ def get_per_cent_by_item(stocks):
     return data.transpose().pct_change()
 
 
-def solve(count):
-    LOG.info('start NSGA with population count %d' % count)
-    count_stocks = len(all_stocks)
-    LOG.info('All stocks: %d' % count_stocks)
-    result = list()
-    for curr in range(count):
-        random_stocks = get_random_stocks(all_stocks)
-        days = len(all_stocks[0].day_history)
-        returns = get_per_cent_by_item(random_stocks)
-        mean_daily_returns = returns.mean()
-        cov_matrix = returns.cov()
-        LOG.info('Parameters: %s, %s, %s, %s' % (returns, mean_daily_returns, cov_matrix, days))
-        problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
-        problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MINIMIZE]
-        algorithm = pt.NSGAII(problem)
-        LOG.info('Start')
-        algorithm.run(400000)
-        LOG.info('End')
-        result.append(algorithm.result)
-        LOG.info('Solve: \n %s' % str(algorithm.result[0]))
-    return str('OK')
+def solve(stocks, iterations, mean_daily_returns, cov_matrix, days):
+    # LOG.info('Parameters: %s, %s, %s' % (mean_daily_returns, cov_matrix, days))
+    problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
+    problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MINIMIZE]
+    algorithm = pt.NSGAII(problem)
+    algorithm.population_size = iterations
+    algorithm.run(iterations)
+    cols = ['ret', 'stdev', 'sharpe']
+    results = np.zeros((algorithm.population_size, 3 + len(stocks)))
+    for num, solution in enumerate(algorithm.result):
+        results[num][0] = solution.objectives[0]
+        results[num][1] = solution.objectives[1]
+        results[num][2] = results[num][0]/ results[num][1]
+        results[num][3:] = np.array(solution.variables)
+    for stock in stocks:
+        cols.append(stock.shape())
+    results_frame = pd.DataFrame(results, columns=cols)
+    return results_frame
+
+# def solve(count):
+#     LOG.info('start NSGA with population count %d' % count)
+#     count_stocks = len(all_stocks)
+#     LOG.info('All stocks: %d' % count_stocks)
+#     result = list()
+#     for curr in range(count):
+#         random_stocks = get_random_stocks(all_stocks)
+#         days = len(all_stocks[0].day_history)
+#         returns = get_per_cent_by_item(random_stocks)
+#         mean_daily_returns = returns.mean()
+#         cov_matrix = returns.cov()
+#         LOG.info('Parameters: %s, %s, %s, %s' % (returns, mean_daily_returns, cov_matrix, days))
+#         problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
+#         problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MINIMIZE]
+#         algorithm = pt.NSGAII(problem)
+#         LOG.info('Start')
+#         algorithm.run(400000)
+#         LOG.info('End')
+#         result.append(algorithm.result)
+#         LOG.info('Solve: \n %s' % str(algorithm.result[0]))
+#     return str('OK')

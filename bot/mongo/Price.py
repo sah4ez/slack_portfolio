@@ -1,9 +1,5 @@
 from mongoengine import (EmbeddedDocument, FloatField, DateTimeField)
 
-import mongo.mongo as m
-
-conn = m.connect()
-
 
 class Price(EmbeddedDocument):
     date = DateTimeField(required=True)

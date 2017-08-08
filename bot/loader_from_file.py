@@ -13,8 +13,7 @@ from selenium import webdriver
 import extractor
 import my_log
 import property
-from mongo import Stock as s
-import mongo.mongo as db
+from mongo import Stock as s, mongo as db
 import finam.finam as finam
 
 LOG = my_log.get_logger('loader_from_file')
@@ -83,7 +82,7 @@ def read_to_list(file):
 
 def get_stock_from_file(name, line, is_download):
     stock = s.Stock()
-    stock.stock_line(line=line)
+    stock_line(stock,line=line)
     stock.short_name = get_short_name(stock.trade_code)
     stock.finame_em = finam.code(stock.short_name)
     stock.last_price = get_last_price(stock.trade_code)
@@ -94,6 +93,19 @@ def get_stock_from_file(name, line, is_download):
         download.start()
         download.join()
     stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
+    return stock
+
+
+def stock_line(stock, line):
+    stock.datestamp = datetime.datetime.utcnow()
+    stock.datestamp = line[0]
+    stock.currency = line[14]
+    stock.trade_code = line[7]
+    stock.emitent_full_name = line[11]
+    stock.capitalisation = float(extractor.get_value_capitalization(stock.trade_code))
+    stock.free_float = float(extractor.get_free_float(stock.trade_code))
+    stock.official_url = line[37]
+    stock.url = line[38]
     return stock
 
 
@@ -212,7 +224,7 @@ def load_stocks(count=None, upload_files=False):
                 stock = db.stock_by_trade_code(trade_code)
             except db.NotFoundStock:
                 stock = s.Stock()
-            stock.stock_line(line=a)
+            stock_line(stock, line=a)
             stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
             stock.short_name = get_short_name(stock.trade_code)
             stock.finame_em = finam.code(stock.short_name)
