@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import pandas as pd
 
 from mongo import Portfolio as pf, mongo as db
 import my_log
@@ -8,16 +9,19 @@ LOG = my_log.get_logger('income_portfolio')
 
 def for_portfolio(position: int = 0, is_max=True):
     LOG.info('Start calculate for %d' % position)
+    result = list()
     for num, ordered in enumerate(
-            pf.Portfolio.objects(date__gte=datetime.today().date()).order_by('-max_item.sharpe_ratio')):
-        if num == position:
+            pf.Portfolio.objects(date__gt=datetime(2017, 8, 7, 19, 0, 0, 0)).order_by('-max_item.sharpe_ratio')):
+        if num <= position:
             item = ordered.max_item if is_max else ordered.min_item
             LOG.info('Predict for %s' % item)
-            return predict(porftolio=item, money=100000)
+            result.append(predict(porftolio=item, money=100000))
+            
+    return str(sum(result)/len(result))
 
 
 def predict(porftolio: pf.ItemPortfolio, money: int, from_date=(datetime.today() - timedelta(days=43)),
-            to_date=datetime.today()):
+            to_date=datetime.today() - timedelta(days=1)):
     db.connect()
     stocks = dict()
     income = list()

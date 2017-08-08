@@ -10,6 +10,10 @@ LOG = my_log.get_logger('platypus')
 from mongo.Stock import Stock
 from mongo.Portfolio import Portfolio, Item, ItemPortfolio
 
+all_stocks = list()
+for s in Stock.objects():
+    all_stocks.append(s)
+
 
 class ProblemPortfolio(pt.Problem):
     def __init__(self, cov_matrix, mean_daily_returns, days):
@@ -19,14 +23,13 @@ class ProblemPortfolio(pt.Problem):
         self.mean_daily_returns = mean_daily_returns
         self.days = days
         self.types[:] = pt.Real(0.0, 1.0)
-        # self.constraints[:] = [">=0", "<=1"]
+        self.constraints[:] = "==1"
 
     def evaluate(self, solution):
         parts = np.array(solution.variables)
-        # todo inser function for objectives, not value
         solution.objectives[:] = [np.sum(self.mean_daily_returns * parts) * self.days,
                                   np.sqrt(np.dot(parts.T, np.dot(self.cov_matrix, parts))) * np.sqrt(self.days)]
-        solution.constraints[:] = [sum(parts) == 1]
+        solution.constraints[:] = sum(parts)
 
 
 def get_random_stocks(all_stocks):
@@ -60,9 +63,6 @@ def get_per_cent_by_item(stocks):
 
 def solve(count):
     LOG.info('start NSGA with population count %d' % count)
-    all_stocks = list()
-    for s in Stock.objects():
-        all_stocks.append(s)
     count_stocks = len(all_stocks)
     LOG.info('All stocks: %d' % count_stocks)
     result = list()
@@ -72,11 +72,13 @@ def solve(count):
         returns = get_per_cent_by_item(random_stocks)
         mean_daily_returns = returns.mean()
         cov_matrix = returns.cov()
-        LOG.info('Parameters: %s, %s, %s, %s' % (result, mean_daily_returns, cov_matrix, days))
+        LOG.info('Parameters: %s, %s, %s, %s' % (returns, mean_daily_returns, cov_matrix, days))
         problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
         problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MINIMIZE]
         algorithm = pt.NSGAII(problem)
-        algorithm.run(40)
+        LOG.info('Start')
+        algorithm.run(400000)
+        LOG.info('End')
         result.append(algorithm.result)
-        LOG.info('Solve: \n %s' % str(algorithm.result))
-    return str(result)
+        LOG.info('Solve: \n %s' % str(algorithm.result[0]))
+    return str('OK')
