@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
-import pandas as pd
-
+import numpy as np
 from mongo import Portfolio as pf, mongo as db
 import my_log
+import texttable
 
 LOG = my_log.get_logger('income_portfolio')
 
@@ -10,14 +10,23 @@ LOG = my_log.get_logger('income_portfolio')
 def for_portfolio(position: int = 0, is_max=True):
     LOG.info('Start calculate for %d' % position)
     result = list()
+    profits = list()
+    stdevs = list()
+    table = texttable.Texttable(max_width=500)
+    table.add_row(['id', 'profit', 'stdev'])
     for num, ordered in enumerate(
             pf.Portfolio.objects(date__gt=datetime(2017, 8, 7, 19, 0, 0, 0)).order_by('-max_item.sharpe_ratio')):
         if num <= position:
             item = ordered.max_item if is_max else ordered.min_item
             LOG.info('Predict for %s' % item)
-            result.append(predict(porftolio=item, money=100000))
-            
-    return str(sum(result)/len(result))
+            profits.append(predict(porftolio=item, money=100000))
+            stdevs.append(ordered.max_item.standard_deviation)
+            table.add_row(
+                [str(ordered._id), str(predict(porftolio=item, money=100000)),
+                 str(ordered.max_item.standard_deviation)])
+
+    table.add_row(['', sum(profits) / len(profits), sum(stdevs) / len(stdevs)])
+    return table.draw()
 
 
 def predict(porftolio: pf.ItemPortfolio, money: int, from_date=(datetime.today() - timedelta(days=43)),

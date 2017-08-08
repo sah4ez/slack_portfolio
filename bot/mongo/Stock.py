@@ -38,6 +38,7 @@ class Stock(Document):
     week_history = ListField(EmbeddedDocumentField(price.Price))
     day_history = ListField(EmbeddedDocumentField(price.Price))
     hour_history = ListField(EmbeddedDocumentField(price.Price))
+    lot = IntField()
 
     def __str__(self):
         return format("{"
@@ -79,6 +80,7 @@ class Stock(Document):
         self.week_history = stock_file.week_history
         self.day_history = stock_file.day_history
         self.hour_history = stock_file.hour_history
+        self.lot = stock_file.lot
 
     def shape(self):
         return self.trade_code.upper() + '.ME'

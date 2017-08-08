@@ -34,7 +34,7 @@ DISCLOSURE_FIN = '/?DTI=8'
 DISCLOSURE_CONSOLIDATION_FIN = '/?DTI=9'
 
 BOARD = 'board.html'
-URL_BOARD = 'http://www.moex.com/ru/issue.aspx?board=TQBR&code='
+URL_BOARD = 'http://www.moex.com/ru/issue.aspx&code='
 SHORT_NAME_ATTR = 'Краткое наименование'
 
 LAST_PRICE = "Цена последней сделки, рублей"
@@ -51,7 +51,8 @@ NOT_PRIVILEGED = r'^[a-zA-Z]{4}$'
 PRIVILEGED_CMD = r'([a-zA-Z]+_p$|[а-яА-Я]+_п$)'
 STOCKS = 'Акции'
 
-DB_HOST = "mongodb"
+DB_HOST = "185.118.66.106"
+# DB_HOST = "mongodb"
 DB_PORT = 27017
 DB_COLLECT = 'stocks'
 
@@ -70,3 +71,4 @@ FINAM_SHIFT_HOUR = 12 * 20  # hours
 FINAM_PERIODS = [FINAM_P_MONTH, FINAM_P_WEEK, FINAM_P_DAY, FINAM_P_HOUR]
 
 PORTFOLION_STOCK = r'[A-Z]'
+LOT_STOCK = r'<th>Размер лота</th><td>[0-9 ]+</td>'

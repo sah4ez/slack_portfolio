@@ -23,9 +23,8 @@ def update(words):
         else:
             company = ' '.join(words[1:count_words])
 
-    LOG.info("Update %s files and %s download" %
-             (str(num) if num is not None else company, str(download)))
-    if company is None:
+    LOG.info("Update %s files and %s download" % (str(num) if num is not None else company, str(download)))
+    if company is None or len(company) == 0:
         lfl.load_stocks(num, download)
     else:
         lfl.update_stock_from_file(company, download, privileged)

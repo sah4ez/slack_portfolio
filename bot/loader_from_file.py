@@ -82,8 +82,10 @@ def read_to_list(file):
 
 def get_stock_from_file(name, line, is_download):
     stock = s.Stock()
-    stock_line(stock,line=line)
-    stock.short_name = get_short_name(stock.trade_code)
+    stock_line(stock, line=line)
+    url = url_board(trade_code=stock.trade_code)
+    html = html_source(url)
+    stock.short_name = get_short_name(stock.trade_code, html, url)
     stock.finame_em = finam.code(stock.short_name)
     stock.last_price = get_last_price(stock.trade_code)
     stock.volume_stock_on_market = get_volume_stock_on_market(stock.trade_code)
@@ -97,13 +99,14 @@ def get_stock_from_file(name, line, is_download):
 
 
 def stock_line(stock, line):
-    stock.datestamp = datetime.datetime.utcnow()
+    stock.datestamp = datetime.utcnow()
     stock.datestamp = line[0]
     stock.currency = line[14]
     stock.trade_code = line[7]
     stock.emitent_full_name = line[11]
     stock.capitalisation = float(extractor.get_value_capitalization(stock.trade_code))
     stock.free_float = float(extractor.get_free_float(stock.trade_code))
+    stock.lot = int(extractor.get_lot(stock.trade_code))
     stock.official_url = line[37]
     stock.url = line[38]
     return stock
@@ -116,7 +119,7 @@ def stock_from_line(name, line, is_download=True):
 
 def update_stock_from_file(name, download, is_priviledged=False):
     try:
-        if name == "":
+        if name == "" or name is None:
             raise db.NotFoundStock
         stock = db.stock_by_emitet_name(name, is_priviledged)
         action = read_to_list(property.DATA)
@@ -225,8 +228,10 @@ def load_stocks(count=None, upload_files=False):
             except db.NotFoundStock:
                 stock = s.Stock()
             stock_line(stock, line=a)
+            url = url_board(trade_code=stock.trade_code)
+            html = html_source(url)
             stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
-            stock.short_name = get_short_name(stock.trade_code)
+            stock.short_name = get_short_name(stock.trade_code, html, url)
             stock.finame_em = finam.code(stock.short_name)
 
             sort_action.append(stock)
@@ -286,12 +291,10 @@ def get_volume_stock_on_market(trade_code):
     return result
 
 
-def get_short_name(code):
+def get_short_name(code, html, url):
     directory = property.TYPE2_PATH + '/' + code + '/'
     file = directory + property.BOARD
     create_path(directory)
-    url = url_board(trade_code=code)
-    html = html_source(url)
     with open(file=file, mode="w+") as f:
         try:
             name = extractor.short_name_code(html)
@@ -302,7 +305,6 @@ def get_short_name(code):
                 name = extractor.short_name_code(html)
             except ValueError:
                 name = ''
-        # f.write(bytearray(html, 'UTF-8'))
         f.write(html)
         f.flush()
     f.close()
