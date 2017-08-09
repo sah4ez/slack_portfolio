@@ -3,7 +3,7 @@
 apt-get remove docker docker-engine docker.io
 apt-get update
 
-apt-get install apt-transport-https ca-certificates curl software-properties-common
+apt-get install -y apt-transport-https ca-certificates curl software-properties-common
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 
 apt-key fingerprint 0EBFCD88
@@ -14,7 +14,7 @@ add-apt-repository \
 
 apt-get update
 
-apt-get install docker-ce
+apt-get install -y docker-ce
 apt-cache madison docker-ce
 
 # Docker-compose
