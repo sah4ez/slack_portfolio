@@ -16,6 +16,7 @@ RUN wget --no-check-certificate -q -O - \
    ln -s /opt/phantomjs-$PHANTOMJS_VERSION-linux-x86_64/bin/phantomjs /usr/bin/phantomjs &&\
    ln -s /opt/phantomjs-$PHANTOMJS_VERSION-linux-x86_64/bin/phantomjs /usr/local/bin/phantomjs
 
-RUN mkdir /home/bot/bot/log && pip3 install texttable
+RUN mkdir /home/bot/bot/log
+RUN git clone https://github.com/Project-Platypus/Platypus.git && cd Platypus && python setup.py install
 #CMD ["/bin/bash"]
 CMD ['python3', '/home/bot/bot/bot.py', '${SLACK_BOT_TOKEN}', '${BOT_ID}']
