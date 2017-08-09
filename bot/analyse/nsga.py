@@ -6,6 +6,7 @@ LOG = my_log.get_logger('NSGA')
 
 
 def solve(stocks, iterations, mean_daily_returns, cov_matrix, days):
+    LOG.info('Start simple GA for %d' % iterations)
     solver = SimpleSolver(stocks, mean_daily_returns, cov_matrix, days)
     results = solver.run(iterations)
     cols = ['ret', 'stdev', 'sharpe']

@@ -11,6 +11,7 @@ db.connect()
 all_stocks = list()
 for s in Stock.objects():
     all_stocks.append(s)
+db.close()
 
 
 class ProblemPortfolio(pt.Problem):
@@ -62,7 +63,7 @@ def get_per_cent_by_item(stocks):
 
 
 def solve(stocks, iterations, mean_daily_returns, cov_matrix, days):
-    # LOG.info('Parameters: %s, %s, %s' % (mean_daily_returns, cov_matrix, days))
+    LOG.info('Start nsgaII for %d' % iterations)
     problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
     problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MINIMIZE]
     algorithm = pt.NSGAII(problem)
@@ -73,31 +74,29 @@ def solve(stocks, iterations, mean_daily_returns, cov_matrix, days):
     for num, solution in enumerate(algorithm.result):
         results[num][0] = solution.objectives[0]
         results[num][1] = solution.objectives[1]
-        results[num][2] = results[num][0]/ results[num][1]
+        results[num][2] = results[num][0] / results[num][1]
         results[num][3:] = np.array(solution.variables)
     for stock in stocks:
         cols.append(stock.shape())
     results_frame = pd.DataFrame(results, columns=cols)
     return results_frame
 
-# def solve(count):
-#     LOG.info('start NSGA with population count %d' % count)
-#     count_stocks = len(all_stocks)
-#     LOG.info('All stocks: %d' % count_stocks)
-#     result = list()
-#     for curr in range(count):
-#         random_stocks = get_random_stocks(all_stocks)
-#         days = len(all_stocks[0].day_history)
-#         returns = get_per_cent_by_item(random_stocks)
-#         mean_daily_returns = returns.mean()
-#         cov_matrix = returns.cov()
-#         LOG.info('Parameters: %s, %s, %s, %s' % (returns, mean_daily_returns, cov_matrix, days))
-#         problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
-#         problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MINIMIZE]
-#         algorithm = pt.NSGAII(problem)
-#         LOG.info('Start')
-#         algorithm.run(400000)
-#         LOG.info('End')
-#         result.append(algorithm.result)
-#         LOG.info('Solve: \n %s' % str(algorithm.result[0]))
-#     return str('OK')
+
+def solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days):
+    LOG.info('Start nsgaIII for %d' % iterations)
+    problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
+    problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MINIMIZE]
+    algorithm = pt.NSGAIII(problem, divisions_outer=1, divisions_inner=1)
+    algorithm.population_size = iterations
+    algorithm.run(iterations)
+    cols = ['ret', 'stdev', 'sharpe']
+    results = np.zeros((algorithm.population_size, 3 + len(stocks)))
+    for num, solution in enumerate(algorithm.result):
+        results[num][0] = solution.objectives[0]
+        results[num][1] = solution.objectives[1]
+        results[num][2] = results[num][0] / results[num][1]
+        results[num][3:] = np.array(solution.variables)
+    for stock in stocks:
+        cols.append(stock.shape())
+    results_frame = pd.DataFrame(results, columns=cols)
+    return results_frame

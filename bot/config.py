@@ -79,10 +79,12 @@ HELP_MAX = format(
 
 CMD_GA_SIMPLE = ['ga']
 HELP_GA_SIMPLE = format(
-    '*%s* _COUNT_ - запустить расчет портфелей по простой реализации генетического алгоритма, для COUNT' % CMD_GA_SIMPLE)
+    '*%s* _COUNT_ - запустить расчет портфелей по простой реализации генетического алгоритма, для COUNT\n' %
+    CMD_GA_SIMPLE[0])
 
-CMD_NSGAII = ['nsgaii']
-HELP_NSGAII = format('*%s* _COUNT_ - запустить расчет порфелей по NSGA-II для COUNT' % CMD_NSGAII)
+CMD_NSGAII = ['nsgaii', 'nsgaiii']
+HELP_NSGAII = format(
+    '*%s* / *%s* _COUNT_ - запустить расчет порфелей по NSGA-II для COUNT\n' % (CMD_NSGAII[0], CMD_NSGAII[1]))
 
 RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_CAPITAL + \
            HELP_MOEX + HELP_UPDATE + HELP_FILES + \
@@ -100,5 +102,6 @@ LOG_ALL_FILE = "log/all.log"
 
 GA_SIMPLE = "ga"
 GA_NSGAII = "nsgaii"
+GA_NSGAIII = "nsgaiii"
 RSP_GA = 'Finish GA'
 RSP_INVALID_PARAMETERS = 'Invalid parameters'

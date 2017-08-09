@@ -23,16 +23,14 @@ def for_portfolio(words):
     stdevs = list()
     table = texttable.Texttable(max_width=500)
     table.add_row(['id', 'profit', 'stdev'])
-    for num, ordered in enumerate(
-            pf.Portfolio.objects(date__gt=datetime(2017, 8, 8, 9, 0, 0, 0)).order_by('-max_item.sharpe_ratio')):
-        if num <= position:
-            item = ordered.max_item if is_max else ordered.min_item
-            LOG.info('Predict for %s' % item)
-            profits.append(predict(porftolio=item, money=100000))
-            stdevs.append(ordered.max_item.standard_deviation)
-            table.add_row(
-                [str(ordered._id), str(predict(porftolio=item, money=100000)),
-                 str(ordered.max_item.standard_deviation)])
+    for ordered in db.get_n_first_portfolios(position):
+        item = ordered.max_item if is_max else ordered.min_item
+        LOG.info('Predict for %s' % item)
+        profits.append(predict(porftolio=item, money=100000))
+        stdevs.append(ordered.max_item.standard_deviation)
+        table.add_row(
+            [str(ordered._id), str(predict(porftolio=item, money=100000)),
+             str(ordered.max_item.standard_deviation)])
 
     table.add_row(['', sum(profits) / len(profits), sum(stdevs) / len(stdevs)])
     return table.draw()
@@ -40,7 +38,6 @@ def for_portfolio(words):
 
 def predict(porftolio: pf.ItemPortfolio, money: int, from_date=(datetime.today() - timedelta(days=43)),
             to_date=datetime.today() - timedelta(days=1)):
-    db.connect()
     stocks = dict()
     income = list()
 

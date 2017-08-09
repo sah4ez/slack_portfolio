@@ -169,7 +169,6 @@ def welcome(msg):
 def listen():
     try:
         LOG.info("StarterBot connected and running!")
-        db.connect()
         while True:
             msg = slack_client.rtm_read()
             # print(msg)
