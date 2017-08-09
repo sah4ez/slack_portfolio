@@ -12,30 +12,19 @@ import config
 from analyse import nsga as simple, nsga_platypus as NSGAII
 from concurrent.futures import ProcessPoolExecutor
 import time
-from mongo import  mongo as db
+from mongo import mongo as db
 
 LOG = my_log.get_logger('solver')
 
 
-def ga(words):
-    if len(words) == 2:
-        type_ga = words[0]
-        count = int(words[1])
-    else:
-        return 'Invalid parameters %s' % str(words)
-
-    LOG.info('start NSGA with population count %d' % count)
-    all_stocks = list()
-    db.connect()
-    for s in Stock.objects():
-        all_stocks.append(s)
-    db.close()
-    print(len(all_stocks))
-    with ProcessPoolExecutor(max_workers=2) as executor:
-        features = {executor.submit(parallel_solve, all_stocks, type_ga, curr, count): curr for curr in range(count)}
-        for feature in concurrent.futures.as_completed(features):
-            LOG.info('Complete %s ' % feature.result())
-    return config.RSP_GA
+def get_stock_from_portfolio(portfolios):
+    stocks = list()
+    for portfolio in portfolios:
+        portfolio_stock = list()
+        for stock in portfolio.max_item.stocks:
+            portfolio_stock.append(db.stock_by_trade_code(stock.trade_code))
+        stocks.append(portfolio_stock)
+    return stocks
 
 
 def parallel_solve(all_stocks, type_ga, curr, count):
@@ -132,3 +121,118 @@ def get_stock_price(stocks):
         data_list.append(price_stock)
     data = pd.DataFrame(data_list)
     return data.transpose()
+
+
+def cov_and_mean(stocks):
+    # download daily price data for each of the stocks in the portfolio
+    data = get_stock_price(stocks)
+    returns = data.pct_change()
+
+    # calculate mean daily return and covariance of daily returns
+    mean_daily_returns = returns.mean()
+    cov_matrix = returns.cov()
+    return cov_matrix, mean_daily_returns
+
+
+def process_result_of_ga(results_frame, stocks):
+    max_sharpe_port = results_frame.iloc[results_frame['sharpe'].idxmax()]
+    min_vol_port = results_frame.iloc[results_frame['stdev'].idxmin()]
+
+    LOG.info('Max Sharpe ratio: \n%s' % str(max_sharpe_port))
+    LOG.info('Min standard deviation: \n%s' % str(min_vol_port))
+    db.connect()
+    solved = Portfolio()
+    max_item = parse_solved_portfolio(max_sharpe_port, stocks)
+    min_item = parse_solved_portfolio(min_vol_port, stocks)
+    solved.max_item = max_item
+    solved.min_item = min_item
+    solved.date = datetime.datetime.today()
+    solved.save()
+    db.close()
+
+
+def ga(words):
+    if len(words) == 2:
+        type_ga = words[0]
+        count = int(words[1])
+    else:
+        return config.RSP_INVALID_PARAMETERS % str(words)
+
+    LOG.info('start NSGA with population count %d' % count)
+    all_stocks = list()
+    db.connect()
+    for s in Stock.objects():
+        all_stocks.append(s)
+    db.close()
+    print(len(all_stocks))
+    with ProcessPoolExecutor(max_workers=2) as executor:
+        features = {executor.submit(parallel_solve, all_stocks, type_ga, curr, count): curr for curr in range(count)}
+        for feature in concurrent.futures.as_completed(features):
+            LOG.info('Complete %s ' % feature.result())
+    return config.RSP_GA
+
+
+def optimize(words):
+    if len(words) == 4:
+        type_ga = words[1]
+        iterations = int(words[2])
+        count = int(words[3])
+    else:
+        return config.RSP_INVALID_PARAMETERS % str(words)
+    LOG.info('Start optimization with %s [%d] for %d' % (type_ga, iterations, count))
+
+    portfolios = db.get_n_first_portfolios(count)
+
+    all_stocks = get_stock_from_portfolio(portfolios)
+    for num, portfolio in enumerate(portfolios):
+        stocks = all_stocks[num]
+        days = len(stocks[0].day_history)
+        cov_matrix, mean_daily_returns = cov_and_mean(stocks)
+        problemGenerator = NSGAII.PortfolioGenerator(portfolio)
+
+        start = time.time()
+        if type_ga == config.GA_SIMPLE:
+            results_frame = simple.solve(stocks, iterations, mean_daily_returns, cov_matrix, days)
+        if type_ga == config.GA_NSGAII:
+            results_frame = NSGAII.solve(stocks, iterations, mean_daily_returns, cov_matrix, days, problemGenerator)
+        if type_ga == config.GA_NSGAIII:
+            results_frame = NSGAII.solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days,
+                                                 problemGenerator)
+        duration = time.time() - start
+        LOG.info('Duration solved: %s' % duration)
+        process_result_of_ga(results_frame, stocks)
+        LOG.info('Solve %d of %d' % (num, len(portfolios)))
+
+
+def parallel_solve(all_stocks, type_ga, curr, count):
+    LOG.info('Start parallel solve in %s' % str(threading.get_ident()))
+    range_stock = len(all_stocks)
+    number = list()
+    stocks = []
+
+    for position in range(15):
+        pos = random.randint(0, range_stock)
+        while pos in number:
+            pos = random.randint(0, range_stock)
+        stock = all_stocks[pos - 1]
+        while len(stock.day_history) < 66:
+            pos = random.randint(0, range_stock)
+            stock = all_stocks[pos - 1]
+        stocks.append(stock)
+
+    cov_matrix, mean_daily_returns = cov_and_mean(stocks)
+    days = len(stocks[0].day_history)
+    iterations = 50000
+
+    start = time.time()
+    if type_ga == config.GA_SIMPLE:
+        results_frame = simple.solve(stocks, iterations, mean_daily_returns, cov_matrix, days)
+    if type_ga == config.GA_NSGAII:
+        results_frame = NSGAII.solve(stocks, iterations, mean_daily_returns, cov_matrix, days)
+    if type_ga == config.GA_NSGAIII:
+        results_frame = NSGAII.solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days)
+    duration = time.time() - start
+    LOG.info('Duration solved: %s' % duration)
+    process_result_of_ga(results_frame, stocks)
+    LOG.info('Save %d portfolio from %d in thread %s' % (curr, count, str(threading.get_ident())))
+    return 'Duration %s' % str(duration)

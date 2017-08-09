@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import mongoengine as me
 from mongoengine.connection import disconnect as closeDb
@@ -58,10 +58,12 @@ def get_regex_trade_code(is_privileged):
     return re.compile(property.PRIVILEGED) if is_privileged else re.compile(property.NOT_PRIVILEGED)
 
 
-def get_n_first_portfolios(count):
+def get_n_first_portfolios(count: int):
+    LOG.info('Loading %d portfolios' % count)
     portolios = list()
     connect()
-    for p in Portfolio.objects(date__gt=datetime(2017, 8, 8, 9, 0, 0, 0)).order_by('-max_item.sharpe_ratio')[:count]:
+    today = datetime.today() - timedelta(hours=12)
+    for p in Portfolio.objects(date__gt=today).order_by('-max_item.sharpe_ratio')[:count]:
         portolios.append(p)
     close()
     return portolios

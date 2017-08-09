@@ -6,9 +6,8 @@ import time
 
 LOG = my_log.get_logger('compare-solver')
 
-
-iterations = [150000, 200000, 250000]
-# iterations = [300000]
+# iterations = [150000, 200000, 250000]
+iterations = [100, 2000, 30000, 50000, 100000]
 
 for ordered in db.get_n_first_portfolios(1):
     sharpes_sm = list()
@@ -34,6 +33,8 @@ for ordered in db.get_n_first_portfolios(1):
         mean_daily_returns = returns.mean()
         cov_matrix = returns.cov()
 
+        problemGenerator = nsagii.PortfolioGenerator(ordered)
+
         start = time.time()
         result_frame_sm = sm.solve(stocks, iter, mean_daily_returns, cov_matrix, days)
         time_sm_solve = time.time() - start
@@ -41,13 +42,14 @@ for ordered in db.get_n_first_portfolios(1):
         LOG.info('sm-%d - time: %s' % (iter, str(time_sm_solve)))
 
         start = time.time()
-        result_frame_nsgaii = nsagii.solve(stocks, iter, mean_daily_returns, cov_matrix, days)
+        result_frame_nsgaii = nsagii.solve(stocks, iter, mean_daily_returns, cov_matrix, days, problemGenerator)
         time_nsga_solve = time.time() - start
         time_nsga.append(time_nsga_solve)
         LOG.info('nsgaii-%d - time: %s' % (iter, str(time_nsga_solve)))
 
         start = time.time()
-        result_frame_nsgaiii = nsagii.solve_nsgaiii(stocks, iter, mean_daily_returns, cov_matrix, days)
+        result_frame_nsgaiii = nsagii.solve_nsgaiii(stocks, iter, mean_daily_returns, cov_matrix, days,
+                                                    problemGenerator)
         time_nsga_solve = time.time() - start
         time_nsgaiii.append(time_nsga_solve)
         LOG.info('nsagiii-%d - time: %s' % (iter, str(time_nsga_solve)))
@@ -79,7 +81,7 @@ for ordered in db.get_n_first_portfolios(1):
         plt.scatter(max_sharpe_port_nsgaiii[1], max_sharpe_port_nsgaiii[0], marker=(6, 2, 0), color='r', s=300)
         LOG.info('nsgaiii-%d: \n %s' % (iter, str(max_sharpe_port_nsgaiii)))
 
-        LOG.info('%d / %d' % (num, len(iterations)))
+        LOG.info('%d / %d' % (num + 1, len(iterations)))
 
     plt.figure('trend')
     plt.plot(iterations, sharpes_sm, label='sm')

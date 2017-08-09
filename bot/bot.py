@@ -4,7 +4,7 @@ import threading
 import time
 import traceback
 
-from analyse import solver , income_portfolio as ip
+from analyse import solver, income_portfolio as ip
 from slackclient import SlackClient
 
 import capital
@@ -18,9 +18,7 @@ import updater
 import url_board
 import yahoo.price as price
 from analyse import analyser
-from parse import portfolio
 from bot_impl.bot_api import Bot
-from mongo import mongo as db
 
 LOG = my_log.get_logger("main")
 
@@ -102,17 +100,22 @@ def handle_command(command, channel):
             response(channel, message)
 
         elif first_command in config.CMD_GA_SIMPLE:
-            response(channel, config.RSP_WAIT)
+            response(channel, config.RSP_GA)
             message = solver.ga(words)
 
         elif first_command in config.CMD_NSGAII:
-            response(channel, config.RSP_WAIT)
+            response(channel, config.RSP_GA)
             message = solver.ga(words)
             response(channel, message)
 
         elif first_command in config.CMD_MIN_MAX:
-            response(channel, config.RSP_WAIT)
+            response(channel, config.RSP_GA)
             message = ip.for_portfolio(words)
+            response(channel, message)
+
+        elif first_command in config.CMD_OPTIMIZE:
+            response(channel, config.RSP_GA)
+            message = solver.optimize(words)
             response(channel, message)
 
         else:
@@ -150,7 +153,7 @@ def parse_slack_wait(msg):
     if output_list and len(output_list) > 0:
         for output in output_list:
             if output and 'user' in output and bot.BOT_ID in output['user']:
-                if 'text' in output and config.RSP_WAIT in output['text']:
+                if 'text' in output and (config.RSP_WAIT in output['text'] or config.RSP_GA in output['text']):
                     bot.reset_delay()
                     slack_client.api_call(
                         method="chat.delete",

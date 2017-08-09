@@ -33,6 +33,30 @@ class ProblemPortfolio(pt.Problem):
         solution.constraints[:] = sum(parts)
 
 
+class PortfolioGenerator(pt.Generator):
+    def __init__(self, portfolio):
+        super(PortfolioGenerator, self).__init__()
+        self.portfolio = portfolio
+        self.step = 0.005
+
+    def generate(self, problem):
+        solution = pt.Solution(problem)
+        solution.variables = [self.shift(x.value) for x in self.portfolio.max_item.stocks]
+        return solution
+
+    def shift(self, x):
+        values = pt.Real(-1, 1)
+        sign = values.rand()
+        x += sign
+        if x > 1:
+            x -= 1
+        elif x < 0:
+            x *= -1
+        return x
+
+
+
+
 def get_random_stocks(all_stocks):
     number = list()
     stocks = list()
@@ -62,11 +86,14 @@ def get_per_cent_by_item(stocks):
     return data.transpose().pct_change()
 
 
-def solve(stocks, iterations, mean_daily_returns, cov_matrix, days):
+def solve(stocks, iterations, mean_daily_returns, cov_matrix, days, generator: pt.Generator = None):
     LOG.info('Start nsgaII for %d' % iterations)
     problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
     problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MINIMIZE]
-    algorithm = pt.NSGAII(problem)
+    if generator is None:
+        algorithm = pt.NSGAII(problem)
+    else:
+        algorithm = pt.NSGAII(problem, generator=generator)
     algorithm.population_size = iterations
     algorithm.run(iterations)
     cols = ['ret', 'stdev', 'sharpe']
@@ -82,11 +109,14 @@ def solve(stocks, iterations, mean_daily_returns, cov_matrix, days):
     return results_frame
 
 
-def solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days):
+def solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days, generator: pt.Generator = None):
     LOG.info('Start nsgaIII for %d' % iterations)
     problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
     problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MINIMIZE]
-    algorithm = pt.NSGAIII(problem, divisions_outer=1, divisions_inner=1)
+    if generator is None:
+        algorithm = pt.NSGAIII(problem, divisions_outer=1, divisions_inner=1)
+    else:
+        algorithm = pt.NSGAIII(problem, divisions_outer=1, divisions_inner=1, generator=generator)
     algorithm.population_size = iterations
     algorithm.run(iterations)
     cols = ['ret', 'stdev', 'sharpe']

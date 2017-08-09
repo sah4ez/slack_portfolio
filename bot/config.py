@@ -9,6 +9,7 @@ HELP_CAPITAL = format(
     "и отношение капитализации к объему акций [_руб/акция_]\n" % (CMD_CAPITAL[0], CMD_CAPITAL[1]))
 
 RSP_WAIT = "Подождите... Я уже ищу"
+RSP_GA = "Я начал долгую оптимизацию... Когда я закончу, я вам сообщу. (ツ)"
 
 CMD_UPDATE = ["update"]
 CMD_UPDATE_P = ["update_p"]
@@ -86,15 +87,21 @@ CMD_NSGAII = ['nsgaii', 'nsgaiii']
 HELP_NSGAII = format(
     '*%s* / *%s* _COUNT_ - запустить расчет порфелей по NSGA-II для COUNT\n' % (CMD_NSGAII[0], CMD_NSGAII[1]))
 
+CMD_OPTIMIZE = ['optimize']
+HELP_OPTIMIZE = format('*%s* TYPE_GA ITERATIONS COUNT - запустить оптимизацию первых COUNT '
+                       'портфелей за последние 12 часов с помощью алгоритма TYPE_GA '
+                       'с количеством итераций ITERATIONS\n' % CMD_OPTIMIZE[0])
+
 RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_CAPITAL + \
            HELP_MOEX + HELP_UPDATE + HELP_FILES + \
            HELP_SELECT_FOR_PORTFOLIO + HELP_GET_LIST_SELECTED + HELP_FIND + \
            HELP_FINAM_CODE + HELP_UPDATE_METAINFO + HELP_ANALYSE + HELP_MAX + \
-           HELP_GA_SIMPLE + HELP_NSGAII
+           HELP_GA_SIMPLE + HELP_NSGAII + HELP_OPTIMIZE
 
 WELCOME = format("Привет, чтобы узнать что я умею напиши одно из @portfolio *%s*, *%s*, *%s*\n" %
                  (CMD_HELP[0], CMD_HELP[1], CMD_HELP[2]))
 
+RSP_INVALID_PARAMETERS = 'Invalid parameters %s'
 RSP_ERROR = "Ops... Some error."
 
 LOG_FORMAT = "%(asctime)s |%(name)s:%(lineno)d|[%(levelname)s]: %(message)s"
@@ -103,5 +110,3 @@ LOG_ALL_FILE = "log/all.log"
 GA_SIMPLE = "ga"
 GA_NSGAII = "nsgaii"
 GA_NSGAIII = "nsgaiii"
-RSP_GA = 'Finish GA'
-RSP_INVALID_PARAMETERS = 'Invalid parameters'
