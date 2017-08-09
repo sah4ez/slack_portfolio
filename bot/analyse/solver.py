@@ -1,27 +1,25 @@
-import concurrent
-
-import numpy as np
 import pandas as pd
 import pandas_datareader.data as web
 import matplotlib.pyplot as plt
-from pandas_datareader._utils import RemoteDataError
 from mongo.Stock import Stock
 from mongo.Portfolio import Portfolio, Item, ItemPortfolio
-from mongo import mongo as db
 import random
 import datetime
-from slackclient import SlackClient
 import shutil
 import my_log
-import re
-from concurrent.futures import ThreadPoolExecutor
 import config
 from analyse import nsga as simple, nsga_platypus as NSGAII
 
 LOG = my_log.get_logger('solver')
 
 
-def ga(slack_client: SlackClient, channel, count=150, type=config.GA_SIMPLE):
+def ga(words):
+    if len(words) == 2:
+        count = words[1]
+        type = words[0]
+    else:
+        return 'Invalid parameters %s' % str(words)
+
     LOG.info('start NSGA with population count %d' % count)
     all_stocks = list()
     for s in Stock.objects():
@@ -60,8 +58,6 @@ def ga(slack_client: SlackClient, channel, count=150, type=config.GA_SIMPLE):
 
         LOG.info('Max Sharpe ratio: %s' % str(max_sharpe_port))
         LOG.info('Min standard deviation: %s' % str(min_vol_port))
-        slack_client.api_call("chat.postMessage", channel=channel,
-                              text=str(max_sharpe_port) + '\n' + str(min_vol_port), as_user=True)
         solved = Portfolio()
         max_item = parse_solved_portfolio(max_sharpe_port, stocks)
         min_item = parse_solved_portfolio(min_vol_port, stocks)
@@ -70,15 +66,7 @@ def ga(slack_client: SlackClient, channel, count=150, type=config.GA_SIMPLE):
         solved.date = datetime.datetime.today()
         solved.save()
         LOG.info('Save %d portfolio from %d' % (curr, count))
-        with open('res/output.txt', 'a') as file:
-            file.write(str(max_sharpe_port))
-            file.write('----------')
-            file.write(str(min_vol_port))
-            file.write('==========')
-            file.flush()
-            file.close()
-
-    shutil.copyfile('res/output.txt', 'res/output_back.txt')
+    return config.RSP_GA
 
 
 def parse_solved_portfolio(array, stocks) -> ItemPortfolio:

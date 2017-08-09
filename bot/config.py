@@ -63,7 +63,7 @@ HELP_FINAM_CODE = format(
 
 CMD_UPDATE_METAINFO = ["meta", "мета"]
 RSP_UPDATE_METAINFO = "Справочная информация обновлена"
-HELP_UPDATE_METAINFO = format("*%s* (*%s) - обновить список компаний MOEX, free-float, capitalization\n" %
+HELP_UPDATE_METAINFO = format("*%s* (*%s*) - обновить список компаний MOEX, free-float, capitalization\n" %
                               (CMD_UPDATE_METAINFO[0], CMD_UPDATE_METAINFO[1]))
 
 CMD_ANALYSE = ["анализ", "analyse"]
@@ -71,10 +71,24 @@ RSP_ANALYSE = "Анализ пакате акций из команды selected
 HELP_ANALYSE = format("*%s* (*%s*) [_<trade_code>_] - проанализировать текущее состояние порфтеля "
                       "или выбарнных акции trade_code\n" % (CMD_ANALYSE[0], CMD_ANALYSE[1]))
 
+CMD_MIN_MAX = ['max', 'min']
+HELP_MAX = format(
+    "*%s* _COUNT_ - посчитать первые COUNT портфель по максимальным/минимальным"
+    " значениям стандартного отклонения за определенный период\n"
+    % CMD_MIN_MAX[0])
+
+CMD_GA_SIMPLE = ['ga']
+HELP_GA_SIMPLE = format(
+    '*%s* _COUNT_ - запустить расчет портфелей по простой реализации генетического алгоритма, для COUNT' % CMD_GA_SIMPLE)
+
+CMD_NSGAII = ['nsgaii']
+HELP_NSGAII = format('*%s* _COUNT_ - запустить расчет порфелей по NSGA-II для COUNT' % CMD_NSGAII)
+
 RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_CAPITAL + \
            HELP_MOEX + HELP_UPDATE + HELP_FILES + \
            HELP_SELECT_FOR_PORTFOLIO + HELP_GET_LIST_SELECTED + HELP_FIND + \
-           HELP_FINAM_CODE + HELP_UPDATE_METAINFO + HELP_ANALYSE
+           HELP_FINAM_CODE + HELP_UPDATE_METAINFO + HELP_ANALYSE + HELP_MAX + \
+           HELP_GA_SIMPLE + HELP_NSGAII
 
 WELCOME = format("Привет, чтобы узнать что я умею напиши одно из @portfolio *%s*, *%s*, *%s*\n" %
                  (CMD_HELP[0], CMD_HELP[1], CMD_HELP[2]))
@@ -84,5 +98,7 @@ RSP_ERROR = "Ops... Some error."
 LOG_FORMAT = "%(asctime)s |%(name)s:%(lineno)d|[%(levelname)s]: %(message)s"
 LOG_ALL_FILE = "log/all.log"
 
-GA_SIMPLE = "nsga"
+GA_SIMPLE = "ga"
 GA_NSGAII = "nsgaii"
+RSP_GA = 'Finish GA'
+RSP_INVALID_PARAMETERS = 'Invalid parameters'

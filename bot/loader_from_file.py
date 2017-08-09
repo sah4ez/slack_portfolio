@@ -1,3 +1,4 @@
+import concurrent
 import os
 import re
 import threading
@@ -9,6 +10,7 @@ from os.path import isfile, join
 from pip._vendor import requests
 from pip._vendor.requests.exceptions import MissingSchema
 from selenium import webdriver
+from concurrent.futures import ThreadPoolExecutor
 
 import extractor
 import my_log
@@ -85,10 +87,12 @@ def get_stock_from_file(name, line, is_download):
     stock_line(stock, line=line)
     url = url_board(trade_code=stock.trade_code)
     html = html_source(url)
+    download_file(url, 'res/companies/' + stock.trade_code + '/' + property.BOARD)
     stock.short_name = get_short_name(stock.trade_code, html, url)
     stock.finame_em = finam.code(stock.short_name)
     stock.last_price = get_last_price(stock.trade_code)
     stock.volume_stock_on_market = get_volume_stock_on_market(stock.trade_code)
+    stock.lot = extractor.get_lot(stock.trade_code, html)
 
     if is_download:
         download = threading.Thread(load_files(line[7], line[38]))
@@ -106,7 +110,6 @@ def stock_line(stock, line):
     stock.emitent_full_name = line[11]
     stock.capitalisation = float(extractor.get_value_capitalization(stock.trade_code))
     stock.free_float = float(extractor.get_free_float(stock.trade_code))
-    stock.lot = int(extractor.get_lot(stock.trade_code))
     stock.official_url = line[37]
     stock.url = line[38]
     return stock
@@ -119,6 +122,7 @@ def stock_from_line(name, line, is_download=True):
 
 def update_stock_from_file(name, download, is_priviledged=False):
     try:
+        LOG.info('Update from file')
         if name == "" or name is None:
             raise db.NotFoundStock
         stock = db.stock_by_emitet_name(name, is_priviledged)
@@ -131,13 +135,15 @@ def update_stock_from_file(name, download, is_priviledged=False):
         stock.update_file(stock_file)
         stock.save()
     except db.NotFoundStock:
-        action = read_to_list(property.DATA)
-        stock_file = None
-        for a in action:
-            stock_file = stock_from_line(name, a, download)
-            if stock_file is not None:
-                break
-        stock_file.save()
+        LOG.error('Not found stock. Update all.')
+        load_stocks(count=None, upload_files=download)
+        # action = read_to_list(property.DATA)
+        # stock_file = None
+        # for a in action:
+        #     stock_file = stock_from_line(name, a, download)
+        #     if stock_file is not None:
+        #         break
+        # stock_file.save()
 
 
 def load_one_stock(name, is_privileged=False):
@@ -215,33 +221,45 @@ def load_files(trade_code, link):
 
 def load_stocks(count=None, upload_files=False):
     action = read_to_list(property.DATA)
-    sort_action = []
-    num = 0
-    for a in action:
-        if a[4] == property.STOCKS:
-            if count is not None and count == num:
-                break
-            num += 1
-            trade_code = a[7]
+    sort_action = list()
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {executor.submit(process_stock, a, count, num, sort_action, upload_files): (num, a)
+                   for (num, a) in enumerate(action)}
+        for future in concurrent.futures.as_completed(futures):
+            data = futures[future]
             try:
-                stock = db.stock_by_trade_code(trade_code)
-            except db.NotFoundStock:
-                stock = s.Stock()
-            stock_line(stock, line=a)
-            url = url_board(trade_code=stock.trade_code)
-            html = html_source(url)
-            stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
-            stock.short_name = get_short_name(stock.trade_code, html, url)
-            stock.finame_em = finam.code(stock.short_name)
-
-            sort_action.append(stock)
-            if upload_files:
-                LOG.info("Will updated finance document company %s" % stock.short_name)
-                load_files(stock.trade_code, stock.url)
-            LOG.info("Save stock %s" % str(stock))
-            stock.save()
-    LOG.info("Updated %d" % num)
+                num = future.result()
+            except Exception as exc:
+                LOG.error('%r generated an exception: %s' % (data, exc))
     return sort_action
+
+
+def process_stock(a, count, num, sort_action, upload_files):
+    if a[4] == property.STOCKS:
+        if count is not None and count == num:
+            return
+        trade_code = a[7]
+        LOG.info('Process stock %s in thred %s' % (trade_code, threading.get_ident()))
+        try:
+            stock = db.stock_by_trade_code(trade_code)
+        except db.NotFoundStock:
+            stock = s.Stock()
+        url = url_board(trade_code=stock.trade_code)
+        html = html_source(url)
+        download_file(url, 'res/companies/' + trade_code + '/' + property.BOARD)
+        stock_line(stock, line=a)
+        stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
+        stock.short_name = get_short_name(stock.trade_code, html, url)
+        stock.finame_em = finam.code(stock.short_name)
+        stock.lot = extractor.get_lot(stock.trade_code, html)
+
+        sort_action.append(stock)
+        if upload_files:
+            LOG.info("Will updated finance document company %s" % stock.short_name)
+            load_files(stock.trade_code, stock.url)
+        LOG.info("Save stock %s" % str(stock))
+        stock.save()
+        return num
 
 
 def get_list(path):
@@ -292,23 +310,27 @@ def get_volume_stock_on_market(trade_code):
 
 
 def get_short_name(code, html, url):
-    directory = property.TYPE2_PATH + '/' + code + '/'
-    file = directory + property.BOARD
-    create_path(directory)
-    with open(file=file, mode="w+") as f:
-        try:
-            name = extractor.short_name_code(html)
-        except ValueError:
-            time.sleep(3)
-            html = html_source(url)
-            try:
-                name = extractor.short_name_code(html)
-            except ValueError:
-                name = ''
-        f.write(html)
-        f.flush()
-    f.close()
-    return name
+    LOG.info('Get short name %s' % code)
+    found = re.compile(property.SHORT_NAME_STOCK).search(html)
+    if found is not None:
+        name = str(found.group(0)).replace('<th>Краткое наименование</th><td>', '').replace('</td>', '')
+        return name
+    # directory = property.TYPE2_PATH + '/' + code + '/'
+    # file = directory + property.BOARD
+    # create_path(directory)
+    # with open(file=file, mode="w+") as f:
+    #     try:
+    #         name = extractor.short_name_code(html)
+        # except ValueError:
+        #     time.sleep(3)
+        #     html = html_source(url)
+        #     try:
+        #         name = extractor.short_name_code(html)
+        #     except ValueError:
+        #         name = ''
+        # f.write(html)
+        # f.flush()
+    # f.close()
 
 
 def url_board(trade_code):

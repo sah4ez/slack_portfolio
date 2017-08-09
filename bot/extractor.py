@@ -113,23 +113,14 @@ def short_name_code(html):
         return name
 
 
-def get_lot(trade_code):
-    directory = TYPE2_PATH + '/' + trade_code + '/'
-    file = directory + BOARD
-    fine_line = -1
+def get_lot(trade_code, source):
     try:
-        with open(file=file, mode="rb") as f:
-            LOG.info('Open file:  %s' % file)
-            for line in f:
-                line = str(line, "UTF-8")
-                if re.compile(LOT_STOCK).search(line):
-                    found_pattern = re.compile(LOT_STOCK).search(line).group(0)
-                    lot = int(re.compile(r'[0-9]+').search(found_pattern.replace(' ', '')).group(0))
-                    LOG.info('Found lot value %d for stock %s' % (lot, trade_code))
-                    f.close()
-                    return lot
-        f.close()
+        if re.compile(LOT_STOCK).search(source):
+            found_pattern = re.compile(LOT_STOCK).search(source).group(0)
+            lot = int(re.compile(r'[0-9]+').search(found_pattern.replace(' ', '')).group(0))
+            LOG.info('Found lot value %d for stock %s' % (lot, trade_code))
+            return lot
     except FileNotFoundError:
-        LOG.error('Not found file %s for stock %s' % (file, trade_code))
+        LOG.error('Not found file %s for stock %s' % (source, trade_code))
 
     return 0

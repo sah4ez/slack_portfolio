@@ -2,7 +2,9 @@ from mongo import (mongo as db, Portfolio as pf)
 import re
 
 import my_log
+
 LOG = my_log.get_logger('Parse_Portfolio')
+
 
 def string_portfolios(path):
     LOG.info('Start for path=%s', path)

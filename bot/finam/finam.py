@@ -141,8 +141,7 @@ def url_download_history_stock_price(trade_code, finam_em, file_name, period, fr
 
 def code(short_name):
     LOG.info('Get finame code by [%s]' % short_name)
-    with (open(file='./res/finam_em.csv', mode='rb')) as f:
-        for r in f:
-            line = str(r, 'UTF-8').split(';')
-            if short_name in line[1]:
-                return line[0]
+    with (open(file='./res/finam_em.csv', mode='r')) as f:
+        for line in f:
+            if short_name in line.split(';')[1]:
+                return line.split(';')[0]

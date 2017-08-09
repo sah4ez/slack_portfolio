@@ -4,7 +4,7 @@ import threading
 import time
 import traceback
 
-from analyse import nsga as nsga, income_portfolio as ip, nsga_platypus as npt
+from analyse import solver , income_portfolio as ip
 from slackclient import SlackClient
 
 import capital
@@ -87,40 +87,34 @@ def handle_command(command, channel):
         elif first_command in config.CMD_FIND:
             message = finder.find(words)
             response(channel, message)
+
         elif first_command in config.CMD_FINAM_CODE:
             response(channel, config.RSP_WAIT)
             message = finam.loader(words)
             response(channel, message)
+
         elif first_command in config.CMD_UPDATE_METAINFO:
             message = updater.update_metainfo()
             response(channel, message)
+
         elif first_command in config.CMD_ANALYSE:
             message = analyser.analyse(words)
             response(channel, message)
-        elif first_command in ['ga']:
-            if len(words) == 2:
-                nsga.ga(slack_client, channel, count=int(words[1]))
-            else:
-                nsga.ga(slack_client, channel)
-            # nsga_ga.start()
-            response(channel, 'Finish GA!')
-            bot.post_file(channel, 'res/output.txt')
-        elif first_command in ['storage_portfolio']:
+
+        elif first_command in config.CMD_GA_SIMPLE:
             response(channel, config.RSP_WAIT)
-            portfolio.string_portfolios(path='res/output.txt')
-            response(channel, 'All portfolios saved')
-        elif first_command in ['test_max']:
+            message = solver.ga(words)
+
+        elif first_command in config.CMD_NSGAII:
             response(channel, config.RSP_WAIT)
-            message = ip.for_portfolio(int(words[1]))
+            message = solver.ga(words)
             response(channel, message)
-        elif first_command in ['test_min']:
+
+        elif first_command in config.CMD_MIN_MAX:
             response(channel, config.RSP_WAIT)
-            message = ip.for_portfolio(int(words[1]), is_max=False)
+            message = ip.for_portfolio(words)
             response(channel, message)
-        elif first_command in ['platypus']:
-            response(channel, config.RSP_WAIT)
-            message = npt.solve(int(words[1]))
-            response(channel, message)
+
         else:
             response(channel, message)
 
