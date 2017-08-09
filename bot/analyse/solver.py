@@ -19,12 +19,14 @@ LOG = my_log.get_logger('solver')
 
 def get_stock_from_portfolio(portfolios):
     stocks = list()
+    sharpes = list()
     for portfolio in portfolios:
         portfolio_stock = list()
+        sharpes.append(portfolio.max_item.sharpe_ratio)
         for stock in portfolio.max_item.stocks:
             portfolio_stock.append(db.stock_by_trade_code(stock.trade_code))
         stocks.append(portfolio_stock)
-    return stocks
+    return stocks, sharpes
 
 
 def parallel_solve(all_stocks, type_ga, curr, count):
@@ -149,6 +151,7 @@ def process_result_of_ga(results_frame, stocks):
     solved.date = datetime.datetime.today()
     solved.save()
     db.close()
+    return max_item.sharpe_ratio
 
 
 def ga(words):
@@ -173,35 +176,59 @@ def ga(words):
 
 
 def optimize(words):
+    repeats = 1
     if len(words) == 4:
         type_ga = words[1]
         iterations = int(words[2])
         count = int(words[3])
+    if len(words) == 5:
+        type_ga = words[1]
+        iterations = int(words[2])
+        count = int(words[3])
+        repeats = int(words[4])
     else:
         return config.RSP_INVALID_PARAMETERS % str(words)
+
+    result = list()
     LOG.info('Start optimization with %s [%d] for %d' % (type_ga, iterations, count))
+    for repeat in range(repeats):
+        LOG.info('Repeat %d / %d' % (repeat, repeats))
 
-    portfolios = db.get_n_first_portfolios(count)
+        portfolios = db.get_n_first_portfolios(count)
 
-    all_stocks = get_stock_from_portfolio(portfolios)
-    for num, portfolio in enumerate(portfolios):
-        stocks = all_stocks[num]
-        days = len(stocks[0].day_history)
-        cov_matrix, mean_daily_returns = cov_and_mean(stocks)
-        problemGenerator = NSGAII.PortfolioGenerator(portfolio)
+        all_stocks, sharpes = get_stock_from_portfolio(portfolios)
+        optimize_sharpes = list()
+        with ProcessPoolExecutor() as executor:
+            features = {
+                executor.submit(parallel_optimization, portfolios.index(portfolio), portfolios, portfolio, all_stocks,
+                                iterations, type_ga): portfolio for portfolio in portfolios}
+            for feature in concurrent.futures.as_completed(features):
+                optimize_sharpes.append(feature.result())
+        for num, x in enumerate(sharpes):
+            y = optimize_sharpes[num]
+        result.append(format('%s | %.4f -> %.4f ==> %.4f%%' % (str(portfolios[num]._id), x, y, y / x * 100)))
+    return "Result: \n" + "\n".join(result)
 
-        start = time.time()
-        if type_ga == config.GA_SIMPLE:
-            results_frame = simple.solve(stocks, iterations, mean_daily_returns, cov_matrix, days)
-        if type_ga == config.GA_NSGAII:
-            results_frame = NSGAII.solve(stocks, iterations, mean_daily_returns, cov_matrix, days, problemGenerator)
-        if type_ga == config.GA_NSGAIII:
-            results_frame = NSGAII.solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days,
-                                                 problemGenerator)
-        duration = time.time() - start
-        LOG.info('Duration solved: %s' % duration)
-        process_result_of_ga(results_frame, stocks)
-        LOG.info('Solve %d of %d' % (num, len(portfolios)))
+
+def parallel_optimization(num, portfolios, portfolio, all_stocks, iterations, type_ga):
+    stocks = all_stocks[num]
+    days = len(stocks[0].day_history)
+    cov_matrix, mean_daily_returns = cov_and_mean(stocks)
+    problemGenerator = NSGAII.PortfolioGenerator(portfolio)
+
+    start = time.time()
+    if type_ga == config.GA_SIMPLE:
+        results_frame = simple.solve(stocks, iterations, mean_daily_returns, cov_matrix, days)
+    if type_ga == config.GA_NSGAII:
+        results_frame = NSGAII.solve(stocks, iterations, mean_daily_returns, cov_matrix, days, problemGenerator)
+    if type_ga == config.GA_NSGAIII:
+        results_frame = NSGAII.solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days,
+                                             problemGenerator)
+    duration = time.time() - start
+    LOG.info('Duration solved: %s' % duration)
+    new_sharpe = process_result_of_ga(results_frame, stocks)
+    LOG.info('Solve %d of %d' % (num + 1, len(portfolios)))
+    return new_sharpe
 
 
 def parallel_solve(all_stocks, type_ga, curr, count):

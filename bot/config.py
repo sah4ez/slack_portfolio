@@ -88,9 +88,10 @@ HELP_NSGAII = format(
     '*%s* / *%s* _COUNT_ - запустить расчет порфелей по NSGA-II для COUNT\n' % (CMD_NSGAII[0], CMD_NSGAII[1]))
 
 CMD_OPTIMIZE = ['optimize']
-HELP_OPTIMIZE = format('*%s* TYPE_GA ITERATIONS COUNT - запустить оптимизацию первых COUNT '
+HELP_OPTIMIZE = format('*%s* TYPE_GA ITERATIONS COUNT [REPEAT] - запустить оптимизацию первых COUNT '
                        'портфелей за последние 12 часов с помощью алгоритма TYPE_GA '
-                       'с количеством итераций ITERATIONS\n' % CMD_OPTIMIZE[0])
+                       'с количеством итераций ITERATIONS. REPEAT - сколько раз эту оптимизацию повторить\n' %
+                       CMD_OPTIMIZE[0])
 
 RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_CAPITAL + \
            HELP_MOEX + HELP_UPDATE + HELP_FILES + \
