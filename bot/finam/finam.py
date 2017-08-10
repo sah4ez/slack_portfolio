@@ -6,7 +6,8 @@ import loader_from_file
 import config
 import mongo.Price as p
 from mongo import Stock as s
-import time
+from concurrent.futures import ProcessPoolExecutor
+import concurrent
 
 LOG = my_log.get_logger("Finam Loader")
 
@@ -26,9 +27,12 @@ def loader(words):
 def history_all_stocks(count=None):
     LOG.info("Load all stocks")
     stocks = s.Stock.objects()
-    for num, stock in enumerate(stocks):
-        LOG.info("Load [%d/%d] %s" % (num, stocks.count(), stock.trade_code))
-        load_history(stock.trade_code, count)
+    all_stocks = stocks.count()
+    with ProcessPoolExecutor(max_workers=4) as executor:
+        features = {executor.submit(load_history, stock.trade_code, count): stock for stock in stocks}
+        for num, feature in enumerate(concurrent.futures.as_completed(features)):
+            trade_code = feature.result()
+            LOG.info("Load [%d/%d] %s" % (num, all_stocks, trade_code))
     return config.RSP_FINAM_CODE_ALL
 
 
@@ -101,7 +105,7 @@ def load_history(trade_code, count=None):
         save_to_db(stock, path, count, period)
 
     stock.save()
-    return format(config.RSP_FINAM_CODE % (stock.trade_code, str(stock.finame_em)))
+    return trade_code
 
 
 def url_download_history_stock_price(trade_code, finam_em, file_name, period, from_day=1, from_month=1, from_year=2010,

@@ -16,7 +16,7 @@ db.close()
 
 class ProblemPortfolio(pt.Problem):
     def __init__(self, cov_matrix, mean_daily_returns, days):
-        super(ProblemPortfolio, self).__init__(15, 2, nconstrs=1)
+        super(ProblemPortfolio, self).__init__(nvars=15, nobjs=2, nconstrs=3)
 
         self.cov_matrix = cov_matrix
         self.mean_daily_returns = mean_daily_returns
@@ -32,7 +32,9 @@ class ProblemPortfolio(pt.Problem):
         solution.objectives[:] = [np.sum(self.mean_daily_returns * solution.variables) * self.days,
                                   np.sqrt(np.dot(solution.variables.T,
                                                  np.dot(self.cov_matrix, solution.variables))) * np.sqrt(self.days)]
-        solution.constraints[:] = np.sum(solution.variables)
+        solution.constraints[:] = [np.sum(solution.variables),
+                                   all(i <= 0.25 for i in solution.variables),
+                                   all(i >= 0.005 for i in solution.variables)]
 
 
 class PortfolioGenerator(pt.Generator):
@@ -87,7 +89,7 @@ def get_per_cent_by_item(stocks):
     return data.transpose().pct_change()
 
 
-def solve(stocks, iterations, mean_daily_returns, cov_matrix, days, generator: pt.Generator = None):
+def solve(stocks, iterations, mean_daily_returns, cov_matrix, days, population=100, generator: pt.Generator = None):
     LOG.info('Start nsgaII for %d . Generator is default %s' % (iterations, generator is None))
     problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
     problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MINIMIZE]
@@ -95,7 +97,7 @@ def solve(stocks, iterations, mean_daily_returns, cov_matrix, days, generator: p
         algorithm = pt.NSGAII(problem)
     else:
         algorithm = pt.NSGAII(problem, generator=generator)
-    algorithm.population_size = iterations
+    algorithm.population_size = population
     algorithm.run(iterations)
     cols = ['ret', 'stdev', 'sharpe']
     results = np.zeros((algorithm.population_size, 3 + len(stocks)))
@@ -110,7 +112,8 @@ def solve(stocks, iterations, mean_daily_returns, cov_matrix, days, generator: p
     return results_frame
 
 
-def solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days, generator: pt.Generator = None):
+def solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days, population=100,
+                  generator: pt.Generator = None):
     LOG.info('Start nsgaIII for %d . Generator is default %s' % (iterations, generator is None))
     problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
     problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MINIMIZE]
@@ -118,7 +121,7 @@ def solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days, gene
         algorithm = pt.NSGAIII(problem, divisions_outer=1, divisions_inner=1)
     else:
         algorithm = pt.NSGAIII(problem, divisions_outer=1, divisions_inner=1, generator=generator)
-    algorithm.population_size = iterations
+    algorithm.population_size = population
     algorithm.run(iterations)
     cols = ['ret', 'stdev', 'sharpe']
     results = np.zeros((algorithm.population_size, 3 + len(stocks)))

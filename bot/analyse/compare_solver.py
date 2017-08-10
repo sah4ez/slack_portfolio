@@ -7,9 +7,9 @@ import time
 LOG = my_log.get_logger('compare-solver')
 
 # iterations = [150000, 200000, 250000]
-iterations = [100, 2000, 30000, 50000, 100000]
+iterations = [50000, 100000]
 
-for ordered in db.get_n_first_portfolios(1):
+for ordered in db.get_n_first_portfolios(2):
     sharpes_sm = list()
     sharpes_nsga = list()
     sharpes_nsgaiii = list()
@@ -42,14 +42,15 @@ for ordered in db.get_n_first_portfolios(1):
         LOG.info('sm-%d - time: %s' % (iter, str(time_sm_solve)))
 
         start = time.time()
-        result_frame_nsgaii = nsagii.solve(stocks, iter, mean_daily_returns, cov_matrix, days, problemGenerator)
+        result_frame_nsgaii = nsagii.solve(stocks, iter, mean_daily_returns, cov_matrix, days,
+                                           generator=problemGenerator, population=1000)
         time_nsga_solve = time.time() - start
         time_nsga.append(time_nsga_solve)
         LOG.info('nsgaii-%d - time: %s' % (iter, str(time_nsga_solve)))
 
         start = time.time()
         result_frame_nsgaiii = nsagii.solve_nsgaiii(stocks, iter, mean_daily_returns, cov_matrix, days,
-                                                    problemGenerator)
+                                                    generator=problemGenerator, population=1000)
         time_nsga_solve = time.time() - start
         time_nsgaiii.append(time_nsga_solve)
         LOG.info('nsagiii-%d - time: %s' % (iter, str(time_nsga_solve)))
@@ -74,7 +75,7 @@ for ordered in db.get_n_first_portfolios(1):
 
         plt.subplot(133)
         max_sharpe_port_nsgaiii = result_frame_nsgaiii.iloc[result_frame_nsgaiii['sharpe'].idxmax()]
-        sharpes_nsgaiii.append(max_sharpe_port_nsgaii[2])
+        sharpes_nsgaiii.append(max_sharpe_port_nsgaiii[2])
         plt.scatter(result_frame_nsgaiii.stdev, result_frame_nsgaiii.ret, c=result_frame_nsgaiii.sharpe, cmap='RdYlBu')
         plt.xlabel('stdev')
         plt.ylabel('ret')

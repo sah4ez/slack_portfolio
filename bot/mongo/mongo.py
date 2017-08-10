@@ -6,6 +6,7 @@ import property
 from mongo import Stock as s
 import my_log
 import re
+import random
 
 from mongo.Portfolio import Portfolio
 from mongo.exception import *
@@ -59,11 +60,25 @@ def get_regex_trade_code(is_privileged):
 
 
 def get_n_first_portfolios(count: int):
-    portolios = list()
+    portfolios = list()
     connect()
     today = datetime.today() - timedelta(hours=12)
     for p in Portfolio.objects(date__gt=today).order_by('-max_item.sharpe_ratio')[:count]:
-        portolios.append(p)
+        portfolios.append(p)
     close()
-    LOG.info('Loading %d portfolios' % len(portolios))
-    return portolios
+    LOG.info('Loading %d portfolios' % len(portfolios))
+    return portfolios
+
+
+def get_n_random_portfolios():
+    portfolios = list()
+    connect()
+    today = datetime.today() - timedelta(hours=12)
+    found_portfolios = Portfolio.objects(date__gt=today).order_by('-max_item.sharpe_ratio')
+    all_found = len(found_portfolios)
+    for x in range(10):
+        position = random.randint(0, all_found - 1)
+        portfolios.append(found_portfolios[position])
+    close()
+    LOG.info('Loading %d portfolios' % len(portfolios))
+    return portfolios

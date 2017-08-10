@@ -3,6 +3,7 @@ from mongoengine import (Document, EmbeddedDocumentField, FloatField, ListField,
 
 from datetime import datetime
 
+
 class Item(EmbeddedDocument):
     trade_code = StringField()
     exchange = StringField()

@@ -35,7 +35,7 @@ def for_portfolio(words):
     return table.draw()
 
 
-def predict(porftolio: pf.ItemPortfolio, money: int, from_date=(datetime.today() - timedelta(days=7)),
+def predict(porftolio: pf.ItemPortfolio, money: int, from_date=(datetime.today() - timedelta(days=21)),
             to_date=datetime.today() - timedelta(days=1)):
     stocks = dict()
     income = list()
