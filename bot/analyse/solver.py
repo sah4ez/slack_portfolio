@@ -149,9 +149,12 @@ def process_result_of_ga(results_frame, stocks):
     solved.max_item = max_item
     solved.min_item = min_item
     solved.date = datetime.datetime.today()
+    solved.total_sum = 0
+    for stock in max_item.stocks:
+        solved.total_sum += stock.value
     solved.save()
     db.close()
-    return max_item.sharpe_ratio
+    return max_item.sharpe_ratio, solved._id
 
 
 def ga(words):
@@ -168,11 +171,11 @@ def ga(words):
         all_stocks.append(s)
     db.close()
     print(len(all_stocks))
-    with ProcessPoolExecutor(max_workers=2) as executor:
+    with ProcessPoolExecutor(max_workers=1) as executor:
         features = {executor.submit(parallel_solve, all_stocks, type_ga, curr, count): curr for curr in range(count)}
         for feature in concurrent.futures.as_completed(features):
             LOG.info('Complete %s ' % feature.result())
-    return config.RSP_GA
+    return 'Finish GA!'
 
 
 def optimize(words):
@@ -198,15 +201,18 @@ def optimize(words):
 
         all_stocks, sharpes = get_stock_from_portfolio(portfolios)
         optimize_sharpes = list()
-        with ProcessPoolExecutor(max_workers=2) as executor:
+        ids = list()
+        with ProcessPoolExecutor(max_workers=1) as executor:
             features = {
                 executor.submit(parallel_optimization, portfolios.index(portfolio), portfolios, portfolio, all_stocks,
                                 iterations, type_ga): portfolio for portfolio in portfolios}
             for feature in concurrent.futures.as_completed(features):
-                optimize_sharpes.append(feature.result())
+                shapre, id = feature.result()
+                optimize_sharpes.append(shapre)
+                ids.append(id)
         for num, x in enumerate(sharpes):
             y = optimize_sharpes[num]
-        result.append(format('%s | %.4f -> %.4f ==> %.4f%%' % (str(portfolios[num]._id), x, y, y / x * 100)))
+            result.append(format('%s | %.4f -> %.4f ==> %.4f%%' % (str(ids[num]), x, y, y / x * 100)))
     return "Result: \n" + "\n".join(result)
 
 
@@ -226,9 +232,9 @@ def parallel_optimization(num, portfolios, portfolio, all_stocks, iterations, ty
                                              problemGenerator)
     duration = time.time() - start
     LOG.info('Duration solved: %s' % duration)
-    new_sharpe = process_result_of_ga(results_frame, stocks)
+    new_sharpe, new_id = process_result_of_ga(results_frame, stocks)
     LOG.info('Solve %d of %d' % (num + 1, len(portfolios)))
-    return new_sharpe
+    return new_sharpe, new_id
 
 
 def parallel_solve(all_stocks, type_ga, curr, count):

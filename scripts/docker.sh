@@ -22,3 +22,4 @@ apt-cache madison docker-ce
 curl -L https://github.com/docker/compose/releases/download/1.14.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
 chmod +x /usr/loca.bin/docker-compose
 
+sudo usermod -a -G docker $USER

@@ -19,6 +19,7 @@ import url_board
 import yahoo.price as price
 from analyse import analyser
 from bot_impl.bot_api import Bot
+from concurrent.futures import ProcessPoolExecutor
 
 LOG = my_log.get_logger("main")
 
@@ -179,7 +180,8 @@ def listen():
             welcome(msg)
             command, channel = parse_slack_output(msg)
             if command and channel:
-                handle_command(command, channel)
+                with ProcessPoolExecutor() as executor:
+                    executor.submit(handle_command, command, channel)
             time.sleep(bot.READ_WEBSOCKET_DELAY)
     except Exception:
         LOG.error('Exception on connect')

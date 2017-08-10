@@ -27,10 +27,12 @@ class ProblemPortfolio(pt.Problem):
     def evaluate(self, solution):
         parts = np.array(solution.variables)
         parts /= np.sum(parts)
+        solution.variables = parts
 
-        solution.objectives[:] = [np.sum(self.mean_daily_returns * parts) * self.days,
-                                  np.sqrt(np.dot(parts.T, np.dot(self.cov_matrix, parts))) * np.sqrt(self.days)]
-        solution.constraints[:] = sum(parts)
+        solution.objectives[:] = [np.sum(self.mean_daily_returns * solution.variables) * self.days,
+                                  np.sqrt(np.dot(solution.variables.T,
+                                                 np.dot(self.cov_matrix, solution.variables))) * np.sqrt(self.days)]
+        solution.constraints[:] = np.sum(solution.variables)
 
 
 class PortfolioGenerator(pt.Generator):
@@ -54,8 +56,6 @@ class PortfolioGenerator(pt.Generator):
         elif x < 0:
             x *= -1
         return x
-
-
 
 
 def get_random_stocks(all_stocks):
@@ -88,7 +88,7 @@ def get_per_cent_by_item(stocks):
 
 
 def solve(stocks, iterations, mean_daily_returns, cov_matrix, days, generator: pt.Generator = None):
-    LOG.info('Start nsgaII for %d' % iterations)
+    LOG.info('Start nsgaII for %d . Generator is default %s' % (iterations, generator is None))
     problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
     problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MINIMIZE]
     if generator is None:
@@ -111,7 +111,7 @@ def solve(stocks, iterations, mean_daily_returns, cov_matrix, days, generator: p
 
 
 def solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days, generator: pt.Generator = None):
-    LOG.info('Start nsgaIII for %d' % iterations)
+    LOG.info('Start nsgaIII for %d . Generator is default %s' % (iterations, generator is None))
     problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
     problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MINIMIZE]
     if generator is None:
