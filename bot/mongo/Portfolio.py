@@ -24,6 +24,7 @@ class Portfolio(Document):
     max_item = EmbeddedDocumentField(ItemPortfolio)
     min_item = EmbeddedDocumentField(ItemPortfolio)
     date = DateTimeField()
+    total_sum = FloatField()
 
     def print_stocks(self) -> str:
         return str(self._id) + " ".join(self.max_item.stocks) + '\n' + " ".join(self.min_item.stocks)

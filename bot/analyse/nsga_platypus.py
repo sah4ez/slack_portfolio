@@ -42,6 +42,7 @@ class PortfolioGenerator(pt.Generator):
     def generate(self, problem):
         solution = pt.Solution(problem)
         solution.variables = [self.shift(x.value) for x in self.portfolio.max_item.stocks]
+        solution.variables /= np.sum(solution.variables)
         return solution
 
     def shift(self, x):

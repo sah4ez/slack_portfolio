@@ -26,11 +26,10 @@ def for_portfolio(words):
     for ordered in db.get_n_first_portfolios(position):
         item = ordered.max_item if is_max else ordered.min_item
         LOG.info('Predict for %s' % item)
-        profits.append(predict(porftolio=item, money=100000))
+        profit = predict(porftolio=item, money=100000)
+        profits.append(profit)
         stdevs.append(ordered.max_item.standard_deviation)
-        table.add_row(
-            [str(ordered._id), str(predict(porftolio=item, money=100000)),
-             str(ordered.max_item.standard_deviation)])
+        table.add_row([str(ordered._id), str(profit), str(ordered.max_item.standard_deviation)])
 
     table.add_row(['', sum(profits) / len(profits), sum(stdevs) / len(stdevs)])
     return table.draw()
@@ -41,23 +40,37 @@ def predict(porftolio: pf.ItemPortfolio, money: int, from_date=(datetime.today()
     stocks = dict()
     income = list()
 
+    correct_summ = list()
+    table = texttable.Texttable()
+    table.add_row(['Code', 'LOT', 'COUNT', 'BASE_COUNT', 'PRICE', 'PART', 'FULL', 'INCOME'])
     for stock in porftolio.stocks:
         try:
             part = float(stock.value)
             trade_code = str(stock.trade_code)
             stock_orm = db.stock_by_trade_code(trade_code)
             lot = int(stock_orm.lot)
-            from_price = stock_orm.get_day_price(from_date)
-            count = correct_on_lot(lot, part, money, from_price)
-
-            stocks[stock_orm.trade_code] = str(count) + '|' + str(from_price)
-            to_price = stock_orm.get_day_price(to_date) * (1 - property.ATON_TAX)
+            try:
+                from_price = stock_orm.get_day_price(from_date)
+            except db.NotFoundPrice:
+                from_price = stock_orm.get_day_price(from_date - timedelta(days=1))
+            count, before_correct_count = correct_on_lot(lot, part, money, from_price)
+            correct_full_pirce = count * from_price
+            correct_summ.append(correct_full_pirce)
+            try:
+                to_price = stock_orm.get_day_price(to_date) * (1 - property.ATON_TAX)
+            except db.NotFoundPrice:
+                to_price = stock_orm.get_day_price(to_date - timedelta(days=1)) * (1 - property.ATON_TAX)
             income.append(float(count * to_price))
+            row = [stock_orm.trade_code, stock_orm.lot, count, before_correct_count, from_price, part,
+                   count * from_price, to_price]
+            table.add_row(row)
         except AttributeError:
             LOG.error('For stock %s not found attribute' % stock.trade_code)
 
     result = sum(income)
-    LOG.info('Portfolio %s base price %s from %s to %s with price %s' % (stocks, money, from_date, to_date, result))
+    print(table.draw())
+    LOG.info('Portfolio base price %s (%s) from %s to %s with price %s' % (
+        money, sum(correct_summ), from_date, to_date, result))
     return result
 
 
@@ -67,4 +80,4 @@ def correct_on_lot(lot, part, money, price):
     mod = count - (full * lot)
     if lot / 2 <= mod:
         full += 1
-    return full * lot
+    return full * lot, count

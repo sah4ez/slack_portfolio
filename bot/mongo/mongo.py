@@ -63,7 +63,16 @@ def get_n_first_portfolios(count: int):
     portolios = list()
     connect()
     today = datetime.today() - timedelta(hours=12)
-    for p in Portfolio.objects(date__gt=today).order_by('-max_item.sharpe_ratio')[:count]:
+    for p in Portfolio.objects(date__gt=today).order_by('-max_item.sharpe_ratio'):
+        sum_stocks = 0
+        for s in p.max_item.stocks:
+            sum_stocks += s.value
+        p.total_sum = sum_stocks
+        p.save()
+        if sum_stocks != 1:
+            continue
         portolios.append(p)
+        if len(portolios) == count:
+            break
     close()
     return portolios
