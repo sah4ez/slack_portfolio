@@ -51,8 +51,7 @@ NOT_PRIVILEGED = r'^[a-zA-Z]{4}$'
 PRIVILEGED_CMD = r'([a-zA-Z]+_p$|[а-яА-Я]+_п$)'
 STOCKS = 'Акции'
 
-# DB_HOST = "mongodb"
-DB_HOST = "192.168.1.100"
+DB_HOST = "mongodb"
 DB_PORT = 27017
 DB_COLLECT = 'stocks'
 

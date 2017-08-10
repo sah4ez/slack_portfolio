@@ -184,12 +184,13 @@ def optimize(words):
         type_ga = words[1]
         iterations = int(words[2])
         count = int(words[3])
-    if len(words) == 5:
+    elif len(words) == 5:
         type_ga = words[1]
         iterations = int(words[2])
         count = int(words[3])
         repeats = int(words[4])
     else:
+        LOG.error(config.RSP_INVALID_PARAMETERS % str(words))
         return config.RSP_INVALID_PARAMETERS % str(words)
 
     result = list()
@@ -207,7 +208,7 @@ def optimize(words):
                 executor.submit(parallel_optimization, portfolios.index(portfolio), portfolios, portfolio, all_stocks,
                                 iterations, type_ga): portfolio for portfolio in portfolios}
             for feature in concurrent.futures.as_completed(features):
-                shapre, id = feature.result()
+                shapre, id =feature.result()
                 optimize_sharpes.append(shapre)
                 ids.append(id)
         for num, x in enumerate(sharpes):
