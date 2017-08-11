@@ -37,18 +37,18 @@ for ordered in db.get_portfolio_by_id('598c333b56840e645bd3f40a'):
 
         problemGenerator = nsagii.PortfolioGenerator(ordered)
 
-        start = time.time()
-        result_frame_sm = sm.solve(stocks, iter, mean_daily_returns, cov_matrix, days)
-        time_sm_solve = time.time() - start
-        time_sm.append(time_sm_solve)
-        LOG.info('sm-%d - time: %s' % (iter, str(time_sm_solve)))
-
-        start = time.time()
-        result_frame_nsgaii = nsagii.solve(stocks, iter, mean_daily_returns, cov_matrix, days,
-                                           generator=problemGenerator, population=1000)
-        time_nsga_solve = time.time() - start
-        time_nsga.append(time_nsga_solve)
-        LOG.info('nsgaii-%d - time: %s' % (iter, str(time_nsga_solve)))
+        # start = time.time()
+        # result_frame_sm = sm.solve(stocks, iter, mean_daily_returns, cov_matrix, days)
+        # time_sm_solve = time.time() - start
+        # time_sm.append(time_sm_solve)
+        # LOG.info('sm-%d - time: %s' % (iter, str(time_sm_solve)))
+        #
+        # start = time.time()
+        # result_frame_nsgaii = nsagii.solve(stocks, iter, mean_daily_returns, cov_matrix, days,
+        #                                    generator=problemGenerator, population=1000)
+        # time_nsga_solve = time.time() - start
+        # time_nsga.append(time_nsga_solve)
+        # LOG.info('nsgaii-%d - time: %s' % (iter, str(time_nsga_solve)))
 
         start = time.time()
         result_frame_nsgaiii = nsagii.solve_nsgaiii(stocks, iter, mean_daily_returns, cov_matrix, days,
@@ -57,25 +57,25 @@ for ordered in db.get_portfolio_by_id('598c333b56840e645bd3f40a'):
         time_nsgaiii.append(time_nsga_solve)
         LOG.info('nsagiii-%d - time: %s' % (iter, str(time_nsga_solve)))
 
-        plt.subplot(131)
-        id_max = result_frame_sm['sharpe'].idxmax()
-        max_sharpe_port_sm = result_frame_sm.iloc[id_max]
-        sharpes_sm.append(max_sharpe_port_sm[2])
-        plt.scatter(result_frame_sm.stdev, result_frame_sm.ret, c=result_frame_sm.sharpe, cmap='RdYlBu')
-        plt.xlabel('stdev')
-        plt.ylabel('ret')
-        plt.scatter(max_sharpe_port_sm[1], max_sharpe_port_sm[0], marker=(3, 1, 0), color='r', s=300)
-        LOG.info('sm-%d: \n %s' % (iter, str(max_sharpe_port_sm)))
-
-        plt.subplot(132)
-        id_max = result_frame_nsgaii['sharpe'].idxmax()
-        max_sharpe_port_nsgaii = result_frame_nsgaii.iloc[id_max]
-        sharpes_nsga.append(max_sharpe_port_nsgaii[2])
-        plt.scatter(result_frame_nsgaii.stdev, result_frame_nsgaii.ret, c=result_frame_nsgaii.sharpe, cmap='RdYlBu')
-        plt.xlabel('stdev')
-        plt.ylabel('ret')
-        plt.scatter(max_sharpe_port_nsgaii[1], max_sharpe_port_nsgaii[0], marker=(5, 1, 0), color='r', s=300)
-        LOG.info('nsgaii-%d: \n %s' % (iter, str(max_sharpe_port_nsgaii)))
+        # plt.subplot(131)
+        # id_max = result_frame_sm['sharpe'].idxmax()
+        # max_sharpe_port_sm = result_frame_sm.iloc[id_max]
+        # sharpes_sm.append(max_sharpe_port_sm[2])
+        # plt.scatter(result_frame_sm.stdev, result_frame_sm.ret, c=result_frame_sm.sharpe, cmap='RdYlBu')
+        # plt.xlabel('stdev')
+        # plt.ylabel('ret')
+        # plt.scatter(max_sharpe_port_sm[1], max_sharpe_port_sm[0], marker=(3, 1, 0), color='r', s=300)
+        # LOG.info('sm-%d: \n %s' % (iter, str(max_sharpe_port_sm)))
+        #
+        # plt.subplot(132)
+        # id_max = result_frame_nsgaii['sharpe'].idxmax()
+        # max_sharpe_port_nsgaii = result_frame_nsgaii.iloc[id_max]
+        # sharpes_nsga.append(max_sharpe_port_nsgaii[2])
+        # plt.scatter(result_frame_nsgaii.stdev, result_frame_nsgaii.ret, c=result_frame_nsgaii.sharpe, cmap='RdYlBu')
+        # plt.xlabel('stdev')
+        # plt.ylabel('ret')
+        # plt.scatter(max_sharpe_port_nsgaii[1], max_sharpe_port_nsgaii[0], marker=(5, 1, 0), color='r', s=300)
+        # LOG.info('nsgaii-%d: \n %s' % (iter, str(max_sharpe_port_nsgaii)))
 
         plt.subplot(133)
         id_max = result_frame_nsgaiii['sharpe'].idxmax()

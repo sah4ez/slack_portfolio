@@ -5,6 +5,7 @@ import random
 import my_log
 from mongo import mongo as db
 from mongo.Stock import Stock
+from scipy.stats.mstats import gmean
 
 LOG = my_log.get_logger('platypus')
 db.connect()
@@ -16,13 +17,18 @@ db.close()
 
 class ProblemPortfolio(pt.Problem):
     def __init__(self, cov_matrix, mean_daily_returns, days):
-        super(ProblemPortfolio, self).__init__(nvars=15, nobjs=2, nconstrs=3)
+        super(ProblemPortfolio, self).__init__(nvars=15, nobjs=2, nconstrs=4)
 
         self.cov_matrix = cov_matrix
         self.mean_daily_returns = mean_daily_returns
         self.days = days
         self.types[:] = pt.Real(0.0, 1.0)
-        self.constraints[:] = "==1"
+        constrains = pt.FixedLengthArray(4, "==0", convert=pt.core._convert_constraint)
+        constrains.__setitem__(0, "==1")
+        constrains.__setitem__(1, "<=6")
+        constrains.__setitem__(3, ">=0.02")
+        constrains.__setitem__(3, "<=0.18")
+        self.constraints[:] = constrains
 
     def evaluate(self, solution):
         parts = np.array(solution.variables)
@@ -33,8 +39,9 @@ class ProblemPortfolio(pt.Problem):
                                   np.sqrt(np.dot(solution.variables.T,
                                                  np.dot(self.cov_matrix, solution.variables))) * np.sqrt(self.days)]
         solution.constraints[:] = [np.sum(solution.variables),
-                                   solution.objectives[1] <= 6,
-                                   all(0.02 <= i <= 0.10 for i in solution.variables)]
+                                   solution.objectives[1],
+                                   gmean(solution.variables),
+                                   gmean(solution.variables), ]
 
 
 class PortfolioGenerator(pt.Generator):
