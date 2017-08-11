@@ -1,4 +1,5 @@
 import os
+from os import environ as env
 import sys
 import threading
 import time
@@ -24,8 +25,8 @@ from concurrent.futures import ProcessPoolExecutor
 LOG = my_log.get_logger("main")
 
 # starterbot's ID as an environment variable
-BOT_ID = os.environ.get("BOT_ID")
-TOKEN = os.environ.get('SLACK_BOT_TOKEN')
+BOT_ID = env.get("BOT_ID")
+TOKEN = env.get('SLACK_BOT_TOKEN')
 if TOKEN is None:
     TOKEN = sys.argv[1]
 if BOT_ID is None:
@@ -181,7 +182,7 @@ def listen():
             command, channel = parse_slack_output(msg)
             if command and channel:
                 handle_command(command, channel)
-                # with ProcessPoolExecutor() as executor:
+                # with ProcessPoolExecutor(max_workers=env.get(THREAD)) as executor:
                 #     executor.submit(handle_command, command, channel)
             time.sleep(bot.READ_WEBSOCKET_DELAY)
     except Exception:

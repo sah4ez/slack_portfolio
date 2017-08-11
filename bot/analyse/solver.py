@@ -11,6 +11,8 @@ import my_log
 import config
 from analyse import nsga as simple, nsga_platypus as NSGAII
 from concurrent.futures import ProcessPoolExecutor
+from os import environ as env
+from property import *
 import time
 from mongo import mongo as db
 
@@ -171,7 +173,7 @@ def ga(words):
         all_stocks.append(s)
     db.close()
     print(len(all_stocks))
-    with ProcessPoolExecutor(max_workers=4) as executor:
+    with ProcessPoolExecutor(max_workers=int(env.get(THREAD))) as executor:
         features = {executor.submit(parallel_solve, all_stocks, type_ga, curr, count): curr for curr in range(count)}
         for feature in concurrent.futures.as_completed(features):
             LOG.info('Complete %s ' % feature.result())
@@ -215,7 +217,7 @@ def optimize(words):
         all_stocks, sharpes = get_stock_from_portfolio(portfolios)
         optimize_sharpes = list()
         ids = list()
-        with ProcessPoolExecutor(max_workers=1) as executor:
+        with ProcessPoolExecutor(max_workers=int(env.get(THREAD))) as executor:
             features = {
                 executor.submit(parallel_optimization, portfolios.index(portfolio), portfolios, portfolio, all_stocks,
                                 iterations, type_ga): portfolio for portfolio in portfolios}

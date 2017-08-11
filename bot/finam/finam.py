@@ -8,6 +8,8 @@ import mongo.Price as p
 from mongo import Stock as s
 from concurrent.futures import ProcessPoolExecutor
 import concurrent
+from os import environ as env
+from property import *
 
 LOG = my_log.get_logger("Finam Loader")
 
@@ -27,7 +29,7 @@ def history_all_stocks():
     all_stocks = stocks.count()
     # for num, stock in enumerate(stocks):
     #     load_history(stock.trade_code)
-    with ProcessPoolExecutor(max_workers=1) as executor:
+    with ProcessPoolExecutor(max_workers=int(env.get(THREAD))) as executor:
         features = {executor.submit(load_history, stock.trade_code): stock for stock in stocks}
         for num, feature in enumerate(concurrent.futures.as_completed(features)):
             trade_code = feature.result()

@@ -5,7 +5,6 @@ import random
 import my_log
 from mongo import mongo as db
 from mongo.Stock import Stock
-from scipy.stats.mstats import gmean
 
 LOG = my_log.get_logger('platypus')
 db.connect()
