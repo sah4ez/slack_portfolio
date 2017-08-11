@@ -7,9 +7,9 @@ import time
 LOG = my_log.get_logger('compare-solver')
 
 # iterations = [150000, 200000, 250000]
-iterations = [50000, 100000]
+iterations = [50000]
 
-for ordered in db.get_n_first_portfolios(2):
+for ordered in db.get_portfolio_by_id('598c333b56840e645bd3f40a'):
     sharpes_sm = list()
     sharpes_nsga = list()
     sharpes_nsgaiii = list()
@@ -30,6 +30,8 @@ for ordered in db.get_n_first_portfolios(2):
         returns = data.pct_change()
 
         days = len(stocks[0].day_history)
+        LOG.info('History length %d' % int(days))
+
         mean_daily_returns = returns.mean()
         cov_matrix = returns.cov()
 
@@ -56,7 +58,8 @@ for ordered in db.get_n_first_portfolios(2):
         LOG.info('nsagiii-%d - time: %s' % (iter, str(time_nsga_solve)))
 
         plt.subplot(131)
-        max_sharpe_port_sm = result_frame_sm.iloc[result_frame_sm['sharpe'].idxmax()]
+        id_max = result_frame_sm['sharpe'].idxmax()
+        max_sharpe_port_sm = result_frame_sm.iloc[id_max]
         sharpes_sm.append(max_sharpe_port_sm[2])
         plt.scatter(result_frame_sm.stdev, result_frame_sm.ret, c=result_frame_sm.sharpe, cmap='RdYlBu')
         plt.xlabel('stdev')
@@ -65,7 +68,8 @@ for ordered in db.get_n_first_portfolios(2):
         LOG.info('sm-%d: \n %s' % (iter, str(max_sharpe_port_sm)))
 
         plt.subplot(132)
-        max_sharpe_port_nsgaii = result_frame_nsgaii.iloc[result_frame_nsgaii['sharpe'].idxmax()]
+        id_max = result_frame_nsgaii['sharpe'].idxmax()
+        max_sharpe_port_nsgaii = result_frame_nsgaii.iloc[id_max]
         sharpes_nsga.append(max_sharpe_port_nsgaii[2])
         plt.scatter(result_frame_nsgaii.stdev, result_frame_nsgaii.ret, c=result_frame_nsgaii.sharpe, cmap='RdYlBu')
         plt.xlabel('stdev')
@@ -74,7 +78,8 @@ for ordered in db.get_n_first_portfolios(2):
         LOG.info('nsgaii-%d: \n %s' % (iter, str(max_sharpe_port_nsgaii)))
 
         plt.subplot(133)
-        max_sharpe_port_nsgaiii = result_frame_nsgaiii.iloc[result_frame_nsgaiii['sharpe'].idxmax()]
+        id_max = result_frame_nsgaiii['sharpe'].idxmax()
+        max_sharpe_port_nsgaiii = result_frame_nsgaiii.iloc[id_max]
         sharpes_nsgaiii.append(max_sharpe_port_nsgaiii[2])
         plt.scatter(result_frame_nsgaiii.stdev, result_frame_nsgaiii.ret, c=result_frame_nsgaiii.sharpe, cmap='RdYlBu')
         plt.xlabel('stdev')

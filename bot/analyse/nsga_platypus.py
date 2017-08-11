@@ -33,8 +33,8 @@ class ProblemPortfolio(pt.Problem):
                                   np.sqrt(np.dot(solution.variables.T,
                                                  np.dot(self.cov_matrix, solution.variables))) * np.sqrt(self.days)]
         solution.constraints[:] = [np.sum(solution.variables),
-                                   all(i <= 0.25 for i in solution.variables),
-                                   all(i >= 0.005 for i in solution.variables)]
+                                   solution.objectives[1] <= 6,
+                                   all(0.02 <= i <= 0.10 for i in solution.variables)]
 
 
 class PortfolioGenerator(pt.Generator):

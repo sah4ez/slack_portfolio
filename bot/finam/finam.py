@@ -14,47 +14,50 @@ LOG = my_log.get_logger("Finam Loader")
 
 def loader(words):
     LOG.info('Start loading from Finam history [%s]' % " ".join(words))
-    count = None
-    if words.__len__() == 3:
-        count = words[2]
     if words[1] in config.ARG_FINAM_CODE_ALL:
-        return history_all_stocks(count) if count is not None else history_all_stocks()
+        return history_all_stocks()
     else:
         trade_code = str(words[1]).upper()
-        return load_history(trade_code, count) if count is not None else load_history(trade_code)
+        return load_history(trade_code)
 
 
-def history_all_stocks(count=None):
+def history_all_stocks():
     LOG.info("Load all stocks")
     stocks = s.Stock.objects()
     all_stocks = stocks.count()
-    with ProcessPoolExecutor(max_workers=4) as executor:
-        features = {executor.submit(load_history, stock.trade_code, count): stock for stock in stocks}
+    # for num, stock in enumerate(stocks):
+    #     load_history(stock.trade_code)
+    with ProcessPoolExecutor(max_workers=1) as executor:
+        features = {executor.submit(load_history, stock.trade_code): stock for stock in stocks}
         for num, feature in enumerate(concurrent.futures.as_completed(features)):
             trade_code = feature.result()
             LOG.info("Load [%d/%d] %s" % (num, all_stocks, trade_code))
     return config.RSP_FINAM_CODE_ALL
 
 
-def save_to_db(stock, path, count, period):
+def save_to_db(stock, path, period):
     LOG.info("Save history %s to DB" % stock.trade_code)
-    with open(file=path, mode='r', encoding='UTF-8') as file:
-        try:
-            for num, line in enumerate(file):
-                if num == 0:
-                    continue
-                words = line.split(",")
-                date = words[2] + ' ' + words[3]
-                value = words[7]
-                date_time = datetime.datetime.strptime(date, '%d/%m/%y %H:%M:%S')
-                price = p.Price()
-                price.value = float(value)
-                price.date = date_time
-                set_price(stock, price, period)
-        except UnicodeDecodeError:
-            LOG.error('Bad file %s' % path)
-        finally:
-            file.close()
+    try:
+        with open(file=path, mode='r', encoding='UTF-8') as file:
+            try:
+                for num, line in enumerate(file):
+                    if num == 0:
+                        continue
+                    words = line.split(",")
+                    if len(words) >= 8:
+                        date = words[2] + ' ' + words[3]
+                        value = words[7]
+                        date_time = datetime.datetime.strptime(date, '%d/%m/%y %H:%M:%S')
+                        price = p.Price()
+                        price.value = float(value)
+                        price.date = date_time
+                    set_price(stock, price, period)
+            except UnicodeDecodeError:
+                LOG.error('Bad file %s' % path)
+            finally:
+                file.close()
+    except FileNotFoundError:
+        LOG.error('Nof found file %s' % path)
 
 
 def set_price(stock, price, period):
@@ -68,7 +71,7 @@ def set_price(stock, price, period):
         stock.hour_history.append(price)
 
 
-def load_history(trade_code, count=None):
+def load_history(trade_code):
     LOG.info('[%s]' % trade_code)
     stock = db.stock_by_trade_code(trade_code)
     stock.month_history = list()
@@ -102,7 +105,7 @@ def load_history(trade_code, count=None):
         LOG.info('Start loading hystory for %s from %s' % (trade_code, url))
         size_download = loader_from_file.download_file(url, path) / 1024
         LOG.info('Load %.2f Кб' % size_download)
-        save_to_db(stock, path, count, period)
+        save_to_db(stock, path, period)
 
     stock.save()
     return trade_code

@@ -180,8 +180,9 @@ def listen():
             welcome(msg)
             command, channel = parse_slack_output(msg)
             if command and channel:
-                with ProcessPoolExecutor() as executor:
-                    executor.submit(handle_command, command, channel)
+                handle_command(command, channel)
+                # with ProcessPoolExecutor() as executor:
+                #     executor.submit(handle_command, command, channel)
             time.sleep(bot.READ_WEBSOCKET_DELAY)
     except Exception:
         LOG.error('Exception on connect')

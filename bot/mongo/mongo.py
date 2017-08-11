@@ -70,6 +70,16 @@ def get_n_first_portfolios(count: int):
     return portfolios
 
 
+def get_portfolio_by_id(id: str):
+    portfolios = list()
+    connect()
+    portfolio = Portfolio.objects(_id=id).first()
+    portfolios.append(portfolio)
+    close()
+    LOG.info('Loading %d portfolios' % len(portfolios))
+    return portfolios
+
+
 def get_n_random_portfolios():
     portfolios = list()
     connect()
