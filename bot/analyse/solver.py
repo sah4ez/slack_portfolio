@@ -215,7 +215,7 @@ def optimize(words):
         all_stocks, sharpes = get_stock_from_portfolio(portfolios)
         optimize_sharpes = list()
         ids = list()
-        with ProcessPoolExecutor(max_workers=4) as executor:
+        with ProcessPoolExecutor(max_workers=1) as executor:
             features = {
                 executor.submit(parallel_optimization, portfolios.index(portfolio), portfolios, portfolio, all_stocks,
                                 iterations, type_ga): portfolio for portfolio in portfolios}

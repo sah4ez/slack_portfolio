@@ -23,12 +23,10 @@ class ProblemPortfolio(pt.Problem):
         self.mean_daily_returns = mean_daily_returns
         self.days = days
         self.types[:] = pt.Real(0.0, 1.0)
-        constrains = pt.FixedLengthArray(4, "==0", convert=pt.core._convert_constraint)
-        constrains.__setitem__(0, "==1")
-        constrains.__setitem__(1, "<=6")
-        constrains.__setitem__(3, ">=0.02")
-        constrains.__setitem__(3, "<=0.18")
-        self.constraints[:] = constrains
+        self.constraints.__setitem__(0, "==1")
+        self.constraints.__setitem__(1, "<=6")
+        self.constraints.__setitem__(2, ">=0.02")
+        self.constraints.__setitem__(3, "<=0.18")
 
     def evaluate(self, solution):
         parts = np.array(solution.variables)
@@ -40,8 +38,8 @@ class ProblemPortfolio(pt.Problem):
                                                  np.dot(self.cov_matrix, solution.variables))) * np.sqrt(self.days)]
         solution.constraints[:] = [np.sum(solution.variables),
                                    solution.objectives[1],
-                                   gmean(solution.variables),
-                                   gmean(solution.variables), ]
+                                   min(solution.variables),
+                                   max(solution.variables) ]
 
 
 class PortfolioGenerator(pt.Generator):
