@@ -93,11 +93,28 @@ HELP_OPTIMIZE = format('*%s* TYPE_GA ITERATIONS [COUNT] [REPEAT] - запуст�
                        'с количеством итераций ITERATIONS. REPEAT - сколько раз эту оптимизацию повторить\n' %
                        CMD_OPTIMIZE[0])
 
+SAVED_PORTFOLIO = ["pf", "list", "select", "current", "save", "add", "rm", "delete", "stat", "compare"]
+HELP_SAVED_PORTFOLIO = format("\n*%s [COMMAND] [ARGS]* \n"
+                              "COMMAND: \n"
+                              "    %s - список всех выбранных потрфелей\n"
+                              "    %s NAME - выбрать текущим потрфель с именем NAME\n"
+                              "    %s - текущий портфель\n"
+                              "    %s ID NAME - сохранить портфель с ID под именем NAME\n"
+                              "    %s STOCK LOT PRICE - добавить в текущий портфель лотов LOT акции STOCK по цене PRICE\n"
+                              "    %s STOCK LOT - удалить в текущем портфеле лоты LOT акции STOCK\n"
+                              "    %s NAME - удалить портфель с названием NAME\n"
+                              "    %s - просчитать текущий портфель\n"
+                              "    %s NAME - сравнить текущий портфель с портфелем NAME\n"
+                              % (SAVED_PORTFOLIO[0], SAVED_PORTFOLIO[1], SAVED_PORTFOLIO[2],
+                                 SAVED_PORTFOLIO[3], SAVED_PORTFOLIO[4], SAVED_PORTFOLIO[5],
+                                 SAVED_PORTFOLIO[6], SAVED_PORTFOLIO[7], SAVED_PORTFOLIO[8],
+                                 SAVED_PORTFOLIO[9]))
+
 RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_CAPITAL + \
            HELP_MOEX + HELP_UPDATE + HELP_FILES + \
            HELP_SELECT_FOR_PORTFOLIO + HELP_GET_LIST_SELECTED + HELP_FIND + \
            HELP_FINAM_CODE + HELP_UPDATE_METAINFO + HELP_ANALYSE + HELP_MAX + \
-           HELP_GA_SIMPLE + HELP_NSGAII + HELP_OPTIMIZE
+           HELP_GA_SIMPLE + HELP_NSGAII + HELP_OPTIMIZE + HELP_SAVED_PORTFOLIO
 
 WELCOME = format("Привет, чтобы узнать что я умею напиши одно из @portfolio *%s*, *%s*, *%s*\n" %
                  (CMD_HELP[0], CMD_HELP[1], CMD_HELP[2]))
@@ -111,3 +128,4 @@ LOG_ALL_FILE = "log/all.log"
 GA_SIMPLE = "ga"
 GA_NSGAII = "nsgaii"
 GA_NSGAIII = "nsgaiii"
+

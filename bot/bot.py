@@ -40,7 +40,7 @@ AT_BOT = "<@" + str(bot.BOT_ID) + ">"
 slack_client = SlackClient(TOKEN)
 
 
-def handle_command(command, channel):
+def handle_command(command, channel, user):
     message = config.WELCOME
     words = str(command).split(' ')
     if words.__len__() < 1:
@@ -104,6 +104,7 @@ def handle_command(command, channel):
         elif first_command in config.CMD_GA_SIMPLE:
             response(channel, config.RSP_GA)
             message = solver.ga(words)
+            response(channel, message)
 
         elif first_command in config.CMD_NSGAII:
             response(channel, config.RSP_GA)
@@ -146,8 +147,8 @@ def parse_slack_output(slack_rtm_output):
             if output and 'text' in output and AT_BOT in output['text']:
                 # return text after the @ mention, whitespace removed
                 return output['text'].split(AT_BOT)[1].strip().lower(), \
-                       output['channel']
-    return None, None
+                       output['channel'], output['user']
+    return None, None, None
 
 
 def parse_slack_wait(msg):
@@ -179,9 +180,9 @@ def listen():
             # print(msg)
             parse_slack_wait(msg)
             welcome(msg)
-            command, channel = parse_slack_output(msg)
-            if command and channel:
-                handle_command(command, channel)
+            command, channel, user = parse_slack_output(msg)
+            if command and channel and user:
+                handle_command(command, channel, user)
                 # with ProcessPoolExecutor(max_workers=env.get(THREAD)) as executor:
                 #     executor.submit(handle_command, command, channel)
             time.sleep(bot.READ_WEBSOCKET_DELAY)

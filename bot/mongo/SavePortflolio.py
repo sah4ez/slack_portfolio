@@ -5,12 +5,17 @@ from mongoengine import (Document, EmbeddedDocumentField, FloatField, ListField,
 
 
 class Transaction(Item):
+    _id = ObjectIdField()
     date = DateTimeField()
     count_lot = IntField()
 
 
-class SavePortfolio(Portfolio):
+class SavePortfolio(Document):
+    _id = ObjectIdField()
     date_save = DateTimeField()
     name = StringField()
     base_price = FloatField()
     current_price = FloatField()
+    income = FloatField()
+    user = StringField()
+    transactions = ListField(EmbeddedDocumentField(Transaction))

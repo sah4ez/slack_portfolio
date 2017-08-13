@@ -8,7 +8,7 @@ import my_log
 LOG = my_log.get_logger("Bot")
 
 
-class Bot():
+class Bot:
     def __init__(self, TOKEN, BOT_ID):
         self.TOKEN = TOKEN
         self.READ_WEBSOCKET_DELAY = 1
