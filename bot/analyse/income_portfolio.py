@@ -49,17 +49,11 @@ def predict(porftolio: pf.ItemPortfolio, money: int, from_date=(datetime.today()
             trade_code = str(stock.trade_code)
             stock_orm = db.stock_by_trade_code(trade_code)
             lot = int(stock_orm.lot)
-            try:
-                from_price = stock_orm.get_day_price(from_date)
-            except db.NotFoundPrice:
-                from_price = stock_orm.get_day_price(from_date - timedelta(days=1))
+            from_price = load_price(stock_orm, from_date)
             count, before_correct_count, full = correct_on_lot(lot, part, money, from_price)
             correct_full_pirce = count * from_price
             correct_summ.append(correct_full_pirce)
-            try:
-                to_price = stock_orm.get_day_price(to_date) * (1 - property.ATON_TAX)
-            except db.NotFoundPrice:
-                to_price = stock_orm.get_day_price(to_date - timedelta(days=1)) * (1 - property.ATON_TAX)
+            to_price = load_price(stock_orm, to_date)
             income.append(float(count * to_price))
             row = [stock_orm.trade_code, stock_orm.short_name, stock_orm.lot, count, full, before_correct_count,
                    from_price, part, count * from_price, to_price]
@@ -72,6 +66,25 @@ def predict(porftolio: pf.ItemPortfolio, money: int, from_date=(datetime.today()
     LOG.info('Portfolio base price %s (%s) from %s to %s with price %s' % (
         money, sum(correct_summ), from_date, to_date, result))
     return result, sum(correct_summ)
+
+
+def load_price(stock_orm, date):
+    load = False
+    shift_days = 0
+    while not load:
+        try:
+            from_price = stock_orm.get_day_price(date + timedelta(days=shift_days))
+            load = True
+            return from_price
+        except db.NotFoundPrice:
+            load = False
+            LOG.warn("Not found price %s on %s" % (stock_orm.trade_code, str(date + timedelta(days=shift_days))))
+            if abs((date.date() - datetime.today().date()).days) <= 7:
+                shift_days -= 1
+            else:
+                shift_days += 1
+            if shift_days == 365:
+                load = True
 
 
 def correct_on_lot(lot, part, money, price):
