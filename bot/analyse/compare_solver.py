@@ -3,11 +3,13 @@ import my_log
 from mongo import mongo as db
 from analyse import solver, nsga as sm, nsga_platypus as nsagii
 import time
+import scipy.stats.mstats as m
+import numpy as np
 
 LOG = my_log.get_logger('compare-solver')
 
 # iterations = [150000, 200000, 250000]
-iterations = [50000]
+iterations = [10000]
 
 for ordered in db.get_portfolio_by_id('598dc26208ed83001321a939'):
     sharpes_sm = list()
@@ -34,6 +36,9 @@ for ordered in db.get_portfolio_by_id('598dc26208ed83001321a939'):
 
         mean_daily_returns = returns.mean()
         cov_matrix = returns.cov()
+        gmean = solver.average_gmean(returns)
+
+        LOG.info('Geometric mean: %.4f, Daily meand: %.4f' % (gmean, np.average(mean_daily_returns)))
 
         problemGenerator = nsagii.PortfolioGenerator(ordered)
 

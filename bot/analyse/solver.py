@@ -15,6 +15,8 @@ from os import environ as env
 from property import *
 import time
 from mongo import mongo as db
+from scipy.stats import mstats as ms
+import numpy as np
 
 LOG = my_log.get_logger('solver')
 
@@ -131,14 +133,26 @@ def cov_and_mean(stocks):
     # download daily price data for each of the stocks in the portfolio
     data = get_stock_price(stocks)
     returns = data.pct_change()
+    gmean = average_gmean(returns)
 
     # calculate mean daily return and covariance of daily returns
     mean_daily_returns = returns.mean()
     cov_matrix = returns.cov()
-    return cov_matrix, mean_daily_returns
+    return cov_matrix, mean_daily_returns, gmean
 
 
-def process_result_of_ga(results_frame, stocks):
+def average_gmean(returns):
+    full_returns = np.array(returns)
+    full_returns += 1
+    avr = 0
+    count = 0
+    for ret in full_returns[1:].T:
+        avr += ms.gmean(ret)
+        count += 1
+    return avr / count
+
+
+def process_result_of_ga(results_frame, stocks, gmean):
     max_sharpe_port = results_frame.iloc[results_frame['sharpe'].idxmax()]
     min_vol_port = results_frame.iloc[results_frame['stdev'].idxmin()]
 
@@ -154,6 +168,10 @@ def process_result_of_ga(results_frame, stocks):
     solved.total_sum = 0
     for stock in max_item.stocks:
         solved.total_sum += stock.value
+    if gmean is None:
+        solved.gmean = 0.0
+    else:
+        solved.gmean = gmean
     solved.save()
     db.close()
     return max_item.sharpe_ratio, solved._id
@@ -222,7 +240,7 @@ def optimize(words):
                 executor.submit(parallel_optimization, portfolios.index(portfolio), portfolios, portfolio, all_stocks,
                                 iterations, type_ga): portfolio for portfolio in portfolios}
             for feature in concurrent.futures.as_completed(features):
-                shapre, id =feature.result()
+                shapre, id = feature.result()
                 optimize_sharpes.append(shapre)
                 ids.append(id)
         for num, x in enumerate(sharpes):
@@ -234,20 +252,21 @@ def optimize(words):
 def parallel_optimization(num, portfolios, portfolio, all_stocks, iterations, type_ga):
     stocks = all_stocks[num]
     days = len(stocks[0].day_history)
-    cov_matrix, mean_daily_returns = cov_and_mean(stocks)
+    cov_matrix, mean_daily_returns, gmean = cov_and_mean(stocks)
     problemGenerator = NSGAII.PortfolioGenerator(portfolio)
 
     start = time.time()
     if type_ga == config.GA_SIMPLE:
         results_frame = simple.solve(stocks, iterations, mean_daily_returns, cov_matrix, days)
     if type_ga == config.GA_NSGAII:
-        results_frame = NSGAII.solve(stocks, iterations, mean_daily_returns, cov_matrix, days, generator=problemGenerator)
+        results_frame = NSGAII.solve(stocks, iterations, mean_daily_returns, cov_matrix, days,
+                                     generator=problemGenerator)
     if type_ga == config.GA_NSGAIII:
         results_frame = NSGAII.solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days,
                                              generator=problemGenerator)
     duration = time.time() - start
     LOG.info('Duration solved: %s' % duration)
-    new_sharpe, new_id = process_result_of_ga(results_frame, stocks)
+    new_sharpe, new_id = process_result_of_ga(results_frame, stocks, gmean)
     LOG.info('Solve %d of %d' % (num + 1, len(portfolios)))
     return new_sharpe, new_id
 
@@ -268,7 +287,7 @@ def parallel_solve(all_stocks, type_ga, curr, count):
             stock = all_stocks[pos - 1]
         stocks.append(stock)
 
-    cov_matrix, mean_daily_returns = cov_and_mean(stocks)
+    cov_matrix, mean_daily_returns, gmean = cov_and_mean(stocks)
     days = len(stocks[0].day_history)
     iterations = 50000
 
@@ -281,6 +300,6 @@ def parallel_solve(all_stocks, type_ga, curr, count):
         results_frame = NSGAII.solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days)
     duration = time.time() - start
     LOG.info('Duration solved: %s' % duration)
-    process_result_of_ga(results_frame, stocks)
+    process_result_of_ga(results_frame, stocks, gmean)
     LOG.info('Save %d portfolio from %d in thread %s' % (curr, count, str(threading.get_ident())))
     return 'Duration %s' % str(duration)
