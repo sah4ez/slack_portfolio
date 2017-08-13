@@ -1,25 +1,16 @@
 version: '3.0'
 
 services:
-  mongodb:
-    image: mongo
-    ports:
-     - "27017:27017"
-    volumes:
-     - ./db:/data/db
-
-  bot:
-    image: bot:1.0
+ bot:
+    image: kozlenkov.ru:5000/bot:1.1
     build:
       context: ./
       dockerfile: Dockerfile
-    links:
-     - mongodb
-    volumes:
-     - ./output.txt:/home/bot/bot/res/output.txt
     #command: ['top']
     command: ['python3', '/home/bot/bot/bot.py', '${SLACK_BOT_TOKEN}', '${BOT_ID}']
     deploy:
       mode: replicated
-      replicas: 2
+      replicas: 1
+      placement:
+        constraints: [node.role != manager]
 
