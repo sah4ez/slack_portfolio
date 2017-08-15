@@ -44,3 +44,8 @@ or build and run:
 ```bash
 docker-compose up --build -d
 ```
+
+# Commands
+
+List all commands of the bot:
+`@portfolio help`
