@@ -1,6 +1,6 @@
 ## Virtual env
 
-If you running bot in not conternized os (Docker), will be good create virtual evnieronment:
+If you running bot in not conternized os (Docker), need created virtual evnironment:
 
 ```bash
 virtualenv portfolio
@@ -16,11 +16,11 @@ pip install -r requirements.txt
 You need create file `.env` with variables:
 ```bash
 BOT_ID=F83923YAS # get from bot/bot_print_id.py
-SLACK_BOT_TOKEN=flkd-931284198453-mfdFsdfs3rsdsfsdfkjadsdl # get from settings you team
+SLACK_BOT_TOKEN=flkd-931284198453-mfdFsdfs3rsdsfsdfkjadsdl # get from settings your team
 THREAD_SLACK=1
 ```
 
-Next applay variable run script `./scripts/applay_env.sh`
+Next run the script for creating environment variables `./scripts/applay_env.sh`
 
 ## Change HOSTS
 
@@ -36,9 +36,9 @@ docker build -t bot/base:1.0 -f Dockerfile.baseimage .
 ```
 
 ## Bot image
-Build image for bot:
+Next build image for bot:
 ```bash
-docker build -t kozlenkov.ru:5000/bot:1.0 -f Dockerfile .
+docker-compose build
 ```
 or build and run:
 ```bash
