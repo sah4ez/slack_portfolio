@@ -16,7 +16,7 @@ LOG = my_log.get_logger("Finam Loader")
 
 def loader(words):
     LOG.info('Start loading from Finam history [%s]' % " ".join(words))
-    if words[1] in config.ARG_FINAM_CODE_ALL:
+    if len(words) == 1:
         return history_all_stocks()
     else:
         trade_code = str(words[1]).upper()
@@ -27,9 +27,10 @@ def history_all_stocks():
     LOG.info("Load all stocks")
     stocks = s.Stock.objects()
     all_stocks = stocks.count()
-    # for num, stock in enumerate(stocks):
-    #     load_history(stock.trade_code)
-    with ProcessPoolExecutor(max_workers=int(env.get(THREAD))) as executor:
+    threads = env.get(THREAD)
+    if threads is not None:
+        threads = int(threads)
+    with ProcessPoolExecutor(max_workers=threads) as executor:
         features = {executor.submit(load_history, stock.trade_code): stock for stock in stocks}
         for num, feature in enumerate(concurrent.futures.as_completed(features)):
             trade_code = feature.result()
@@ -146,11 +147,3 @@ def url_download_history_stock_price(trade_code, finam_em, file_name, period, fr
                     '&datf=1' \
                     '&at=1'
     return history_stock
-
-
-def code(short_name):
-    LOG.info('Get finame code by [%s]' % short_name)
-    with (open(file='./res/finam_em.csv', mode='r')) as f:
-        for line in f:
-            if short_name in line.split(';')[1]:
-                return line.split(';')[0]
