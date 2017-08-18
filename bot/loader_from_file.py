@@ -7,8 +7,6 @@ from csv import *
 from datetime import datetime
 from os.path import isfile, join
 
-from pip._vendor import requests
-from pip._vendor.requests.exceptions import MissingSchema
 from selenium import webdriver
 from concurrent.futures import ThreadPoolExecutor
 
@@ -17,52 +15,9 @@ import my_log
 import property
 from mongo import Stock as s, mongo as db
 import finam.finam as finam
+from resources.loader import download_file, load_files
 
 LOG = my_log.get_logger('loader_from_file')
-
-
-def download_file(url, file):
-    try:
-        u = requests.get(url=url)
-
-        with open(file=file, mode='wb') as f:
-            for chunk in u.iter_content(chunk_size=1024):
-                if chunk:
-                    f.write(chunk)
-                    f.flush()
-        f.close()
-        LOG.info(format('Load from %s file %s' % (url, file)))
-        return os.stat(file).st_size
-    except MissingSchema:
-        LOG.info(format('Not found URL %s' % url))
-    except requests.exceptions.SSLError:
-        LOG.info('Bad SLL of url: %s' % url)
-
-
-def download_type2(url, name):
-    folder = property.TYPE2_PATH + '/' + name
-    file = open(folder + '/url.txt', 'w+')
-    path = folder + property.TYPE2
-    path_file = folder.replace('company', 'files') + property.FILES
-    file.write(url)
-    download_file(url, path)
-    download_file(str(url).replace('company', 'files'), path_file)
-    file.close()
-
-
-def download_type3(url, name):
-    folder = property.TYPE2_PATH + '/' + name
-    file = open(folder + '/url.txt', 'w+')
-    path_file = folder + property.FILES2
-    url = str(url).replace('company', 'files')
-    file.write(url)
-    download_file(url, path_file)
-    file.close()
-
-
-def create_path(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
 
 
 def load_all():
@@ -82,24 +37,12 @@ def read_to_list(file):
     return arr
 
 
-def get_stock_from_file(name, line, is_download):
-    stock = s.Stock()
-    stock_line(stock, line=line)
-    url = url_board(trade_code=stock.trade_code)
-    html = html_source(url)
-    download_file(url, 'res/companies/' + stock.trade_code + '/' + property.BOARD)
-    stock.short_name = get_short_name(stock.trade_code, html, url)
-    stock.finame_em = finam.code(stock.short_name)
-    stock.last_price = get_last_price(stock.trade_code)
-    stock.volume_stock_on_market = get_volume_stock_on_market(stock.trade_code)
-    stock.lot = extractor.get_lot(stock.trade_code, html)
-
-    if is_download:
-        download = threading.Thread(load_files(line[7], line[38]))
-        download.start()
-        download.join()
-    stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
-    return stock
+def finam_code(short_name):
+    LOG.info('Get finame code by [%s]' % short_name)
+    with (open(file='./res/finam_em.csv', mode='r')) as f:
+        for line in f:
+            if short_name in line.split(';')[1]:
+                return line.split(';')[0]
 
 
 def stock_line(stock, line):
@@ -115,9 +58,31 @@ def stock_line(stock, line):
     return stock
 
 
+def get_stock_from_file(line, is_download):
+    stock = s.Stock()
+    stock_line(stock, line=line)
+    url = url_board(trade_code=stock.trade_code)
+    html = html_source(url)
+    download_file(url, 'res/companies/' + stock.trade_code + '/' + property.BOARD)
+    stock.short_name = get_short_name(stock.trade_code, html, url)
+    stock.finame_em = finam_code(stock.short_name)
+    stock.last_price = get_last_price(stock.trade_code)
+    stock.volume_stock_on_market = get_volume_stock_on_market(stock.trade_code)
+    stock.lot = extractor.get_lot(stock.trade_code, html)
+
+    if is_download:
+        download = threading.Thread(load_files(line[7], line[38]))
+        download.start()
+        download.join()
+    stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
+    return stock
+
+
+
+
 def stock_from_line(name, line, is_download=True):
     if line[4] == property.STOCKS and name.lower() in line[11].lower():
-        return get_stock_from_file(name, line, is_download)
+        return get_stock_from_file(line, is_download)
 
 
 def update_stock_from_file(name, download, is_priviledged=False):
@@ -136,14 +101,7 @@ def update_stock_from_file(name, download, is_priviledged=False):
         stock.save()
     except db.NotFoundStock:
         LOG.error('Not found stock. Update all.')
-        load_stocks(count=None, upload_files=download)
-        # action = read_to_list(property.DATA)
-        # stock_file = None
-        # for a in action:
-        #     stock_file = stock_from_line(name, a, download)
-        #     if stock_file is not None:
-        #         break
-        # stock_file.save()
+        load_stocks(upload_files=download)
 
 
 def load_one_stock(name, is_privileged=False):
@@ -179,50 +137,10 @@ def get_stocks_contains(company):
     return found
 
 
-def is_today(file):
-    date_now = datetime.now()
-    if not os.path.isfile(file):
-        return False
-    date_file = datetime.fromtimestamp(os.stat(file).st_ctime)
-    return datetime(date_now.year, date_now.month, date_now.day) <= datetime(date_file.year, date_file.month,
-                                                                             date_file.day)
-
-
-def download_from_disclosure(url, name):
-    folder = property.TYPE2_PATH + '/' + name
-    file = open(folder + '/url.txt', 'w+')
-    url = str(url).replace('company', 'files')
-    file.write(url)
-
-    path_file = folder + property.FILES3
-    download_file(url + property.DISCLOSURE_ALL, path_file)
-    path_file = folder + property.FILES4
-    download_file(url + property.DISCLOSURE_FIN, path_file)
-    path_file = folder + property.FILES5
-    download_file(url + property.DISCLOSURE_CONSOLIDATION_FIN, path_file)
-
-    file.close()
-
-
-def load_files(trade_code, link):
-    files = list()
-    create_path(property.TYPE2_PATH + '/' + trade_code)
-    create_path(property.TYPE2_PATH + '/' + trade_code + property.ARCHIVES)
-    download_type2(link + '&type=2', trade_code)
-    files.extend(extractor.extract_files(property.TYPE2_PATH + '/' + trade_code, property.FILES))
-    download_type3(link + '&type=3', trade_code)
-    files.extend(extractor.extract_files(property.TYPE2_PATH + '/' + trade_code, property.FILES2))
-    download_from_disclosure(link, trade_code)
-    if files.__len__() == 0:
-        files.extend(extractor.extract_files(property.TYPE2_PATH + '/' + trade_code, property.FILES3))
-        files.extend(extractor.extract_files(property.TYPE2_PATH + '/' + trade_code, property.FILES4))
-        files.extend(extractor.extract_files(property.TYPE2_PATH + '/' + trade_code, property.FILES5))
-
-
 def load_stocks(count=None, upload_files=False):
     action = read_to_list(property.DATA)
     sort_action = list()
-    with ThreadPoolExecutor(max_workers=10) as executor:
+    with ThreadPoolExecutor(max_workers=4) as executor:
         futures = {executor.submit(process_stock, a, count, num, sort_action, upload_files): (num, a)
                    for (num, a) in enumerate(action)}
         for future in concurrent.futures.as_completed(futures):
@@ -250,7 +168,7 @@ def process_stock(a, count, num, sort_action, upload_files):
         stock_line(stock, line=a)
         stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
         stock.short_name = get_short_name(stock.trade_code, html, url)
-        stock.finame_em = finam.code(stock.short_name)
+        stock.finame_em = finam_code(stock.short_name)
         stock.lot = extractor.get_lot(stock.trade_code, html)
 
         sort_action.append(stock)
