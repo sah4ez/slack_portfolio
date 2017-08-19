@@ -133,12 +133,12 @@ def cov_and_mean(stocks):
     # download daily price data for each of the stocks in the portfolio
     data = get_stock_price(stocks)
     returns = data.pct_change()
-    gmean = average_gmean(returns)
+    avr_gmean, gmeans = average_gmean(returns)
 
     # calculate mean daily return and covariance of daily returns
     mean_daily_returns = returns.mean()
     cov_matrix = returns.cov()
-    return cov_matrix, mean_daily_returns, gmean
+    return cov_matrix, mean_daily_returns, avr_gmean, gmeans
 
 
 def average_gmean(returns):
@@ -146,10 +146,12 @@ def average_gmean(returns):
     full_returns += 1
     avr = 0
     count = 0
+    gmeans = list()
     for ret in full_returns[1:].T:
         avr += ms.gmean(ret)
+        gmeans.append(ms.gmean(ret))
         count += 1
-    return avr / count
+    return avr / count, ms.gmean(gmeans)
 
 
 def process_result_of_ga(results_frame, stocks, gmean):
@@ -252,7 +254,7 @@ def optimize(words):
 def parallel_optimization(num, portfolios, portfolio, all_stocks, iterations, type_ga):
     stocks = all_stocks[num]
     days = len(stocks[0].day_history)
-    cov_matrix, mean_daily_returns, gmean = cov_and_mean(stocks)
+    cov_matrix, mean_daily_returns, avr_gmean, gmeans = cov_and_mean(stocks)
     problemGenerator = NSGAII.PortfolioGenerator(portfolio)
 
     start = time.time()
@@ -266,7 +268,7 @@ def parallel_optimization(num, portfolios, portfolio, all_stocks, iterations, ty
                                              generator=problemGenerator)
     duration = time.time() - start
     LOG.info('Duration solved: %s' % duration)
-    new_sharpe, new_id = process_result_of_ga(results_frame, stocks, gmean)
+    new_sharpe, new_id = process_result_of_ga(results_frame, stocks, avr_gmean)
     LOG.info('Solve %d of %d' % (num + 1, len(portfolios)))
     return new_sharpe, new_id
 
@@ -287,7 +289,7 @@ def parallel_solve(all_stocks, type_ga, curr, count):
             stock = all_stocks[pos - 1]
         stocks.append(stock)
 
-    cov_matrix, mean_daily_returns, gmean = cov_and_mean(stocks)
+    cov_matrix, mean_daily_returns, arg_gmean, gmeans = cov_and_mean(stocks)
     days = len(stocks[0].day_history)
     iterations = 50000
 
@@ -300,6 +302,6 @@ def parallel_solve(all_stocks, type_ga, curr, count):
         results_frame = NSGAII.solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days)
     duration = time.time() - start
     LOG.info('Duration solved: %s' % duration)
-    process_result_of_ga(results_frame, stocks, gmean)
+    process_result_of_ga(results_frame, stocks, arg_gmean)
     LOG.info('Save %d portfolio from %d in thread %s' % (curr, count, str(threading.get_ident())))
     return 'Duration %s' % str(duration)
