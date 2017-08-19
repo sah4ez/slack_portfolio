@@ -3,18 +3,17 @@ import os
 import re
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from csv import *
 from datetime import datetime
 from os.path import isfile, join
 
 from selenium import webdriver
-from concurrent.futures import ThreadPoolExecutor
 
 import extractor
 import my_log
 import property
 from mongo import Stock as s, mongo as db
-import finam.finam as finam
 from resources.loader import download_file, load_files
 
 LOG = my_log.get_logger('loader_from_file')
@@ -28,8 +27,7 @@ def load_all():
 
 
 def read_to_list(file):
-    arr = []
-
+    arr = list()
     with open(file, newline='', encoding='cp1251') as csvfile:
         moex_data = reader(csvfile, dialect='excel', delimiter=';')
         for row in moex_data:
@@ -58,13 +56,18 @@ def stock_line(stock, line):
     return stock
 
 
+def url_board(trade_code):
+    url = property.URL_BOARD + trade_code
+    download_file(url, 'res/companies/' + trade_code + '/' + property.BOARD)
+    html = html_source(url)
+    return html
+
+
 def get_stock_from_file(line, is_download):
     stock = s.Stock()
     stock_line(stock, line=line)
-    url = url_board(trade_code=stock.trade_code)
-    html = html_source(url)
-    download_file(url, 'res/companies/' + stock.trade_code + '/' + property.BOARD)
-    stock.short_name = get_short_name(stock.trade_code, html, url)
+    html = url_board(stock.trade_code)
+    stock.short_name = get_short_name(stock.trade_code, html)
     stock.finame_em = finam_code(stock.short_name)
     stock.last_price = get_last_price(stock.trade_code)
     stock.volume_stock_on_market = get_volume_stock_on_market(stock.trade_code)
@@ -76,8 +79,6 @@ def get_stock_from_file(line, is_download):
         download.join()
     stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
     return stock
-
-
 
 
 def stock_from_line(name, line, is_download=True):
@@ -162,12 +163,10 @@ def process_stock(a, count, num, sort_action, upload_files):
             stock = db.stock_by_trade_code(trade_code)
         except db.NotFoundStock:
             stock = s.Stock()
-        url = url_board(trade_code=stock.trade_code)
-        html = html_source(url)
-        download_file(url, 'res/companies/' + trade_code + '/' + property.BOARD)
+        html = url_board(trade_code=stock.trade_code)
         stock_line(stock, line=a)
         stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
-        stock.short_name = get_short_name(stock.trade_code, html, url)
+        stock.short_name = get_short_name(stock.trade_code, html)
         stock.finame_em = finam_code(stock.short_name)
         stock.lot = extractor.get_lot(stock.trade_code, html)
 
@@ -227,32 +226,12 @@ def get_volume_stock_on_market(trade_code):
     return result
 
 
-def get_short_name(code, html, url):
+def get_short_name(code, html):
     LOG.info('Get short name %s' % code)
     found = re.compile(property.SHORT_NAME_STOCK).search(html)
     if found is not None:
         name = str(found.group(0)).replace('<th>Краткое наименование</th><td>', '').replace('</td>', '')
         return name
-    # directory = property.TYPE2_PATH + '/' + code + '/'
-    # file = directory + property.BOARD
-    # create_path(directory)
-    # with open(file=file, mode="w+") as f:
-    #     try:
-    #         name = extractor.short_name_code(html)
-        # except ValueError:
-        #     time.sleep(3)
-        #     html = html_source(url)
-        #     try:
-        #         name = extractor.short_name_code(html)
-        #     except ValueError:
-        #         name = ''
-        # f.write(html)
-        # f.flush()
-    # f.close()
-
-
-def url_board(trade_code):
-    return property.URL_BOARD + trade_code
 
 
 def html_source(url):
@@ -260,6 +239,5 @@ def html_source(url):
     driver.get(url)
     time.sleep(5)
     html_inner = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
-    # html_inner = driver.find_element_by_tag_name('html').get_attribute('innerHTML')
     driver.close()
     return html_inner

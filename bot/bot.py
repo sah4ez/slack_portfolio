@@ -1,11 +1,10 @@
 import os
-from os import environ as env
 import sys
 import threading
 import time
 import traceback
+from os import environ as env
 
-from analyse import solver, income_portfolio as ip
 from slackclient import SlackClient
 
 import capital
@@ -16,11 +15,10 @@ import my_log
 import select_for_portfolio
 import sender_file
 import updater
-import url_board
 import yahoo.price as price
 from analyse import analyser
+from analyse import solver, income_portfolio as ip
 from bot_impl.bot_api import Bot
-from concurrent.futures import ProcessPoolExecutor
 
 LOG = my_log.get_logger("main")
 
@@ -60,10 +58,6 @@ def handle_command(command, channel, user):
             response(channel, config.RSP_WAIT)
             message = capital.capital(words)
             response(channel, message)
-
-        elif first_command in config.CMD_MOEX:
-            response(channel, config.RSP_WAIT)
-            response(channel, url_board.get_url(words))
 
         elif first_command in config.CMD_UPDATE or first_command in config.CMD_UPDATE_P:
             response(channel, config.RSP_WAIT)

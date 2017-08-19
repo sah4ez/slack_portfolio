@@ -22,9 +22,6 @@ HELP_UPDATE = format(
 
 RSP_NOF_FOUND_STOCK = "Не найдена акция %s...¯\_(ツ)_/¯"
 
-CMD_MOEX = ["moex", "биржа", "moex_p", "биржа_п"]
-HELP_MOEX = format("*%s*[_p] (*%s*[_п]) - получить ссылку акции на бирже\n" % (CMD_MOEX[0], CMD_MOEX[1]))
-
 CMD_HELP = ["help", "помогите", "помощь"]
 
 CMD_FILES = ["file", "файл", "files", "файлы"]
@@ -110,7 +107,7 @@ HELP_SAVED_PORTFOLIO = format("\n*%s [COMMAND] [ARGS]* \n"
                                  SAVED_PORTFOLIO[9]))
 
 RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_CAPITAL + \
-           HELP_MOEX + HELP_UPDATE + HELP_FILES + \
+           HELP_UPDATE + HELP_FILES + \
            HELP_SELECT_FOR_PORTFOLIO + HELP_GET_LIST_SELECTED + HELP_FIND + \
            HELP_FINAM_CODE + HELP_UPDATE_METAINFO + HELP_ANALYSE + HELP_MAX + \
            HELP_GA_SIMPLE + HELP_NSGAII + HELP_OPTIMIZE + HELP_SAVED_PORTFOLIO
