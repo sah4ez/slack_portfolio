@@ -80,13 +80,13 @@ def get_portfolio_by_id(id: str):
     return portfolios
 
 
-def get_n_random_portfolios():
+def get_n_random_portfolios(number=10):
     portfolios = list()
     connect()
     today = datetime.today() - timedelta(hours=12)
     found_portfolios = Portfolio.objects(date__gt=today).order_by('-max_item.sharpe_ratio')
     all_found = len(found_portfolios)
-    for x in range(10):
+    for x in range(number):
         position = random.randint(0, all_found - 1)
         portfolios.append(found_portfolios[position])
     close()
