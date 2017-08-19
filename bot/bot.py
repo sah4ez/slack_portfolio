@@ -25,10 +25,11 @@ LOG = my_log.get_logger("main")
 # starterbot's ID as an environment variable
 BOT_ID = env.get("BOT_ID")
 TOKEN = env.get('SLACK_BOT_TOKEN')
-if TOKEN is None:
-    TOKEN = sys.argv[1]
-if BOT_ID is None:
-    BOT_ID = sys.argv[2]
+if len(sys.argv) == 3:
+    if TOKEN is None:
+        TOKEN = sys.argv[1]
+    if BOT_ID is None:
+        BOT_ID = sys.argv[2]
 
 bot = Bot(TOKEN=TOKEN, BOT_ID=BOT_ID)
 # constants
