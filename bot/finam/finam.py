@@ -1,14 +1,15 @@
+import datetime as datetime
 import re
 
-import my_log
-import property
-import datetime as datetime
-import mongo.mongo as db
+from dateutil import relativedelta
+
 import config
 import mongo.Price as p
+import mongo.mongo as db
+import my_log
+import property
 from mongo import Stock as s
 from resources.loader import download_file
-from dateutil import relativedelta
 
 LOG = my_log.get_logger("Finam Loader")
 
@@ -111,6 +112,7 @@ def save_to_db(stock, finance_history, period, day_from):
         LOG.error('Nof found file %s' % finance_history)
 
     skips = 0
+    value = 0
     while date_from <= datetime.date.today():
         if date_from.weekday() in [5, 6] and period != property.FINAM_P_MONTH:
             date_from += datetime.timedelta(days=1)
@@ -122,16 +124,22 @@ def save_to_db(stock, finance_history, period, day_from):
 
         if found is not None and found.group():
             value = found.group().split(',')[7]
-            for skip in range(skips, -1, -1):
-                price = p.Price()
-                price.value = float(value)
-                price.date = shift_date_past(date_from, period, skip)
-                set_price(stock, price, period)
+            save_skip_price(skips, value, date_from, period, stock)
             skips = 0
         else:
             skips += 1
 
         date_from = shift_date_future(date_from, period)
+    if skips != 0:
+        save_skip_price(skips, value, date_from, period, stock)
+
+
+def save_skip_price(skips, value, date_from, period, stock):
+    for skip in range(skips, -1, -1):
+        price = p.Price()
+        price.value = float(value)
+        price.date = shift_date_past(date_from, period, skip)
+        set_price(stock, price, period)
 
 
 def process_by_period(stock, period):

@@ -1,17 +1,19 @@
-import matplotlib.pyplot as plt
-import my_log
-from mongo import mongo as db
-from analyse import solver, nsga as sm, nsga_platypus as nsagii
 import time
-import scipy.stats.mstats as m
+
+import matplotlib.pyplot as plt
 import numpy as np
+
+import my_log
+from analyse import solver, nsga as sm, nsga_platypus as nsagii
+from mongo import mongo as db
 
 LOG = my_log.get_logger('compare-solver')
 
 # iterations = [150000, 200000, 250000]
 iterations = [10000]
 
-for ordered in db.get_portfolio_by_id('598dc26208ed83001321a939'):
+#for ordered in db.get_portfolio_by_id('598dc26208ed83001321a939'):
+for ordered in db.get_n_first_portfolios(count=2):
     sharpes_sm = list()
     sharpes_nsga = list()
     sharpes_nsgaiii = list()
@@ -36,9 +38,10 @@ for ordered in db.get_portfolio_by_id('598dc26208ed83001321a939'):
 
         mean_daily_returns = returns.mean()
         cov_matrix = returns.cov()
-        gmean = solver.average_gmean(returns)
+        avr_gmean, gmeans = solver.average_gmean(returns)
 
-        LOG.info('Geometric mean: %.4f, Daily meand: %.4f' % (gmean, np.average(mean_daily_returns)))
+        LOG.info('Geometric mean: %.4f, Daily meand: %.4f, Gmeans: %.4f' %
+                 (avr_gmean, np.average(mean_daily_returns), gmeans))
 
         problemGenerator = nsagii.PortfolioGenerator(ordered)
 
