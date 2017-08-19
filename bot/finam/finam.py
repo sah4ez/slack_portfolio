@@ -1,66 +1,16 @@
+import re
+
 import my_log
 import property
 import datetime as datetime
 import mongo.mongo as db
-import loader_from_file
 import config
 import mongo.Price as p
 from mongo import Stock as s
-from concurrent.futures import ProcessPoolExecutor
-import concurrent
-from os import environ as env
-from property import *
+from resources.loader import download_file
+from dateutil import relativedelta
 
 LOG = my_log.get_logger("Finam Loader")
-
-
-def loader(words):
-    LOG.info('Start loading from Finam history [%s]' % " ".join(words))
-    if len(words) == 1:
-        return history_all_stocks()
-    else:
-        trade_code = str(words[1]).upper()
-        return load_history(trade_code)
-
-
-def history_all_stocks():
-    LOG.info("Load all stocks")
-    stocks = s.Stock.objects()
-    all_stocks = stocks.count()
-    threads = env.get(THREAD)
-    if threads is not None:
-        threads = int(threads)
-    with ProcessPoolExecutor(max_workers=threads) as executor:
-        features = {executor.submit(load_history, stock.trade_code): stock for stock in stocks}
-        for num, feature in enumerate(concurrent.futures.as_completed(features)):
-            trade_code = feature.result()
-            LOG.info("Load [%d/%d] %s" % (num, all_stocks, trade_code))
-    return config.RSP_FINAM_CODE_ALL
-
-
-def save_to_db(stock, path, period):
-    LOG.info("Save history %s to DB" % stock.trade_code)
-    try:
-        with open(file=path, mode='r', encoding='UTF-8') as file:
-            try:
-                for num, line in enumerate(file):
-                    if num == 0:
-                        continue
-                    words = line.split(",")
-                    if len(words) >= 8:
-                        date = words[2] + ' ' + words[3]
-                        value = words[7]
-                        date_time = datetime.datetime.strptime(date, '%d/%m/%y %H:%M:%S')
-                        price = p.Price()
-                        price.value = float(value)
-                        price.date = date_time
-                    set_price(stock, price, period)
-            except UnicodeDecodeError:
-                LOG.error('Bad file %s' % path)
-            finally:
-                file.close()
-    except FileNotFoundError:
-        LOG.error('Nof found file %s' % path)
 
 
 def set_price(stock, price, period):
@@ -74,44 +24,41 @@ def set_price(stock, price, period):
         stock.hour_history.append(price)
 
 
-def load_history(trade_code):
-    LOG.info('[%s]' % trade_code)
-    stock = db.stock_by_trade_code(trade_code)
-    stock.month_history = list()
-    stock.week_history = list()
-    stock.day_history = list()
-    stock.hour_history = list()
-    now = datetime.datetime.now()
+def get_date_from(period):
+    if period == property.FINAM_P_WEEK:
+        return datetime.datetime.now() - datetime.timedelta(days=property.FINAM_SHIFT_WEEK)
+    elif period == property.FINAM_P_DAY:
+        return datetime.datetime.now() - datetime.timedelta(days=property.FINAM_SHIFT_DAY)
+    elif period == property.FINAM_P_HOUR:
+        return datetime.datetime.now() - datetime.timedelta(hours=property.FINAM_SHIFT_HOUR)
+    else:
+        return datetime.datetime.now() - datetime.timedelta(days=property.FINAM_SHIFT_MONTH)
 
-    for period in property.FINAM_PERIODS:
-        history_file_name = stock.trade_code + '_' + \
-                            str(now.year) + '-' + \
-                            str(now.month) + '-' + \
-                            str(now.day) + '-' + period
-        if period == property.FINAM_P_WEEK:
-            date_from = datetime.datetime.now() - datetime.timedelta(days=property.FINAM_SHIFT_WEEK)
-        elif period == property.FINAM_P_DAY:
-            date_from = datetime.datetime.now() - datetime.timedelta(days=property.FINAM_SHIFT_DAY)
-        elif period == property.FINAM_P_HOUR:
-            date_from = datetime.datetime.now() - datetime.timedelta(hours=property.FINAM_SHIFT_HOUR)
-        else:
-            date_from = datetime.datetime.now() - datetime.timedelta(days=property.FINAM_SHIFT_MONTH)
 
-        url = url_download_history_stock_price(stock.trade_code,
-                                               stock.finame_em,
-                                               history_file_name,
-                                               period=period,
-                                               from_day=date_from.day,
-                                               from_month=date_from.month,
-                                               from_year=date_from.year)
-        path = property.TYPE2_PATH + '/' + stock.trade_code + '/' + history_file_name + '.csv'
-        LOG.info('Start loading hystory for %s from %s' % (trade_code, url))
-        size_download = loader_from_file.download_file(url, path) / 1024
-        LOG.info('Load %.2f Кб' % size_download)
-        save_to_db(stock, path, period)
+def shift_date_past(day_from, period, skips):
+    date = day_from
+    if period == property.FINAM_P_WEEK:
+        date -= datetime.timedelta(weeks=skips)
+    elif period == property.FINAM_P_DAY:
+        date -= datetime.timedelta(days=skips)
+    elif period == property.FINAM_P_HOUR:
+        date -= datetime.timedelta(hours=skips)
+    else:
+        date -= relativedelta.relativedelta(months=skips)
+    return date
 
-    stock.save()
-    return trade_code
+
+def shift_date_future(day_from, period):
+    date = day_from
+    if period == property.FINAM_P_WEEK:
+        date += datetime.timedelta(weeks=1)
+    elif period == property.FINAM_P_DAY:
+        date += datetime.timedelta(days=1)
+    elif period == property.FINAM_P_HOUR:
+        date += datetime.timedelta(hours=1)
+    else:
+        date += relativedelta.relativedelta(months=1)
+    return date
 
 
 def url_download_history_stock_price(trade_code, finam_em, file_name, period, from_day=1, from_month=1, from_year=2010,
@@ -147,3 +94,97 @@ def url_download_history_stock_price(trade_code, finam_em, file_name, period, fr
                     '&datf=1' \
                     '&at=1'
     return history_stock
+
+
+def save_to_db(stock, finance_history, period, day_from):
+    LOG.info("Save history %s to DB" % stock.trade_code)
+    if period == property.FINAM_P_MONTH:
+        day_from = datetime.datetime(day_from.year, day_from.month, 1)
+    if period == property.FINAM_P_WEEK:
+        day_from -= datetime.timedelta(days=day_from.weekday())
+    date_from = day_from.date()
+    text = ''
+    try:
+        with open(file=finance_history, mode='r', encoding='UTF-8') as file:
+            text = file.read()
+    except FileNotFoundError:
+        LOG.error('Nof found file %s' % finance_history)
+
+    skips = 0
+    while date_from <= datetime.date.today():
+        if date_from.weekday() in [5, 6] and period != property.FINAM_P_MONTH:
+            date_from += datetime.timedelta(days=1)
+            continue
+
+        date = date_from.strftime('%d/%m/%y')
+        pattern = re.compile(r'[A-Z]{4,5},[DWM],' + date + ',00:00:00,[0-9.]+,[0-9.]+,[0-9.]+,[0-9.]+,[0-9.]+')
+        found = pattern.search(text)
+
+        if found is not None and found.group():
+            value = found.group().split(',')[7]
+            for skip in range(skips, -1, -1):
+                price = p.Price()
+                price.value = float(value)
+                price.date = shift_date_past(date_from, period, skip)
+                set_price(stock, price, period)
+            skips = 0
+        else:
+            skips += 1
+
+        date_from = shift_date_future(date_from, period)
+
+
+def process_by_period(stock, period):
+    history_file_name = stock.trade_code + '_' + period
+    date_from = get_date_from(period)
+    url = url_download_history_stock_price(stock.trade_code,
+                                           stock.finame_em,
+                                           history_file_name,
+                                           period=period,
+                                           from_day=date_from.day,
+                                           from_month=date_from.month,
+                                           from_year=date_from.year)
+    path = property.TYPE2_PATH + '/' + stock.trade_code + '/' + history_file_name + '.csv'
+    LOG.info('Start loading hystory for %s from %s' % (stock.trade_code, url))
+    size_download = download_file(url, path) / 1024
+    LOG.info('Load %.2f Кб' % size_download)
+    try:
+        save_to_db(stock, path, period, date_from)
+    except UnicodeDecodeError:
+        LOG.error('Don\'t save %s with %s period with file %s on date %s' % (
+            stock.trade_code, period, path, str(date_from)))
+    finally:
+        return stock.trade_code, period
+
+
+def load_history(trade_code):
+    LOG.info('[%s]' % trade_code)
+    stock = db.stock_by_trade_code(trade_code)
+    stock.month_history = list()
+    stock.week_history = list()
+    stock.day_history = list()
+    stock.hour_history = list()
+
+    for period in property.FINAM_PERIODS:
+        process_by_period(stock, period)
+
+    stock.save()
+    return trade_code
+
+
+def history_all_stocks():
+    LOG.info("Load all stocks")
+    stocks = s.Stock.objects()
+    all_stocks = stocks.count()
+    for num, stock in enumerate(stocks):
+        load_history(stock.trade_code)
+        LOG.info("Load [%d/%d] %s" % (num, all_stocks, stock.trade_code))
+    return config.RSP_FINAM_CODE_ALL
+
+
+def loader(words):
+    LOG.info('Start loading from Finam history [%s]' % " ".join(words))
+    if len(words) == 1:
+        return history_all_stocks()
+    else:
+        return load_history(trade_code=str(words[1]).upper())
