@@ -142,7 +142,7 @@ def cov_and_mean(stocks):
 
 
 def average_gmean(returns):
-    full_returns = np.array(returns)
+    full_returns = np.array(returns[1:len(returns) - 1])
     full_returns += 1
     avr = 0
     count = 0
