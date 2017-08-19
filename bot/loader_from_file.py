@@ -105,23 +105,28 @@ def update_stock_from_file(name, download, is_priviledged=False):
         load_stocks(upload_files=download)
 
 
+def get_stock_from_array(name, is_privileged):
+    actions = read_to_list(property.DATA)
+    for action in actions:
+        if is_privileged:
+            if re.compile(property.PRIVILEGED).match(action[7]):
+                stock = stock_from_line(name, action)
+                if stock is not None:
+                    return stock
+        else:
+            stock = stock_from_line(name, action)
+            if stock is not None:
+                return stock
+
+
 def load_one_stock(name, is_privileged=False):
     LOG.info('Load stock with name %s and privileged is %s' % (name, str(is_privileged)))
     stock = None
     try:
         stock = db.stock_by_emitet_name(name, is_privileged)
     except db.NotFoundStock:
-        action = read_to_list(property.DATA)
-        for a in action:
-            if is_privileged:
-                if re.compile(property.PRIVILEGED).match(a[7]):
-                    stock = stock_from_line(name, a)
-                    if stock is not None:
-                        break
-            else:
-                stock = stock_from_line(name, a)
-                if stock is not None:
-                    break
+        stock = get_stock_from_array(name, is_privileged)
+
     if stock is None:
         raise db.NotFoundStock(name)
     else:
