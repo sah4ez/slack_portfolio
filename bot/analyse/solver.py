@@ -92,9 +92,10 @@ def parallel_solve(all_stocks, type_ga, curr, count):
 def parse_solved_portfolio(array, stocks) -> ItemPortfolio:
     item_portfolio = ItemPortfolio()
     item_portfolio.returns = array[0]
-    item_portfolio.standard_deviation = array[1]
-    item_portfolio.sharpe_ratio = array[2]
-    for num, stock_parts in enumerate(array[3:]):
+    item_portfolio.wgmean = array[1]
+    item_portfolio.standard_deviation = array[2]
+    item_portfolio.sharpe_ratio = array[3]
+    for num, stock_parts in enumerate(array[4:]):
         item = Item()
         item.value = stock_parts
         item.trade_code = stocks[num].trade_code

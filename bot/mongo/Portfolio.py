@@ -1,8 +1,6 @@
 from mongoengine import (Document, EmbeddedDocumentField, FloatField, ListField, EmbeddedDocument, StringField,
                          ObjectIdField, DateTimeField)
 
-from datetime import datetime
-
 
 class Item(EmbeddedDocument):
     trade_code = StringField()
@@ -17,6 +15,7 @@ class ItemPortfolio(EmbeddedDocument):
     returns = FloatField()
     standard_deviation = FloatField()
     sharpe_ratio = FloatField()
+    wgmean = FloatField()
     stocks = ListField(EmbeddedDocumentField(Item))
 
 
