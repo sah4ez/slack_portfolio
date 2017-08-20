@@ -9,14 +9,17 @@ from mongo import mongo as db
 
 LOG = my_log.get_logger('compare-solver')
 
-# iterations = [150000, 200000, 250000]
-iterations = [10000]
+iterations = [1000, 2000, 3000, 5000, 10000]#, 20000, 30000, 50000]
+# iterations = [5000]
 
-#for ordered in db.get_portfolio_by_id('598dc26208ed83001321a939'):
-for ordered in db.get_n_first_portfolios(count=2):
+# for ordered in db.get_portfolio_by_id('598dc26208ed83001321a939'):
+for ordered in db.get_portfolio_by_id('5998a176c60a860014ad8555'):
     sharpes_sm = list()
     sharpes_nsga = list()
     sharpes_nsgaiii = list()
+    wgmean_sm = list()
+    wgmean_nsga = list()
+    wgmean_nsgaiii = list()
     time_sm = list()
     time_nsga = list()
     time_nsgaiii = list()
@@ -40,7 +43,7 @@ for ordered in db.get_n_first_portfolios(count=2):
         cov_matrix = returns.cov()
         avr_gmean, gmeans = solver.average_gmean(returns)
 
-        LOG.info('Geometric mean: %.4f, Daily meand: %.4f, Gmeans: %.4f' %
+        LOG.info('Geometric mean: %.8f, Daily meand: %.8f, Gmeans: %.8f' %
                  (avr_gmean, np.average(mean_daily_returns), gmeans))
 
         problemGenerator = nsagii.PortfolioGenerator(ordered)
@@ -68,39 +71,59 @@ for ordered in db.get_n_first_portfolios(count=2):
         plt.subplot(131)
         id_max = result_frame_sm['sharpe'].idxmax()
         max_sharpe_port_sm = result_frame_sm.iloc[id_max]
+        id_max_wgmean = result_frame_sm['wgmean'].idxmax()
+        max_wgmean_port_sw = result_frame_sm.iloc[id_max_wgmean]
         sharpes_sm.append(max_sharpe_port_sm[2])
+        wgmean_sm.append(max_wgmean_port_sw[1])
         plt.scatter(result_frame_sm.stdev, result_frame_sm.ret, c=result_frame_sm.sharpe, cmap='RdYlBu')
         plt.xlabel('stdev')
         plt.ylabel('ret')
-        plt.scatter(max_sharpe_port_sm[1], max_sharpe_port_sm[0], marker=(3, 1, 0), color='r', s=300)
-        LOG.info('sm-%d: \n %s' % (iter, str(max_sharpe_port_sm)))
+        plt.scatter(max_sharpe_port_sm[2], max_sharpe_port_sm[0], marker=(3, 1, 0), color='r', s=300)
+        plt.scatter(max_wgmean_port_sw[2], max_wgmean_port_sw[0], marker=(4, 2, 0), color='g', s=300)
+        LOG.info('sm-%d: \nsharpe: \n %s \n wgmean \n %s ' % (iter, str(max_sharpe_port_sm), str(max_wgmean_port_sw)))
 
         plt.subplot(132)
         id_max = result_frame_nsgaii['sharpe'].idxmax()
         max_sharpe_port_nsgaii = result_frame_nsgaii.iloc[id_max]
+        id_max_wgmean = result_frame_nsgaii['wgmean'].idxmax()
+        max_wgmean_port_nsgaii = result_frame_nsgaii.iloc[id_max_wgmean]
         sharpes_nsga.append(max_sharpe_port_nsgaii[2])
+        wgmean_nsga.append(max_wgmean_port_nsgaii[1])
         plt.scatter(result_frame_nsgaii.stdev, result_frame_nsgaii.ret, c=result_frame_nsgaii.sharpe, cmap='RdYlBu')
         plt.xlabel('stdev')
         plt.ylabel('ret')
-        plt.scatter(max_sharpe_port_nsgaii[1], max_sharpe_port_nsgaii[0], marker=(5, 1, 0), color='r', s=300)
-        LOG.info('nsgaii-%d: \n %s' % (iter, str(max_sharpe_port_nsgaii)))
+        plt.scatter(max_sharpe_port_nsgaii[2], max_sharpe_port_nsgaii[0], marker=(5, 1, 0), color='r', s=300)
+        plt.scatter(max_wgmean_port_nsgaii[2], max_wgmean_port_nsgaii[0], marker=(6, 2, 0), color='g', s=300)
+        LOG.info(
+            'nsgaii-%d: sharpe\n %s \n wgmean \n %s' % (iter, str(max_sharpe_port_nsgaii), str(max_wgmean_port_nsgaii)))
 
         plt.subplot(133)
         id_max = result_frame_nsgaiii['sharpe'].idxmax()
         max_sharpe_port_nsgaiii = result_frame_nsgaiii.iloc[id_max]
+        id_max_wgmean = result_frame_nsgaiii['sharpe'].idxmax()
+        max_wgmean_port_nsgaiii = result_frame_nsgaiii.iloc[id_max_wgmean]
         sharpes_nsgaiii.append(max_sharpe_port_nsgaiii[2])
+        wgmean_nsgaiii.append(max_wgmean_port_nsgaiii[1])
         plt.scatter(result_frame_nsgaiii.stdev, result_frame_nsgaiii.ret, c=result_frame_nsgaiii.sharpe, cmap='RdYlBu')
         plt.xlabel('stdev')
         plt.ylabel('ret')
-        plt.scatter(max_sharpe_port_nsgaiii[1], max_sharpe_port_nsgaiii[0], marker=(6, 2, 0), color='r', s=300)
-        LOG.info('nsgaiii-%d: \n %s' % (iter, str(max_sharpe_port_nsgaiii)))
+        plt.scatter(max_sharpe_port_nsgaiii[2], max_sharpe_port_nsgaiii[0], marker=(6, 2, 0), color='r', s=300)
+        plt.scatter(max_wgmean_port_nsgaiii[2], max_wgmean_port_nsgaiii[0], marker=(7, 2, 0), color='g', s=300)
+        LOG.info('nsgaiii-%d: \n sharpe \n %s \n wgmean \n %s' % (
+            iter, str(max_sharpe_port_nsgaiii), str(max_wgmean_port_nsgaiii)))
 
         LOG.info('%d / %d' % (num + 1, len(iterations)))
 
     plt.figure('trend')
     plt.plot(iterations, sharpes_sm, label='sm')
     plt.plot(iterations, sharpes_nsga, label='nsgaii')
-    plt.plot(iterations, sharpes_nsgaiii, label='nsgaii')
+    plt.plot(iterations, sharpes_nsgaiii, label='nsgaiii')
+    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
+
+    plt.figure('trend_wgmean')
+    plt.plot(iterations, wgmean_sm, label='sm')
+    plt.plot(iterations, wgmean_nsga, label='nsgaii')
+    plt.plot(iterations, wgmean_nsgaiii, label='nsgaiii')
     plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
 
     plt.figure('time')

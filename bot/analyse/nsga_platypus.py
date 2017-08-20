@@ -1,7 +1,9 @@
-import platypus as pt
+import random
+
 import numpy as np
 import pandas as pd
-import random
+import platypus as pt
+
 import my_log
 from mongo import mongo as db
 from mongo.Stock import Stock
@@ -23,7 +25,7 @@ class ProblemPortfolio(pt.Problem):
         self.days = days
         self.types[:] = pt.Real(0.0, 1.0)
         self.constraints.__setitem__(0, "==1")
-        self.constraints.__setitem__(1, "<=6")
+        self.constraints.__setitem__(1, "<=0.06")
         self.constraints.__setitem__(2, ">=0.02")
         self.constraints.__setitem__(3, "<=0.18")
 
@@ -33,12 +35,23 @@ class ProblemPortfolio(pt.Problem):
         solution.variables = parts
 
         solution.objectives[:] = [np.sum(self.mean_daily_returns * solution.variables) * self.days,
-                                  np.sqrt(np.dot(solution.variables.T,
-                                                 np.dot(self.cov_matrix, solution.variables))) * np.sqrt(self.days)]
+                                  np.exp(sum([solution.variables[num] * np.log(1 + mean) for num, mean in
+                                              enumerate(self.mean_daily_returns)]) / np.sum(solution.variables))]
+
+        solution.stdev = np.sqrt(np.dot(solution.variables.T,
+                                        np.dot(self.cov_matrix, solution.variables))) * np.sqrt(self.days)
+
         solution.constraints[:] = [np.sum(solution.variables),
-                                   solution.objectives[1],
+                                   np.sqrt(np.dot(solution.variables.T,
+                                                  np.dot(self.cov_matrix, solution.variables))) * np.sqrt(self.days),
                                    min(solution.variables),
-                                   max(solution.variables) ]
+                                   max(solution.variables)]
+
+
+class PortfolioSolution(pt.Solution):
+    def __init__(self, problem):
+        super().__init__(problem)
+        self.stdev = 0.0
 
 
 class PortfolioGenerator(pt.Generator):
@@ -48,7 +61,7 @@ class PortfolioGenerator(pt.Generator):
         self.step = 0.005
 
     def generate(self, problem):
-        solution = pt.Solution(problem)
+        solution = PortfolioSolution(problem)
         solution.variables = [self.shift(x.value) for x in self.portfolio.max_item.stocks]
         solution.variables /= np.sum(solution.variables)
         return solution
@@ -93,48 +106,42 @@ def get_per_cent_by_item(stocks):
     return data.transpose().pct_change()
 
 
-def solve(stocks, iterations, mean_daily_returns, cov_matrix, days, population=100, generator: pt.Generator = None):
-    LOG.info('Start nsgaII for %d . Generator is default %s' % (iterations, generator is None))
-    problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
-    problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MINIMIZE]
-    if generator is None:
-        algorithm = pt.NSGAII(problem)
-    else:
-        algorithm = pt.NSGAII(problem, generator=generator)
-    algorithm.population_size = population
-    algorithm.run(iterations)
-    cols = ['ret', 'stdev', 'sharpe']
-    results = np.zeros((algorithm.population_size, 3 + len(stocks)))
-    for num, solution in enumerate(algorithm.result):
+def algorithm(stocks, iterations, NSGA, population=100):
+    NSGA.population_size = population
+    NSGA.run(iterations)
+    cols = ['ret', 'wgmean', 'stdev', 'sharpe']
+    results = np.zeros((NSGA.population_size, len(cols) + len(stocks)))
+    for num, solution in enumerate(NSGA.result):
         results[num][0] = solution.objectives[0]
         results[num][1] = solution.objectives[1]
-        results[num][2] = results[num][0] / results[num][1]
-        results[num][3:] = np.array(solution.variables)
+        results[num][2] = solution.stdev
+        results[num][3] = results[num][0] / results[num][2]
+        results[num][4:] = np.array(solution.variables)
     for stock in stocks:
         cols.append(stock.shape())
     results_frame = pd.DataFrame(results, columns=cols)
     return results_frame
+
+
+def solve(stocks, iterations, mean_daily_returns, cov_matrix, days, population=100, generator: pt.Generator = None):
+    LOG.info('Start nsgaII for %d . Generator is default %s' % (iterations, generator is None))
+
+    problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
+    problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MAXIMIZE]
+    if generator is None:
+        nsga = pt.NSGAII(problem)
+    else:
+        nsga = pt.NSGAII(problem, generator=generator)
+    return algorithm(stocks, iterations, nsga, population)
 
 
 def solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days, population=100,
                   generator: pt.Generator = None):
     LOG.info('Start nsgaIII for %d . Generator is default %s' % (iterations, generator is None))
     problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
-    problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MINIMIZE]
+    problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MAXIMIZE]
     if generator is None:
-        algorithm = pt.NSGAIII(problem, divisions_outer=1, divisions_inner=1)
+        nsgaiii = pt.NSGAIII(problem, divisions_outer=1, divisions_inner=1)
     else:
-        algorithm = pt.NSGAIII(problem, divisions_outer=1, divisions_inner=1, generator=generator)
-    algorithm.population_size = population
-    algorithm.run(iterations)
-    cols = ['ret', 'stdev', 'sharpe']
-    results = np.zeros((algorithm.population_size, 3 + len(stocks)))
-    for num, solution in enumerate(algorithm.result):
-        results[num][0] = solution.objectives[0]
-        results[num][1] = solution.objectives[1]
-        results[num][2] = results[num][0] / results[num][1]
-        results[num][3:] = np.array(solution.variables)
-    for stock in stocks:
-        cols.append(stock.shape())
-    results_frame = pd.DataFrame(results, columns=cols)
-    return results_frame
+        nsgaiii = pt.NSGAIII(problem, divisions_outer=1, divisions_inner=1, generator=generator)
+    return algorithm(stocks, iterations, nsgaiii, population)

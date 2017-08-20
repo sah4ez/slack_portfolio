@@ -1,22 +1,24 @@
 import concurrent
-import threading
-import pandas as pd
-import pandas_datareader.data as web
-import matplotlib.pyplot as plt
-from mongo.Stock import Stock
-from mongo.Portfolio import Portfolio, Item, ItemPortfolio
-import random
 import datetime
-import my_log
-import config
-from analyse import nsga as simple, nsga_platypus as NSGAII
+import random
+import threading
+import time
 from concurrent.futures import ProcessPoolExecutor
 from os import environ as env
-from property import *
-import time
-from mongo import mongo as db
-from scipy.stats import mstats as ms
+
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import pandas_datareader.data as web
+from scipy.stats import mstats as ms
+
+import config
+import my_log
+from analyse import nsga as simple, nsga_platypus as NSGAII
+from mongo import mongo as db
+from mongo.Portfolio import Portfolio, Item, ItemPortfolio
+from mongo.Stock import Stock
+from property import *
 
 LOG = my_log.get_logger('solver')
 
@@ -154,6 +156,10 @@ def average_gmean(returns):
     return avr / count, ms.gmean(gmeans)
 
 
+def weigth_geom_mean(means, parts):
+    return np.exp(sum([parts[num] * np.log(mean) for num, mean in enumerate(means)]) / np.sum(parts))
+
+
 def process_result_of_ga(results_frame, stocks, gmean):
     max_sharpe_port = results_frame.iloc[results_frame['sharpe'].idxmax()]
     min_vol_port = results_frame.iloc[results_frame['stdev'].idxmin()]
@@ -179,25 +185,6 @@ def process_result_of_ga(results_frame, stocks, gmean):
     return max_item.sharpe_ratio, solved._id
 
 
-def ga(words):
-    if len(words) == 2:
-        type_ga = words[0]
-        count = int(words[1])
-    else:
-        return config.RSP_INVALID_PARAMETERS % str(words)
-
-    LOG.info('start NSGA with population count %d' % count)
-    all_stocks = list()
-    db.connect()
-    for s in Stock.objects():
-        all_stocks.append(s)
-    db.close()
-    print(len(all_stocks))
-    with ProcessPoolExecutor(max_workers=int(env.get(THREAD))) as executor:
-        features = {executor.submit(parallel_solve, all_stocks, type_ga, curr, count): curr for curr in range(count)}
-        for feature in concurrent.futures.as_completed(features):
-            LOG.info('Complete %s ' % feature.result())
-    return 'Finish GA!'
 
 
 def optimize(words):
@@ -305,3 +292,24 @@ def parallel_solve(all_stocks, type_ga, curr, count):
     process_result_of_ga(results_frame, stocks, arg_gmean)
     LOG.info('Save %d portfolio from %d in thread %s' % (curr, count, str(threading.get_ident())))
     return 'Duration %s' % str(duration)
+
+
+def ga(words):
+    if len(words) == 2:
+        type_ga = words[0]
+        count = int(words[1])
+    else:
+        return config.RSP_INVALID_PARAMETERS % str(words)
+
+    LOG.info('start NSGA with population count %d' % count)
+    all_stocks = list()
+    db.connect()
+    for s in Stock.objects():
+        all_stocks.append(s)
+    db.close()
+    print(len(all_stocks))
+    with ProcessPoolExecutor(max_workers=int(env.get(THREAD))) as executor:
+        features = {executor.submit(parallel_solve, all_stocks, type_ga, curr, count): curr for curr in range(count)}
+        for feature in concurrent.futures.as_completed(features):
+            LOG.info('Complete %s ' % feature.result())
+    return 'Finish GA!'
