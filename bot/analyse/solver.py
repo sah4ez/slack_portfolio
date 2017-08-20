@@ -185,8 +185,6 @@ def process_result_of_ga(results_frame, stocks, gmean):
     return max_item.sharpe_ratio, solved._id
 
 
-
-
 def optimize(words):
     repeats = 1
     if 'repeat' in words:
@@ -226,8 +224,8 @@ def optimize(words):
         ids = list()
         with ProcessPoolExecutor(max_workers=int(env.get(THREAD))) as executor:
             features = {
-                executor.submit(parallel_optimization, portfolios.index(portfolio), portfolios, portfolio, all_stocks,
-                                iterations, type_ga): portfolio for portfolio in portfolios}
+                executor.submit(parallel_optimization, num, portfolios, portfolio, all_stocks, iterations, type_ga):
+                    [num, portfolio] for num, portfolio in enumerate(portfolios)}
             for feature in concurrent.futures.as_completed(features):
                 shapre, id = feature.result()
                 optimize_sharpes.append(shapre)

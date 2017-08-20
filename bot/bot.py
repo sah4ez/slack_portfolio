@@ -45,7 +45,7 @@ def handle_command(command, channel, user):
     if words.__len__() < 1:
         response(channel, message)
         return
-    if words[0] in config.CMD_HOSTNAME:
+    if words[0] in config.CMD_HOSTNAME and len(words) >= 2:
         host = words[1]
         if host not in env.get("HOSTNAME"):
             LOG.warn("Can't run command %s for host %s on host %s" % (words[2], host, env.get("HOSTNAME")))
@@ -57,9 +57,10 @@ def handle_command(command, channel, user):
     list_extracted_files = list()
     try:
         if first_command in config.CMD_HELP:
+            response(channel, config.RSP_HELP)
+        if first_command in config.CMD_HOSTNAME:
             hostname = env.get("HOSTNAME")
             response(channel, "ON HOST: %s" % hostname)
-            response(channel, config.RSP_HELP)
 
         elif first_command in config.CMD_PRICE:
             response(channel, config.RSP_WAIT)
