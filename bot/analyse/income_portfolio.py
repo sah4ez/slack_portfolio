@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
-import config
-from mongo import Portfolio as pf, mongo as db
-import my_log
+
 import texttable
+
+import config
+import my_log
 import property
+from mongo import Portfolio as pf, mongo as db
 
 LOG = my_log.get_logger('income_portfolio')
 
@@ -37,7 +39,6 @@ def for_portfolio(words):
 
 def predict(porftolio: pf.ItemPortfolio, money: int, from_date=(datetime.today() - timedelta(days=21)),
             to_date=datetime.today() - timedelta(days=1)):
-    stocks = dict()
     income = list()
 
     correct_summ = list()
@@ -74,7 +75,6 @@ def load_price(stock_orm, date):
     while not load:
         try:
             from_price = stock_orm.get_day_price(date + timedelta(days=shift_days))
-            load = True
             return from_price
         except db.NotFoundPrice:
             load = False
