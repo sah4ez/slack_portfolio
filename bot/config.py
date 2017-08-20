@@ -106,7 +106,13 @@ HELP_SAVED_PORTFOLIO = format("\n*%s [COMMAND] [ARGS]* \n"
                                  SAVED_PORTFOLIO[6], SAVED_PORTFOLIO[7], SAVED_PORTFOLIO[8],
                                  SAVED_PORTFOLIO[9]))
 
-RSP_HELP = "Вот чему меня научили:\n" + HELP_PRICE + HELP_CAPITAL + \
+CMD_HOSTNAME = ["host"]
+HELP_HOSTNAME = format(
+    "%s HOSTNAME - если бот запущен в нескольких экземплярах, то используейте "
+    "эту команду для запуска на конкретном экземеляре HOSTNAME\b" % (
+        CMD_HOSTNAME[0]))
+
+RSP_HELP = "Вот чему меня научили:\n" + HELP_HOSTNAME + HELP_PRICE + HELP_CAPITAL + \
            HELP_UPDATE + HELP_FILES + \
            HELP_SELECT_FOR_PORTFOLIO + HELP_GET_LIST_SELECTED + HELP_FIND + \
            HELP_FINAM_CODE + HELP_UPDATE_METAINFO + HELP_ANALYSE + HELP_MAX + \
@@ -124,4 +130,3 @@ LOG_ALL_FILE = "log/all.log"
 GA_SIMPLE = "ga"
 GA_NSGAII = "nsgaii"
 GA_NSGAIII = "nsgaiii"
-
