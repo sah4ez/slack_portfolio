@@ -168,7 +168,7 @@ def process_stock(a, count, num, sort_action, upload_files):
             stock = db.stock_by_trade_code(trade_code)
         except db.NotFoundStock:
             stock = s.Stock()
-        html = url_board(trade_code=stock.trade_code)
+        html = url_board(trade_code=trade_code)
         stock_line(stock, line=a)
         stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
         stock.short_name = get_short_name(stock.trade_code, html)
