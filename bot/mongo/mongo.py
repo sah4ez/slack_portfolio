@@ -7,6 +7,7 @@ from mongo import Stock as s
 import my_log
 import re
 import random
+from os import environ as env
 
 from mongo.Portfolio import Portfolio
 from mongo.exception import *
@@ -15,11 +16,11 @@ LOG = my_log.get_logger('mongo')
 
 
 def connect():
-    return me.connect(property.DB_COLLECT, host=property.DB_HOST, port=property.DB_PORT)
+    return me.connect(env.get('DB_NAME_ENV'), host=env.get('DB_HOST'), port=env.get('DB_PORT'))
 
 
 def close():
-    return closeDb(property.DB_COLLECT)
+    return closeDb(env.get('DB_NAME_ENV'))
 
 
 def extract_stock(stocks, parameter):

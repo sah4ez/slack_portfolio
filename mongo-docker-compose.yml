@@ -8,3 +8,7 @@ services:
     volumes:
      - ./db:/data/db
     restart: always
+    environment:
+     - MONGODB_USER: '${DB_USER_ENV}'
+     - MONGODB_DATABASE: '${DB_NAME_ENV}'
+     - MONGODB_PASS: '${DB_PASS}'
