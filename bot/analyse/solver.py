@@ -162,8 +162,30 @@ def weigth_geom_mean(means, parts):
 
 
 def process_result_of_ga(results_frame, stocks, gmean):
-    max_sharpe_port = results_frame.iloc[results_frame['sharpe'].idxmax()]
-    min_vol_port = results_frame.iloc[results_frame['stdev'].idxmin()]
+    try:
+        id_sharpe = results_frame['sharpe'].idxmax()
+    except TypeError as exc:
+        id_sharpe = maxId(results_frame, 'sharpe')
+
+    try:
+        max_sharpe_port = results_frame.iloc[id_sharpe]
+    except TypeError as exc:
+        id_sharpe = maxId(results_frame, 'sharpe')
+        max_sharpe_port = results_frame.iloc[id_sharpe]
+
+    try:
+        id_stdev = results_frame['stdev'].idxmin()
+    except TypeError as exc:
+        id_stdev = minId(results_frame, 'stdev')
+
+    if id_stdev == np.NaN:
+        id_stdev = minId(results_frame, 'stdev')
+
+    try:
+        min_vol_port = results_frame.iloc[id_stdev]
+    except TypeError as exc:
+        id_stdev = minId(results_frame, 'stdev')
+        min_vol_port = results_frame.iloc[id_stdev]
 
     LOG.info('Max Sharpe ratio: \n%s' % str(max_sharpe_port))
     LOG.info('Min standard deviation: \n%s' % str(min_vol_port))
@@ -184,6 +206,28 @@ def process_result_of_ga(results_frame, stocks, gmean):
     solved.save()
     db.close()
     return max_item.sharpe_ratio, solved._id
+
+
+def maxId(results_frame, key):
+    LOG.info("frame %s" % results_frame[key])
+    sharpe = 0
+    id_item = 0
+    for num, x in enumerate(results_frame[key]):
+        if sharpe < x:
+            sharpe = x
+            id_item = num
+    return id_item
+
+
+def minId(results_frame, key):
+    LOG.info("frame %s" % results_frame[key])
+    sharpe = 0
+    id_item = 0
+    for num, x in enumerate(results_frame[key]):
+        if sharpe > x:
+            sharpe = x
+            id_item = num
+    return id_item
 
 
 def optimize(words):
@@ -223,12 +267,21 @@ def optimize(words):
         all_stocks, sharpes = get_stock_from_portfolio(portfolios)
         optimize_sharpes = list()
         ids = list()
-        with ProcessPoolExecutor(max_workers=int(env.get(THREAD))) as executor:
-            features = {
-                executor.submit(parallel_optimization, num, portfolios, portfolio, all_stocks, iterations, type_ga):
-                    [num, portfolio] for num, portfolio in enumerate(portfolios)}
-            for feature in concurrent.futures.as_completed(features):
-                shapre, id = feature.result()
+        if PARALLEL:
+            workers = env.get(THREAD)
+            if workers is None:
+                workers = 1
+            with ProcessPoolExecutor(max_workers=int(workers)) as executor:
+                features = {
+                    executor.submit(parallel_optimization, num, portfolios, portfolio, all_stocks, iterations, type_ga):
+                        [num, portfolio] for num, portfolio in enumerate(portfolios)}
+                for feature in concurrent.futures.as_completed(features):
+                    shapre, id = feature.result()
+                    optimize_sharpes.append(shapre)
+                    ids.append(id)
+        else:
+            for num, portfolio in enumerate(portfolios):
+                shapre, id = parallel_optimization(num, portfolios, portfolio, all_stocks, iterations, type_ga)
                 optimize_sharpes.append(shapre)
                 ids.append(id)
         for num, x in enumerate(sharpes):
@@ -246,10 +299,10 @@ def parallel_optimization(num, portfolios, portfolio, all_stocks, iterations, ty
     start = time.time()
     if type_ga == config.GA_SIMPLE:
         results_frame = simple.solve(stocks, iterations, mean_daily_returns, cov_matrix, days)
-    if type_ga == config.GA_NSGAII:
+    elif type_ga == config.GA_NSGAII:
         results_frame = NSGAII.solve(stocks, iterations, mean_daily_returns, cov_matrix, days,
                                      generator=problemGenerator)
-    if type_ga == config.GA_NSGAIII:
+    else:
         results_frame = NSGAII.solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days,
                                              generator=problemGenerator)
     duration = time.time() - start
@@ -273,6 +326,7 @@ def parallel_solve(all_stocks, type_ga, curr, count):
         while len(stock.day_history) < 66:
             pos = random.randint(0, range_stock)
             stock = all_stocks[pos - 1]
+        number.append(pos)
         stocks.append(stock)
 
     cov_matrix, mean_daily_returns, arg_gmean, gmeans = cov_and_mean(stocks)
@@ -282,9 +336,9 @@ def parallel_solve(all_stocks, type_ga, curr, count):
     start = time.time()
     if type_ga == config.GA_SIMPLE:
         results_frame = simple.solve(stocks, iterations, mean_daily_returns, cov_matrix, days)
-    if type_ga == config.GA_NSGAII:
+    elif type_ga == config.GA_NSGAII:
         results_frame = NSGAII.solve(stocks, iterations, mean_daily_returns, cov_matrix, days)
-    if type_ga == config.GA_NSGAIII:
+    else:
         results_frame = NSGAII.solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days)
     duration = time.time() - start
     LOG.info('Duration solved: %s' % duration)
@@ -307,8 +361,15 @@ def ga(words):
         all_stocks.append(s)
     db.close()
     print(len(all_stocks))
-    with ProcessPoolExecutor(max_workers=int(env.get(THREAD))) as executor:
-        features = {executor.submit(parallel_solve, all_stocks, type_ga, curr, count): curr for curr in range(count)}
-        for feature in concurrent.futures.as_completed(features):
-            LOG.info('Complete %s ' % feature.result())
+    if PARALLEL:
+        workers = env.get(THREAD)
+        if workers is None:
+            workers = 1
+        with ProcessPoolExecutor(max_workers=int(workers)) as executor:
+            features = {executor.submit(parallel_solve, all_stocks, type_ga, curr, count): curr for curr in range(count)}
+            for feature in concurrent.futures.as_completed(features):
+                LOG.info('Complete %s ' % feature.result())
+    else:
+        for curr in range(count):
+            parallel_solve(all_stocks, type_ga, curr, count)
     return 'Finish GA!'

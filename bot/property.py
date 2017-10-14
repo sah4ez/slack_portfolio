@@ -75,3 +75,5 @@ PORTFOLION_STOCK = r'[A-Z]'
 LOT_STOCK = r'<th>Размер лота</th><td>[0-9 ]+</td>'
 SHORT_NAME_STOCK = r'<th>Краткое наименование</th><td>[a-zA-Zа-яА-Я0-9 +\-_\'."]+</td>'
 THREAD = 'THREAD_SLACK'
+
+PARALLEL = False

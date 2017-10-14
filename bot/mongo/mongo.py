@@ -16,7 +16,7 @@ LOG = my_log.get_logger('mongo')
 
 
 def connect():
-    return me.connect(env.get('DB_NAME_ENV'), host=env.get('DB_HOST'), port=env.get('DB_PORT'))
+    return me.connect(env.get('DB_NAME_ENV'), host=env.get('DB_HOST'), port=int(env.get('DB_PORT')))
 
 
 def close():

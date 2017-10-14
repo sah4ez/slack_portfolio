@@ -9,11 +9,11 @@ from mongo import mongo as db
 
 LOG = my_log.get_logger('compare-solver')
 
-iterations = [1000, 2000, 3000, 5000, 10000]#, 20000, 30000, 50000]
-# iterations = [5000]
+#iterations = [1000, 2000, 3000, 5000, 10000]#, 20000, 30000, 50000]
+iterations = [50000]
 
 # for ordered in db.get_portfolio_by_id('598dc26208ed83001321a939'):
-for ordered in db.get_portfolio_by_id('5998a176c60a860014ad8555'):
+for ordered in db.get_portfolio_by_id('59dfa8d956840e758733884e'):
     sharpes_sm = list()
     sharpes_nsga = list()
     sharpes_nsgaiii = list()
