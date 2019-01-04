@@ -14,11 +14,11 @@ pymongo==3.4.0
 python-dateutil==2.6.1
 pytz==2017.2
 rarfile==3.0
-requests==2.18.1
+requests==2.20.1
 selenium==3.4.3
 six==1.10.0
 slackclient==1.0.6
-urllib3==1.21.1
+urllib3>=1.23
 virtualenv==15.1.0
 websocket-client==0.44.0
 xvfbwrapper==0.2.9
@@ -33,3 +33,4 @@ tabulate
 fix_yahoo_finance
 pandas_datareader==0.5.0
 texttable
+platypus-opt
