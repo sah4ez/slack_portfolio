@@ -2,8 +2,8 @@ from mongoengine import (EmbeddedDocumentField, Document, IntField, FloatField, 
                          ObjectIdField)
 import datetime
 from datetime import timedelta
-import mongo.Price as price
-from mongo import exception
+import bot.mongo.Price as price
+from bot.mongo import exception
 
 
 class Stock(Document):

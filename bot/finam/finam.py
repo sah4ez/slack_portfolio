@@ -3,15 +3,15 @@ import re
 
 from dateutil import relativedelta
 
-import config
-import mongo.Price as p
-import mongo.mongo as db
-import my_log
-import property
-from mongo import Stock as s
-from resources.loader import download_file
+from bot.config import RSP_FINAM_CODE_ALL
+import bot.mongo.Price as p
+import bot.mongo.mongo as db
+from bot.my_log import get_logger
+import bot.property as property
+from bot.mongo import Stock as s
+from bot.resources.loader import download_file
 
-LOG = my_log.get_logger("Finam Loader")
+LOG = get_logger("Finam Loader")
 
 
 def set_price(stock, price, period):
@@ -187,7 +187,7 @@ def history_all_stocks():
     for num, stock in enumerate(stocks):
         load_history(stock.trade_code)
         LOG.info("Load [%d/%d] %s" % (num, all_stocks, stock.trade_code))
-    return config.RSP_FINAM_CODE_ALL
+    return RSP_FINAM_CODE_ALL
 
 
 def loader(words):

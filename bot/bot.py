@@ -7,20 +7,20 @@ from os import environ as env
 
 from slackclient import SlackClient
 
-import capital
-import config
-import finam.finam as finam
-import finder
-import my_log
-import select_for_portfolio
-import sender_file
-import updater
-import yahoo.price as price
-from analyse import analyser
-from analyse import solver, income_portfolio as ip
-from bot_impl.bot_api import Bot
+from bot.capital import capital
+import bot.config as config
+from bot.finam.finam import loader
+from bot.finder import find
+from bot.my_log import get_logger
+from bot.select_for_portfolio import get_list_selected, select
+from bot.sender_file import send_file
+from bot.updater import update_metainfo, update
+from bot.yahoo.price import price
+from bot.analyse import analyser
+from bot.analyse import solver, income_portfolio as ip
+from bot.bot_impl.bot_api import Bot
 
-LOG = my_log.get_logger("main")
+LOG = get_logger("main")
 
 # starterbot's ID as an environment variable
 BOT_ID = env.get("BOT_ID")
@@ -64,43 +64,43 @@ def handle_command(command, channel, user):
 
         elif first_command in config.CMD_PRICE:
             response(channel, config.RSP_WAIT)
-            message = price.price(words)
+            message = price(words)
             response(channel, message)
         elif first_command in config.CMD_CAPITAL:
             response(channel, config.RSP_WAIT)
-            message = capital.capital(words)
+            message = capital(words)
             response(channel, message)
 
         elif first_command in config.CMD_UPDATE or first_command in config.CMD_UPDATE_P:
             response(channel, config.RSP_WAIT)
-            updater.update(words)
+            update(words)
             response(channel, config.RSP_UPDATE_STOCK)
 
         elif first_command in config.CMD_FILES:
-            message, list_extracted_files = sender_file.send_file(words)
+            message, list_extracted_files = send_file(words)
             response(channel, message)
             for filename in list_extracted_files:
                 bot.post_file(channel, filename)
 
         elif first_command in config.CMD_SELECT_FOR_PORTFOLIO:
-            message = select_for_portfolio.select(words)
+            message = select(words)
             response(channel, message)
 
         elif first_command in config.CMD_GET_LIST_SELECTED:
-            message = select_for_portfolio.get_list_selected()
+            message = get_list_selected()
             response(channel, message)
 
         elif first_command in config.CMD_FIND:
-            message = finder.find(words)
+            message = find(words)
             response(channel, message)
 
         elif first_command in config.CMD_FINAM_CODE:
             response(channel, config.RSP_WAIT)
-            message = finam.loader(words)
+            message = loader(words)
             response(channel, message)
 
         elif first_command in config.CMD_UPDATE_METAINFO:
-            message = updater.update_metainfo()
+            message = update_metainfo()
             response(channel, message)
 
         elif first_command in config.CMD_ANALYSE:

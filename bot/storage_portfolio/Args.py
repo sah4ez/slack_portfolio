@@ -1,4 +1,4 @@
-from config import *
+from bot.config import *
 
 
 class Args:

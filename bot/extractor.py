@@ -1,9 +1,9 @@
-import loader_from_file
-import my_log
-from property import *
 import re
 
-LOG = my_log.get_logger("extractor")
+from bot.my_log import get_logger
+from bot.property import *
+
+LOG = get_logger("extractor")
 
 
 def get_value_capitalization(trade_code):

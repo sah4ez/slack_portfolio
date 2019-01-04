@@ -1,9 +1,9 @@
-from mongo import (mongo as db, Portfolio as pf)
+import bot.mongo
 import re
 
-import my_log
+from bot.my_log import get_logger
 
-LOG = my_log.get_logger('Parse_Portfolio')
+LOG = get_logger('Parse_Portfolio')
 
 
 def string_portfolios(path):
@@ -23,7 +23,7 @@ def string_portfolios(path):
             continue
         max_item = pair_items[0]
         min_item = pair_items[1]
-        portfolio = pf.Portfolio()
+        portfolio = bot.mongo.Portfolio.Portfolio()
         max_portfolio = parse(max_item)
         min_portfolio = parse(min_item)
 
@@ -35,10 +35,10 @@ def string_portfolios(path):
                  portfolio.min_item.returns, portfolio.min_item.standard_deviation, portfolio.min_item.sharpe_ratio)
 
 
-def parse(string: str) -> pf.ItemPortfolio:
+def parse(string: str) -> bot.mongo.Portfolio.ItemPortfolio:
     float_pattern = re.compile('[0-9.-]{8,9}')
     stock_pattern = re.compile('^[A-Z]{4,5}.[A-Z]{2}')
-    item_portfolio = pf.ItemPortfolio()
+    item_portfolio = bot.mongo.Portfolio.ItemPortfolio()
     for line in string.split('\n'):
         if line.startswith('ret'):
             item_portfolio.returns = float(float_pattern.search(line).group(0))
@@ -47,7 +47,7 @@ def parse(string: str) -> pf.ItemPortfolio:
         if line.startswith('sharpe'):
             item_portfolio.sharpe_ratio = float(float_pattern.search(line).group(0))
         if stock_pattern.match(line):
-            item = pf.Item()
+            item = bot.mongo.Portfolio.Item()
             stock_trade_code = stock_pattern.search(line).group(0).split('.')
             item.trade_code = stock_trade_code[0]
             item.exchange = stock_trade_code[1]

@@ -1,4 +1,4 @@
-import extractor
+from bot.extractor import get_free_float, get_value_capitalization
 
 
 # from ..database import db_property as prop
@@ -37,8 +37,8 @@ class Stock:
         self.currency = line[14]
         self.trade_code = line[7]
         self.emitent_full_name = line[11]
-        self.capitalisation = float(extractor.get_value_capitalization(self.trade_code))
-        self.free_float = float(extractor.get_free_float(self.trade_code))
+        self.capitalisation = float(get_value_capitalization(self.trade_code))
+        self.free_float = float(get_free_float(self.trade_code))
         self.official_url = line[37]
         self.url = line[38]
         return self

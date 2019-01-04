@@ -1,11 +1,11 @@
 import re
-import my_log
-import mongo.mongo as db
-import property
+from bot.my_log import get_logger
+import bot.mongo.mongo as db
+from bot.property import FINAM_PERIODS, FINAM_P_DAY, FINAM_P_WEEK, FINAM_P_HOUR, SELECTED_STOCKS, FINAM_P_MONTH
 import numpy as np
 import texttable as tt
 
-LOG = my_log.get_logger("analyzer")
+LOG = get_logger("analyzer")
 np.set_printoptions(formatter={'float': '{: 0.4f}'.format})
 
 
@@ -43,7 +43,7 @@ def all_stock(stocks):
 
 def stocks_from_file():
     companies = list()
-    with open(property.SELECTED_STOCKS, mode='r', encoding='UTF-8') as file:
+    with open(SELECTED_STOCKS, mode='r', encoding='UTF-8') as file:
         for line in file:
             trade_code = line.split(';')[1]
             companies.append(db.stock_by_trade_code(trade_code))
@@ -61,16 +61,16 @@ def response(companies, count):
     formatter.add_row(header)
     lines = list()
     risks = {
-        property.FINAM_P_MONTH: list(),
-        property.FINAM_P_WEEK: list(),
-        property.FINAM_P_DAY: list(),
-        property.FINAM_P_HOUR: list(),
+        FINAM_P_MONTH: list(),
+        FINAM_P_WEEK: list(),
+        FINAM_P_DAY: list(),
+        FINAM_P_HOUR: list(),
     }
     incomes = {
-        property.FINAM_P_MONTH: list(),
-        property.FINAM_P_WEEK: list(),
-        property.FINAM_P_DAY: list(),
-        property.FINAM_P_HOUR: list(),
+        FINAM_P_MONTH: list(),
+        FINAM_P_WEEK: list(),
+        FINAM_P_DAY: list(),
+        FINAM_P_HOUR: list(),
     }
     for company in companies:
         if count is None:
@@ -84,7 +84,7 @@ def response(companies, count):
     risk_periods = []
     incomes_periods = []
     try:
-        for period in property.FINAM_PERIODS:
+        for period in FINAM_PERIODS:
             covariance_m = covariance_matrix(companies, count, period)
             part, t_part = get_parts(companies)
             m_c_p = mmult(companies.__len__(), covariance_m, part)
@@ -108,7 +108,7 @@ def response(companies, count):
 
 def calculate_stock(company, count, risks, incomes):
     line = [company.trade_code]
-    for period in property.FINAM_PERIODS:
+    for period in FINAM_PERIODS:
         risk_by_one = risk(count, history_by_period(period, company))
         income_by_one = income(count, history_by_period(period, company))
         risks[period].append(risk_by_one)
@@ -168,13 +168,13 @@ def covariance_matrix(stocks, count, period):
 
 
 def history_by_period(period, stock):
-    if period == property.FINAM_P_MONTH:
+    if period == FINAM_P_MONTH:
         return stock.month_history
-    elif period == property.FINAM_P_WEEK:
+    elif period == FINAM_P_WEEK:
         return stock.week_history
-    elif period == property.FINAM_P_DAY:
+    elif period == FINAM_P_DAY:
         return stock.day_history
-    elif period == property.FINAM_P_HOUR:
+    elif period == FINAM_P_HOUR:
         return stock.hour_history
 
 

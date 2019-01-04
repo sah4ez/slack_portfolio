@@ -3,13 +3,13 @@ from datetime import datetime
 
 from pip._vendor import requests
 from pip._vendor.requests.exceptions import MissingSchema
-import my_log
+from bot.my_log import get_logger
 import os
 
-from extractor import get_id_and_ext_file
-from property import *
+from bot.extractor import get_id_and_ext_file
+from bot.property import *
 
-LOG = my_log.get_logger("resource.loader")
+LOG = get_logger("resource.loader")
 
 
 def download_file(url, file):

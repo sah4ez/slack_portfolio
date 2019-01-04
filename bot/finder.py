@@ -1,16 +1,16 @@
-import my_log
-import loader_from_file
-import config
+from bot.my_log import get_logger
+from bot.loader_from_file import get_stocks_contains
+from bot.config import RSP_NOT_FOUND, RSP_FIND
 
-LOG = my_log.get_logger("finder")
+LOG = get_logger("finder")
 
 
 def find(words):
     company = " ".join(words[1:])
     LOG.info("Find companies contains '%s'" % company)
-    list_found_stocks = loader_from_file.get_stocks_contains(company)
+    list_found_stocks = get_stocks_contains(company)
     if list_found_stocks.__len__() == 0:
-        LOG.info(config.RSP_NOT_FOUND)
-        return config.RSP_NOT_FOUND
+        LOG.info(RSP_NOT_FOUND)
+        return RSP_NOT_FOUND
     LOG.info("Found %s" % str(list_found_stocks.__len__()))
-    return format(config.RSP_FIND % "\n".join(list_found_stocks))
+    return format(RSP_FIND % "\n".join(list_found_stocks))

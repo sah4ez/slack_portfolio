@@ -1,14 +1,14 @@
-import my_log
-import config
-import property
-import loader_from_file
-import parser_command.command as p
+from bot.my_log import get_logger
+from bot.config import RSP_GET_LIST_SELECTED, RSP_SELECT_FOR_PORTFOLIO
+from bot.property import SELECTED_STOCKS
+from bot.loader_from_file import load_one_stock
+from bot.parser_command.command import name_and_priviledget
 
-LOG = my_log.get_logger("select_for_portfolio")
+LOG = get_logger("select_for_portfolio")
 
 
 def save_stock(stock):
-    with open(file=property.SELECTED_STOCKS, mode='a+', encoding='UTF-8') as file:
+    with open(file=SELECTED_STOCKS, mode='a+', encoding='UTF-8') as file:
         string = ';'.join(get_parameters_stock(stock))
         file.write(string + '\n')
         file.flush()
@@ -17,15 +17,15 @@ def save_stock(stock):
 
 
 def select(words):
-    company, privileged = p.name_and_priviledget(words)
+    company, privileged = name_and_priviledget(words)
     LOG.info("Select: %s" % company)
-    stock = loader_from_file.load_one_stock(company, privileged)
+    stock = load_one_stock(company, privileged)
     save_stock(stock)
     return get_response(stock)
 
 
 def get_response(stock):
-    return format(config.RSP_SELECT_FOR_PORTFOLIO % (stock.emitent_full_name, stock.trade_code, stock.last_price))
+    return format(RSP_SELECT_FOR_PORTFOLIO % (stock.emitent_full_name, stock.trade_code, stock.last_price))
 
 
 def get_parameters_stock(stock):
@@ -43,10 +43,10 @@ def get_list_selected():
     selected = 'Name | Trade Code | Price | Volume | Capitalization | Cap/Volume \n'
     LOG.info("Get list selected companies")
     lines = 0
-    with open(file=property.SELECTED_STOCKS, mode='r', encoding='UTF-8') as file:
+    with open(file=SELECTED_STOCKS, mode='r', encoding='UTF-8') as file:
         for num, line in enumerate(file, 1):
             selected += line.replace(';', ' | ')
             lines = num
         file.close()
     LOG.info("Found %d selected companies" % lines)
-    return format(config.RSP_GET_LIST_SELECTED % selected)
+    return format(RSP_GET_LIST_SELECTED % selected)

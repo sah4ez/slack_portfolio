@@ -12,15 +12,15 @@ import pandas as pd
 import pandas_datareader.data as web
 from scipy.stats import mstats as ms
 
-import config
-import my_log
-from analyse import nsga as simple, nsga_platypus as NSGAII
-from mongo import mongo as db
-from mongo.Portfolio import Portfolio, Item, ItemPortfolio
-from mongo.Stock import Stock
-from property import *
+from bot.config import GA_NSGAII, RSP_INVALID_PARAMETERS, GA_SIMPLE, GA_NSGAIII
+from bot.my_log import get_logger
+from bot.analyse import nsga as simple, nsga_platypus as NSGAII
+from bot.mongo import mongo as db
+from bot.mongo.Portfolio import Portfolio, Item, ItemPortfolio
+from bot.mongo.Stock import Stock
+from bot.property import *
 
-LOG = my_log.get_logger('solver')
+LOG = get_logger('solver')
 
 
 def get_stock_from_portfolio(portfolios):
@@ -62,11 +62,11 @@ def parallel_solve(all_stocks, type_ga, curr, count):
     iterations = 50000
 
     start = time.time()
-    if type_ga == config.GA_SIMPLE:
+    if type_ga == GA_SIMPLE:
         results_frame = simple.solve(stocks, iterations, mean_daily_returns, cov_matrix, days)
-    if type_ga == config.GA_NSGAII:
+    if type_ga == GA_NSGAII:
         results_frame = NSGAII.solve(stocks, iterations, mean_daily_returns, cov_matrix, days)
-    if type_ga == config.GA_NSGAIII:
+    if type_ga == GA_NSGAIII:
         results_frame = NSGAII.solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days)
     duration = time.time() - start
     LOG.info('Duration solved: %s' % duration)
@@ -251,8 +251,8 @@ def optimize(words):
         count = int(words[3])
         repeats = int(words[4])
     else:
-        LOG.error(config.RSP_INVALID_PARAMETERS % str(words))
-        return config.RSP_INVALID_PARAMETERS % str(words)
+        LOG.error(RSP_INVALID_PARAMETERS % str(words))
+        return RSP_INVALID_PARAMETERS % str(words)
 
     result = list()
     LOG.info('Start optimization with %s [%d] for %d' % (type_ga, iterations, count))
@@ -297,9 +297,9 @@ def parallel_optimization(num, portfolios, portfolio, all_stocks, iterations, ty
     problemGenerator = NSGAII.PortfolioGenerator(portfolio)
 
     start = time.time()
-    if type_ga == config.GA_SIMPLE:
+    if type_ga == GA_SIMPLE:
         results_frame = simple.solve(stocks, iterations, mean_daily_returns, cov_matrix, days)
-    elif type_ga == config.GA_NSGAII:
+    elif type_ga == GA_NSGAII:
         results_frame = NSGAII.solve(stocks, iterations, mean_daily_returns, cov_matrix, days,
                                      generator=problemGenerator)
     else:
@@ -334,9 +334,9 @@ def parallel_solve(all_stocks, type_ga, curr, count):
     iterations = 50000
 
     start = time.time()
-    if type_ga == config.GA_SIMPLE:
+    if type_ga == GA_SIMPLE:
         results_frame = simple.solve(stocks, iterations, mean_daily_returns, cov_matrix, days)
-    elif type_ga == config.GA_NSGAII:
+    elif type_ga == GA_NSGAII:
         results_frame = NSGAII.solve(stocks, iterations, mean_daily_returns, cov_matrix, days)
     else:
         results_frame = NSGAII.solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days)
@@ -352,7 +352,7 @@ def ga(words):
         type_ga = words[0]
         count = int(words[1])
     else:
-        return config.RSP_INVALID_PARAMETERS % str(words)
+        return RSP_INVALID_PARAMETERS % str(words)
 
     LOG.info('start NSGA with population count %d' % count)
     all_stocks = list()

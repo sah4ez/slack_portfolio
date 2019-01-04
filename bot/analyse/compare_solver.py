@@ -3,11 +3,11 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-import my_log
-from analyse import solver, nsga as sm, nsga_platypus as nsagii
-from mongo import mongo as db
+from bot.my_log import get_logger
+from bot.analyse import solver, nsga as sm, nsga_platypus as nsagii
+from bot.mongo import mongo as db
 
-LOG = my_log.get_logger('compare-solver')
+LOG = get_logger('compare-solver')
 
 #iterations = [1000, 2000, 3000, 5000, 10000]#, 20000, 30000, 50000]
 iterations = [50000]

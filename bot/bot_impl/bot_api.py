@@ -3,9 +3,9 @@ import threading
 import os
 import requests
 
-import my_log
+from bot.my_log import get_logger
 
-LOG = my_log.get_logger("Bot")
+LOG = get_logger("Bot")
 
 
 class Bot:

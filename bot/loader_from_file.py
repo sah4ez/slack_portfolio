@@ -10,13 +10,13 @@ from os.path import isfile, join
 
 from selenium import webdriver
 
-import extractor
-import my_log
-import property
-from mongo import Stock as s, mongo as db
-from resources.loader import download_file, load_files
+from bot.extractor import get_free_float, get_lot, get_value_capitalization
+from bot.my_log import get_logger
+import bot.property as property
+from bot.mongo import Stock as s, mongo as db
+from bot.resources.loader import download_file, load_files
 
-LOG = my_log.get_logger('loader_from_file')
+LOG = get_logger('loader_from_file')
 
 
 def load_all():
@@ -49,8 +49,8 @@ def stock_line(stock, line):
     stock.currency = line[14]
     stock.trade_code = line[7]
     stock.emitent_full_name = line[11]
-    stock.capitalisation = float(extractor.get_value_capitalization(stock.trade_code))
-    stock.free_float = float(extractor.get_free_float(stock.trade_code))
+    stock.capitalisation = float(get_value_capitalization(stock.trade_code))
+    stock.free_float = float(get_free_float(stock.trade_code))
     stock.official_url = line[37]
     stock.url = line[38]
     return stock
@@ -71,7 +71,7 @@ def get_stock_from_file(line, is_download):
     stock.finame_em = finam_code(stock.short_name)
     stock.last_price = get_last_price(stock.trade_code)
     stock.volume_stock_on_market = get_volume_stock_on_market(stock.trade_code)
-    stock.lot = extractor.get_lot(stock.trade_code, html)
+    stock.lot = get_lot(stock.trade_code, html)
 
     if is_download:
         download = threading.Thread(load_files(line[7], line[38]))
@@ -173,7 +173,7 @@ def process_stock(a, count, num, sort_action, upload_files):
         stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
         stock.short_name = get_short_name(stock.trade_code, html)
         stock.finame_em = finam_code(stock.short_name)
-        stock.lot = extractor.get_lot(stock.trade_code, html)
+        stock.lot = get_lot(stock.trade_code, html)
 
         sort_action.append(stock)
         if upload_files:

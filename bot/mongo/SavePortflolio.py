@@ -1,4 +1,4 @@
-from mongo.Portfolio import Portfolio, Item
+from bot.mongo.Portfolio import Portfolio, Item
 
 from mongoengine import (Document, EmbeddedDocumentField, FloatField, ListField, EmbeddedDocument, StringField,
                          ObjectIdField, DateTimeField, IntField)

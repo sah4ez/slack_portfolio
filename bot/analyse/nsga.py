@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 
-import my_log
+from bot.my_log import get_logger
 
-LOG = my_log.get_logger('NSGA')
+LOG = get_logger('NSGA')
 
 
 def solve(stocks, iterations, mean_daily_returns, cov_matrix, days):

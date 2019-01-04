@@ -1,12 +1,12 @@
 import logging
 import sys
 
-import config
+from bot.config import LOG_FORMAT, LOG_ALL_FILE
 
 
 def get_logger(name):
     COMMON_LEVEL = logging.DEBUG
-    formatter = logging.Formatter(config.LOG_FORMAT)
+    formatter = logging.Formatter(LOG_FORMAT)
 
     log = logging.getLogger(name)
     log.setLevel(COMMON_LEVEL)
@@ -15,7 +15,7 @@ def get_logger(name):
     stdout.setLevel(COMMON_LEVEL)
     stdout.setFormatter(formatter)
 
-    all = logging.FileHandler(config.LOG_ALL_FILE)
+    all = logging.FileHandler(LOG_ALL_FILE)
     all.setLevel(COMMON_LEVEL)
     all.setFormatter(formatter)
 

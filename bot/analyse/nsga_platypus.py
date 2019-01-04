@@ -4,11 +4,11 @@ import numpy as np
 import pandas as pd
 import platypus as pt
 
-import my_log
-from mongo import mongo as db
-from mongo.Stock import Stock
+from bot.my_log import get_logger
+from bot.mongo import mongo as db
+from bot.mongo.Stock import Stock
 
-LOG = my_log.get_logger('platypus')
+LOG = get_logger('platypus')
 db.connect()
 all_stocks = list()
 for s in Stock.objects():

@@ -2,18 +2,18 @@ from datetime import datetime, timedelta
 
 import texttable
 
-import config
-import my_log
-import property
-from mongo import Portfolio as pf, mongo as db
+from bot.config import RSP_INVALID_PARAMETERS
+from bot.my_log import get_logger
+from bot.property import ATON_TAX
+from bot.mongo import Portfolio as pf, mongo as db
 
-LOG = my_log.get_logger('income_portfolio')
+LOG = get_logger('income_portfolio')
 
 
 def for_portfolio(words):
     if len(words) != 2:
         LOG.error('Ivalid parameters %s' % str(words))
-        return config.RSP_INVALID_PARAMETERS
+        return RSP_INVALID_PARAMETERS
 
     position = int(words[1])
     is_max = True
@@ -88,7 +88,7 @@ def load_price(stock_orm, date):
 
 
 def correct_on_lot(lot, part, money, price):
-    count = money * part * (1 - property.ATON_TAX) / price
+    count = money * part * (1 - ATON_TAX) / price
     full = count // lot
     mod = count - (full * lot)
     if lot / 2 <= mod:
