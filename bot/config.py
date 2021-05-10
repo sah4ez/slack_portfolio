@@ -62,7 +62,7 @@ HELP_FINAM_CODE = format(
 CMD_UPDATE_METAINFO = "meta"
 RSP_UPDATE_METAINFO = "Справочная информация обновлена"
 HELP_UPDATE_METAINFO = format("%s - обновить список компаний MOEX, free-float, capitalization\n" %
-                              (CMD_UPDATE_METAINFO[0]))
+                              (CMD_UPDATE_METAINFO))
 
 CMD_ANALYSE = "analyze"
 RSP_ANALYSE = "Анализ пакате акций из команды selected"

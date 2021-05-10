@@ -31,3 +31,4 @@ platypus-opt
 python-telegram-bot
 pillow>=8.1.2
 lxml>=4.6.3
+yfinance

@@ -8,6 +8,7 @@ import bot.mongo.Price as p
 import bot.mongo.mongo as db
 from bot.my_log import get_logger
 import bot.property as property
+from bot.mongo.mongo import connect, close
 from bot.mongo import Stock as s
 from bot.resources.loader import download_file
 
@@ -182,11 +183,13 @@ def load_history(trade_code):
 
 def history_all_stocks():
     LOG.info("Load all stocks")
+    connect()
     stocks = s.Stock.objects()
     all_stocks = stocks.count()
     for num, stock in enumerate(stocks):
         load_history(stock.trade_code)
         LOG.info("Load [%d/%d] %s" % (num, all_stocks, stock.trade_code))
+    close()
     return RSP_FINAM_CODE_ALL
 
 

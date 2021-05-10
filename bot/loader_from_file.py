@@ -49,15 +49,21 @@ def stock_line(stock, line):
     stock.currency = line[14]
     stock.trade_code = line[7]
     stock.emitent_full_name = line[11]
-    stock.capitalisation = float(get_value_capitalization(stock.trade_code))
-    stock.free_float = float(get_free_float(stock.trade_code))
-    stock.official_url = line[37]
-    stock.url = line[38]
+    #  stock.capitalisation = float(get_value_capitalization(stock.trade_code))
+    #  stock.free_float = float(get_free_float(stock.trade_code))
+    #  stock.official_url = line[37]
+    #  stock.url = line[38]
     return stock
+
+
+def create_path(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 
 def url_board(trade_code):
     url = property.URL_BOARD + trade_code
+    create_path('res/companies/' + trade_code)
     download_file(url, 'res/companies/' + trade_code + '/' + property.BOARD)
     html = html_source(url)
     return html
@@ -166,21 +172,23 @@ def process_stock(a, count, num, sort_action, upload_files):
         LOG.info('Process stock %s in thred %s' % (trade_code, threading.get_ident()))
         try:
             stock = db.stock_by_trade_code(trade_code)
-        except db.NotFoundStock:
+        except db.NotFoundStock as e:
             stock = s.Stock()
-        html = url_board(trade_code=trade_code)
+        #html = url_board(trade_code=trade_code)
         stock_line(stock, line=a)
-        stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
-        stock.short_name = get_short_name(stock.trade_code, html)
-        stock.finame_em = finam_code(stock.short_name)
-        stock.lot = get_lot(stock.trade_code, html)
+        ## TODO: need to add loading history of the stock
+
+        #  LOG.info("Will updated finance document company " + str(a))
+        #  load_files(stock.trade_code, stock.url)
+        #  stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
+        #  stock.short_name = get_short_name(stock.trade_code, html)
+        #  stock.finame_em = finam_code(stock.short_name)
+        #  stock.lot = get_lot(stock.trade_code, html)
 
         sort_action.append(stock)
-        if upload_files:
-            LOG.info("Will updated finance document company %s" % stock.short_name)
-            load_files(stock.trade_code, stock.url)
-        LOG.info("Save stock %s" % str(stock))
+        #  if upload_files:
         stock.save()
+        LOG.info("Save stock %s" % str(stock._id))
         return num
 
 
