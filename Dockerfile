@@ -1,6 +1,11 @@
-FROM bot/base:1.0
-ENV THREAD_SLACK=1
-ADD ./bot /home/bot/bot
-RUN echo "185.118.67.195 mongodb" >> /etc/hosts
+FROM python:3.8
 
-CMD ['python3', '/home/bot/bot/bot.py', '${SLACK_BOT_TOKEN}', '${BOT_ID}']
+RUN mkdir -p -m 750 /home/bot/bot
+WORKDIR /home/bot
+ADD requirements.txt /home/bot
+
+RUN pip3 install -r /home/bot/requirements.txt
+
+ADD . /home/bot/
+
+CMD [ "python", "/home/bot/main.py" ]
