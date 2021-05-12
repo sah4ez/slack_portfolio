@@ -1,51 +1,31 @@
-## Virtual env
+## pyenv
 
-If you running bot in not conternized os (Docker), need created virtual evnironment:
+For local development install [pyenv](https://github.com/pyenv/pyenv-installer)
 
+Create virtual env:
 ```bash
-virtualenv portfolio
+pyenv viratul 3.8.8 portfolio
+pyenv activate portfolio
 ```
 
 And install requirements:
 ```bash
-pip install -r requirements.txt
+pip install -r ./requirements.txt
+```
+
+Or build docker:
+```
+make build
 ```
 
 ## System environment
 
-You need create file `.env` with variables:
-```bash
-BOT_ID=F83923YAS # get from bot/bot_print_id.py
-SLACK_BOT_TOKEN=flkd-931284198453-mfdFsdfs3rsdsfsdfkjadsdl # get from settings your team
-THREAD_SLACK=1
+Local run:
+```
+env TOKEN_BOT=<TELEGRAM_TOKEN_BOT> python main.py
 ```
 
-Next run the script for creating environment variables `./scripts/applay_env.sh`
-
-## Change HOSTS
-
-Run script `./scripts/connection_for_mongodb.sh` for add mongodb host.
-
-# Docker
-
-## Base image
-
-First, build base image for bot:
-```bash
-docker build -t bot/base:1.0 -f Dockerfile.baseimage .
+or Docker:
 ```
-
-## Bot image
-Next build image for bot:
-```bash
-docker-compose build
+make run TOKEN_BOT=<TELEGRAM_TOKEN_BOT>
 ```
-or build and run:
-```bash
-docker-compose up --build -d
-```
-
-# Commands
-
-List all commands of the bot:
-`@portfolio help`

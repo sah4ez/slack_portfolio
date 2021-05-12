@@ -1,4 +1,4 @@
-import yahoo_finance as yf
+import yfinance as yf
 from bot.my_log import get_logger
 import bot.mongo.mongo as db
 from bot.config import RSP_PRICE, RSP_NOF_FOUND_STOCK
@@ -13,7 +13,7 @@ def price(words):
 
     stock = db.stock_by_emitet_name(name, is_privileged=privileged)
 
-    shape = yf.Share(stock.shape())
+    shape = yf.Ticker()
     if shape.get_name() is None:
         return format(RSP_NOF_FOUND_STOCK % name)
     else:
