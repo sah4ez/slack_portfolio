@@ -85,7 +85,7 @@ def parallel_solve(all_stocks, type_ga, curr, count):
     solved.date = datetime.datetime.today()
     solved.save()
     db.close()
-    LOG.info('Save %d portfolio from %d in thread %s' % (curr, count, str(threading.get_ident())))
+    LOG.info('Save %d portfolio from %d in thread %s' % (curr+1, count, str(threading.get_ident())))
     return 'Duration %s' % str(duration)
 
 
@@ -312,7 +312,7 @@ def parallel_optimization(num, portfolios, portfolio, all_stocks, iterations, ty
     return new_sharpe, new_id
 
 
-def parallel_solve(all_stocks, type_ga, curr, count):
+def parallel_solve_WTF_im_very_sad(all_stocks, type_ga, curr, count):
     LOG.info('Start parallel solve in %s' % str(threading.get_ident()))
     range_stock = len(all_stocks)
     number = list()

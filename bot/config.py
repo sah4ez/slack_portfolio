@@ -69,18 +69,18 @@ RSP_ANALYSE = "Анализ пакате акций из команды selected
 HELP_ANALYSE = format("%s [_<trade_code>_] - проанализировать текущее состояние порфтеля "
                       "или выбарнных акции trade_code\n" % (CMD_ANALYSE))
 
-CMD_MIN_MAX = r'(max|min)'
+CMD_MIN_MAX = r'(max|min)\s(\d+)'
 HELP_MAX = format(
     "%s _COUNT_ - посчитать первые COUNT портфель по максимальным/минимальным"
     " значениям стандартного отклонения за определенный период\n"
     % CMD_MIN_MAX)
 
-CMD_GA_SIMPLE = 'ga'
+CMD_GA_SIMPLE = 'ga\s(\d+)'
 HELP_GA_SIMPLE = format(
     '%s _COUNT_ - запустить расчет портфелей по простой реализации генетического алгоритма, для COUNT\n' %
     CMD_GA_SIMPLE)
 
-CMD_NSGAII = r'(nsgaii|nsgaiii)'
+CMD_NSGAII = r'(ga|nsgaii|nsgaiii)\s(\d+)'
 HELP_NSGAII = format(
     '%s _COUNT_ - запустить расчет порфелей по NSGA-II для COUNT\n' % CMD_NSGAII)
 

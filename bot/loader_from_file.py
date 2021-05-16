@@ -5,12 +5,13 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from csv import *
+import traceback
 from datetime import datetime
 from os.path import isfile, join
 
 from selenium import webdriver
 
-from bot.extractor import get_free_float, get_lot, get_value_capitalization
+from bot.extractor import get_free_float, get_value_capitalization
 from bot.my_log import get_logger
 import bot.property as property
 from bot.mongo import Stock as s, mongo as db
@@ -35,12 +36,40 @@ def read_to_list(file):
     return arr
 
 
-def finam_code(short_name):
-    LOG.info('Get finame code by [%s]' % short_name)
-    with (open(file='./res/finam_em.csv', mode='r')) as f:
+def get_lot(ticker: str) -> int:
+    LOG.info('Get lot size name by [%s]' % ticker)
+    codes = {}
+    with (open(file='./bot/res/moex_lot_size.csv', mode='r')) as f:
         for line in f:
-            if short_name in line.split(';')[1]:
-                return line.split(';')[0]
+            parts = line.split(';')
+            codes[parts[0].strip()] = parts[1].strip()
+    return int(codes[ticker])
+
+
+def get_short_name(ticker: str) -> str:
+    LOG.info('Get short name by [%s]' % ticker)
+    codes = {}
+    with (open(file='./bot/res/moex_short.csv', mode='r')) as f:
+        for line in f:
+            parts = line.split(';')
+            codes[parts[0].strip()] = parts[1].strip()
+    return codes[ticker]
+
+def finam_code(ticker: str) -> str:
+    LOG.info('Get finame code by [%s]' % ticker)
+    codes = {}
+    with (open(file='./bot/res/moex_short.csv', mode='r')) as f:
+        for line in f:
+            parts = line.split(';')
+            codes[parts[0].strip()] = parts[1].strip()
+
+    finam_id = {}
+    with (open(file='./bot/res/finam_em.csv', mode='r')) as f:
+        for line in f:
+            parts = line.split(';')
+            finam_id[parts[1].strip()] = parts[0].strip()
+
+    return finam_id[codes[ticker]]
 
 
 def stock_line(stock, line):
@@ -61,23 +90,14 @@ def create_path(path):
         os.makedirs(path)
 
 
-def url_board(trade_code):
-    url = property.URL_BOARD + trade_code
-    create_path('res/companies/' + trade_code)
-    download_file(url, 'res/companies/' + trade_code + '/' + property.BOARD)
-    html = html_source(url)
-    return html
-
-
 def get_stock_from_file(line, is_download):
     stock = s.Stock()
     stock_line(stock, line=line)
-    html = url_board(stock.trade_code)
-    stock.short_name = get_short_name(stock.trade_code, html)
-    stock.finame_em = finam_code(stock.short_name)
+    stock.short_name = get_short_name(stock.trade_code)
+    stock.finame_em = finam_code(stock.trade_code)
     stock.last_price = get_last_price(stock.trade_code)
     stock.volume_stock_on_market = get_volume_stock_on_market(stock.trade_code)
-    stock.lot = get_lot(stock.trade_code, html)
+    stock.lot = get_lot(stock.trade_code)
 
     if is_download:
         download = threading.Thread(load_files(line[7], line[38]))
@@ -97,7 +117,7 @@ def update_stock_from_file(name, download, is_priviledged=False):
         LOG.info('Update from file')
         if name == "" or name is None:
             raise db.NotFoundStock
-        stock = db.stock_by_emitet_name(name, is_priviledged)
+        stock = db.stock_by_trade_code(name, is_priviledged)
         action = read_to_list(property.DATA)
         stock_file = None
         for a in action:
@@ -161,6 +181,7 @@ def load_stocks(count=None, upload_files=False):
                 num = future.result()
             except Exception as exc:
                 LOG.error('%r generated an exception: %s' % (data, exc))
+                traceback.print_exc()
     return sort_action
 
 
@@ -174,16 +195,17 @@ def process_stock(a, count, num, sort_action, upload_files):
             stock = db.stock_by_trade_code(trade_code)
         except db.NotFoundStock as e:
             stock = s.Stock()
-        #html = url_board(trade_code=trade_code)
         stock_line(stock, line=a)
         ## TODO: need to add loading history of the stock
 
         #  LOG.info("Will updated finance document company " + str(a))
         #  load_files(stock.trade_code, stock.url)
         #  stock.files_name = get_list(property.TYPE2_PATH + "/" + stock.trade_code + property.ARCHIVES + '/')
-        #  stock.short_name = get_short_name(stock.trade_code, html)
-        #  stock.finame_em = finam_code(stock.short_name)
-        #  stock.lot = get_lot(stock.trade_code, html)
+        stock.short_name = get_short_name(stock.trade_code)
+
+        stock.finame_em = finam_code(stock.trade_code)
+        #  update_stock_from_file(stock.emitent_full_name, False)
+        stock.lot = get_lot(stock.trade_code)
 
         sort_action.append(stock)
         #  if upload_files:
@@ -237,20 +259,3 @@ def get_volume_stock_on_market(trade_code):
                 LOG.info(format("volume stock on market %d" % result))
 
     return result
-
-
-def get_short_name(code, html):
-    LOG.info('Get short name %s' % code)
-    found = re.compile(property.SHORT_NAME_STOCK).search(html)
-    if found is not None:
-        name = str(found.group(0)).replace('<th>Краткое наименование</th><td>', '').replace('</td>', '')
-        return name
-
-
-def html_source(url):
-    driver = webdriver.PhantomJS(executable_path=property.PATH_PHANTOMJS)
-    driver.get(url)
-    time.sleep(5)
-    html_inner = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
-    driver.close()
-    return html_inner

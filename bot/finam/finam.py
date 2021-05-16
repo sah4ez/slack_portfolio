@@ -1,5 +1,6 @@
 import datetime as datetime
 import re
+import time
 
 from dateutil import relativedelta
 
@@ -65,6 +66,7 @@ def shift_date_future(day_from, period):
 
 def url_download_history_stock_price(trade_code, finam_em, file_name, period, from_day=1, from_month=1, from_year=2010,
                                      extention='.csv'):
+    time.sleep(1)
     now = datetime.datetime.now()
     cur_day = now.day
     cur_month = now.month
@@ -94,7 +96,9 @@ def url_download_history_stock_price(trade_code, finam_em, file_name, period, fr
                     '&sep=1' \
                     '&sep2=1' \
                     '&datf=1' \
+                    '&token=03AGdBq24_3I4vJR8oUB1foObv-kAHUn7aucmya5V-gi5EhtOTj9sPidqafqlnBzL_j8i0i5Eg5zci7r0kiFnDKgQlY0bIs634Ziiy3in_v_80iityYS1diRSLav54fhpI7A8cw7J9dZPK0zhkqg38bh4fpayXZHjbKgCrlzn4yo1E6AAiYfYXUXrhdi1To-fGSqnjKPiIWC5KQ7VeiMFGhPt0ZPAvSw1sZocMtBq57fgqPCF1nkx5DzdpSY6hp63HtDHn_F57BW5WotSdVbBMH6n6yHI3QpwekSxKPi5DG7e_ILDjHLmWoLQuPrcdZlgphmh2GGGHE89C6RRHkMGci_mh2vd8XSwZVi5plbftrBMy5apcJiy-ZCrpSX41ptEhq9jI538NCrEPKWNqls59eWwLhsS62GkvwmufeiVLScSNPbbERcs7m6wO_U4IZECv13zBiJmZ7VRt' \
                     '&at=1'
+
     return history_stock
 
 

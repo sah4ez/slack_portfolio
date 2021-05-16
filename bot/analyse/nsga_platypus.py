@@ -34,8 +34,8 @@ class ProblemPortfolio(pt.Problem):
         parts /= np.sum(parts)
         solution.variables = parts
 
-        solution.objectives[:] = [np.sum(self.mean_daily_returns * solution.variables) * self.days,
-                                  np.exp(sum([solution.variables[num] * np.log(1 + mean) for num, mean in
+        solution.objectives[:] = [np.sum(-1*self.mean_daily_returns * solution.variables) * self.days,
+                                  np.exp(sum([solution.variables[num] * -1 * np.log(1 + mean) for num, mean in
                                               enumerate(self.mean_daily_returns)]) / np.sum(solution.variables))]
 
         solution.stdev = np.sqrt(np.dot(solution.variables.T,
@@ -112,10 +112,10 @@ def algorithm(stocks, iterations, NSGA, population=100):
     cols = ['ret', 'wgmean', 'stdev', 'sharpe']
     results = np.zeros((NSGA.population_size, len(cols) + len(stocks)))
     for num, solution in enumerate(NSGA.result):
-        results[num][0] = solution.objectives[0]
-        results[num][1] = solution.objectives[1]
-        results[num][2] = solution.stdev
-        results[num][3] = results[num][0] / results[num][2]
+        results[num][0] = -1*solution.objectives[0]
+        results[num][1] = -1*solution.objectives[1]
+        results[num][2] = -1*solution.stdev
+        results[num][3] = -1*results[num][0] / -1*results[num][2]
         results[num][4:] = np.array(solution.variables)
     for stock in stocks:
         cols.append(stock.shape())
@@ -127,7 +127,8 @@ def solve(stocks, iterations, mean_daily_returns, cov_matrix, days, population=1
     LOG.info('Start nsgaII for %d . Generator is default %s' % (iterations, generator is None))
 
     problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
-    problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MAXIMIZE]
+    #  problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MAXIMIZE]
+    problem.directions[:] = [pt.Problem.MINIMIZE, pt.Problem.MINIMIZE]
     if generator is None:
         nsga = pt.NSGAII(problem)
     else:
@@ -139,7 +140,8 @@ def solve_nsgaiii(stocks, iterations, mean_daily_returns, cov_matrix, days, popu
                   generator: pt.Generator = None):
     LOG.info('Start nsgaIII for %d . Generator is default %s' % (iterations, generator is None))
     problem = ProblemPortfolio(cov_matrix, mean_daily_returns, days)
-    problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MAXIMIZE]
+    #  problem.directions[:] = [pt.Problem.MAXIMIZE, pt.Problem.MAXIMIZE]
+    problem.directions[:] = [pt.Problem.MINIMIZE, pt.Problem.MINIMIZE]
     if generator is None:
         nsgaiii = pt.NSGAIII(problem, divisions_outer=1, divisions_inner=1)
     else:

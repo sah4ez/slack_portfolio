@@ -11,7 +11,7 @@
 from bot import config, property
 from telegram.ext import (CommandHandler)
 from bot.resources.loader import download_file
-from bot.loader_from_file import load_stocks, load_all
+from bot.loader_from_file import load_stocks, load_all, update_stock_from_file
 
 from pathlib import Path
 Path("./res").mkdir(parents=True, exist_ok=True)
@@ -24,7 +24,7 @@ def cmd(update, context):
     download_file(property.URL_DATA, property.DATA)
     #  load_all()
     load_stocks(count=None, upload_files=True)
-    #update_stock_from_file()
+    #  update_stock_from_file()
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=msg,

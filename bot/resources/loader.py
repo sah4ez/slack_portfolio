@@ -14,7 +14,8 @@ LOG = get_logger("resource.loader")
 
 def download_file(url, file):
     try:
-        u = requests.get(url=url)
+        headers = {'User-Agent': 'curl'}
+        u = requests.get(url, headers=headers)
 
         with open(file=file, mode='wb') as f:
             for chunk in u.iter_content(chunk_size=1024):

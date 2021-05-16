@@ -18,3 +18,17 @@ run-dev:
 		-e DB_USERNAME=user \
 		-e DB_PASSWORD=${DB_PASSWORD} \
 		${NAME}
+
+
+run-compare:
+	docker run --rm \
+		-v $(shell pwd):/home/bot \
+		--name "compare-${NAME}" \
+		-it \
+		-e TOKEN_BOT=${TOKEN_BOT} \
+		-e DB_NAME_ENV=portfolio \
+		-e DB_HOST=194.113.104.149 \
+		-e DB_PORT=27017 \
+		-e DB_USERNAME=user \
+		-e DB_PASSWORD=${DB_PASSWORD} \
+		${NAME} python  /home/bot/compare.py
