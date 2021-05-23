@@ -29,3 +29,6 @@ class Portfolio(Document):
 
     def print_stocks(self) -> str:
         return str(self._id) + " ".join(self.max_item.stocks) + '\n' + " ".join(self.min_item.stocks)
+
+    def __str__(self):
+        return str(self._id) + " ".join(self.max_item.stocks) + '\n' + " ".join(self.min_item.stocks)

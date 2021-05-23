@@ -27,7 +27,7 @@ def for_portfolio(words):
     table.add_row(['id', 'price', 'profit', 'stdev'])
     for ordered in db.get_n_first_portfolios(position):
         item = ordered.max_item if is_max else ordered.min_item
-        LOG.info('Predict for %s' % item)
+        LOG.info('Predict for %s' % str(item))
         profit, correct_summ = predict(porftolio=item, money=118000)
         profits.append(profit)
         stdevs.append(ordered.max_item.standard_deviation)

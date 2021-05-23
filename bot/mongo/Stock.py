@@ -43,11 +43,9 @@ class Stock(Document):
     def __str__(self):
         return format("{"
                       "_id: %s,\n datestamp: %s,\n trade_code: %s,\n emitent_full_name: %s,\n"
-                      "curency: %s,\n capitalisation: %s,\n free_float: %s,\n official_url: %s,\n"
-                      "url: %s,\n short_name: %s,\n finame_em: %s\n}" %
+                      "curency: %s}" %
                       (str(self._id), str(self.datestamp), self.trade_code, self.emitent_full_name,
-                       str(self.currency), str(self.capitalisation), str(self.free_float), self.official_url,
-                       self.url, self.short_name, self.finame_em))
+                       str(self.currency)))
 
     def update_file(self, stock_file):
         self.datestamp = stock_file.datestamp

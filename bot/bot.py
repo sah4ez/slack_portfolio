@@ -5,8 +5,6 @@ import time
 import traceback
 from os import environ as env
 
-from slackclient import SlackClient
-
 from bot.capital import capital
 import bot.config as config
 from bot.finam.finam import loader
@@ -36,7 +34,7 @@ bot = Bot(TOKEN=TOKEN, BOT_ID=BOT_ID)
 AT_BOT = "<@" + str(bot.BOT_ID) + ">"
 
 # instantiate Slack & Twilio clients
-slack_client = SlackClient(TOKEN)
+#slack_client = SlackClient(TOKEN)
 
 
 def handle_command(command, channel, user):
@@ -56,8 +54,8 @@ def handle_command(command, channel, user):
     first_command = words[0]
     list_extracted_files = list()
     try:
-        if first_command in config.CMD_HELP:
-            response(channel, config.RSP_HELP)
+        #  if first_command in config.CMD_HELP:
+            #  response(channel, config.RSP_HELP)
         if first_command in config.CMD_HOSTNAME:
             hostname = env.get("HOSTNAME")
             response(channel, "ON HOST: %s" % hostname)
@@ -141,9 +139,10 @@ def handle_command(command, channel, user):
 
 
 def response(to_channel, message):
-    bot.short_delay()
-    slack_client.api_call("chat.postMessage", channel=to_channel,
-                          text=message, as_user=True)
+    pass
+#    bot.short_delay()
+#    slack_client.api_call("chat.postMessage", channel=to_channel,
+#                          text=message, as_user=True)
 
 
 def parse_slack_output(slack_rtm_output):
@@ -158,16 +157,17 @@ def parse_slack_output(slack_rtm_output):
 
 
 def parse_slack_wait(msg):
-    output_list = msg
-    if output_list and len(output_list) > 0:
-        for output in output_list:
-            if output and 'user' in output and bot.BOT_ID in output['user']:
-                if 'text' in output and (config.RSP_WAIT in output['text'] or config.RSP_GA in output['text']):
-                    bot.reset_delay()
-                    slack_client.api_call(
-                        method="chat.delete",
-                        channel=output['channel'],
-                        ts=output['ts'])
+    pass
+#   output_list = msg
+#    if output_list and len(output_list) > 0:
+#        for output in output_list:
+#            if output and 'user' in output and bot.BOT_ID in output['user']:
+#                if 'text' in output and (config.RSP_WAIT in output['text'] or config.RSP_GA in output['text']):
+#                    bot.reset_delay()
+#                    slack_client.api_call(
+#                        method="chat.delete",
+#                        channel=output['channel'],
+#                        ts=output['ts'])
 
 
 def welcome(msg):
@@ -178,29 +178,22 @@ def welcome(msg):
                 response(output['channel'], config.WELCOME)
 
 
-def listen():
-    try:
-        LOG.info("StarterBot connected and running!")
-        while True:
-            msg = slack_client.rtm_read()
-            # print(msg)
-            parse_slack_wait(msg)
-            welcome(msg)
-            command, channel, user = parse_slack_output(msg)
-            if command and channel and user:
-                handle_command(command, channel, user)
-                # with ProcessPoolExecutor(max_workers=env.get(THREAD)) as executor:
-                #     executor.submit(handle_command, command, channel)
-            time.sleep(bot.READ_WEBSOCKET_DELAY)
-    except Exception:
-        LOG.error('Exception on connect')
-        slack_client.rtm_connect()
-        traceback.print_exc(file=sys.stdout)
-        listen()
-
-
-if __name__ == "__main__":
-    if slack_client.rtm_connect():
-        listen()
-    else:
-        LOG.error("Connection failed. Invalid Slack token or bot ID?")
+#def listen():
+#    try:
+#        LOG.info("StarterBot connected and running!")
+#        while True:
+#            msg = slack_client.rtm_read()
+#            # print(msg)
+#            parse_slack_wait(msg)
+#            welcome(msg)
+#            command, channel, user = parse_slack_output(msg)
+#            if command and channel and user:
+#                handle_command(command, channel, user)
+#                # with ProcessPoolExecutor(max_workers=env.get(THREAD)) as executor:
+#                #     executor.submit(handle_command, command, channel)
+#            time.sleep(bot.READ_WEBSOCKET_DELAY)
+#    except Exception:
+#        LOG.error('Exception on connect')
+#        slack_client.rtm_connect()
+#        traceback.print_exc(file=sys.stdout)
+#        listen()
