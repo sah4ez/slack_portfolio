@@ -12,9 +12,12 @@ import sys
 from os import environ as env
 from bot import config
 from bot.cmd import (
-    help, welcome, solver, max_min, ga, analyze, meta, finam, find, price
+    help, welcome, solver, max_min, ga,
+    analyze, meta, finam, find, price, tinvest_meta,
+    tinvest
 )
 from bot.my_log import (get_logger)
+import traceback
 
 
 from telegram.ext import (Updater, CommandHandler, MessageHandler)
@@ -29,6 +32,7 @@ if TOKEN is None:
 
 def error(update, context):
     LOG.warning('Update "%s" caused error "%s"' % (update, context.error))
+    traceback.print_exc()
 
 def main():
     updater = Updater(token=TOKEN) 
@@ -44,6 +48,8 @@ def main():
     dp.add_handler(finam.handler())
     dp.add_handler(find.handler())
     dp.add_handler(price.handler())
+    dp.add_handler(tinvest_meta.handler())
+    dp.add_handler(tinvest.handler())
 
     dp.add_error_handler(error)
 

@@ -130,3 +130,9 @@ LOG_ALL_FILE = "log/all.log"
 GA_SIMPLE = "ga"
 GA_NSGAII = "nsgaii"
 GA_NSGAIII = "nsgaiii"
+
+
+CMD_TINVEST = "tinvest"
+HELP_TINVEST = "обновить тикеты с tinvest"
+
+CMD_T_META = 'tmeta'

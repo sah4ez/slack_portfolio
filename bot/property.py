@@ -1,3 +1,4 @@
+import tinvest as ti
 DATA = 'res/ListingSecurityList.csv'
 URL_DATA = 'http://www.moex.com/ru/listing/securities-list-csv.aspx?type=2'
 
@@ -66,8 +67,10 @@ FINAM_P_HOUR = '7'
 FINAM_SHIFT_MONTH = 365 * 3  # days
 FINAM_SHIFT_WEEK = 7 * 50  # days
 FINAM_SHIFT_DAY = 200  # days
-FINAM_SHIFT_HOUR = 12 * 20  # hours
+FINAM_SHIFT_HOUR = 7 * 24  # hours
 FINAM_PERIODS = [FINAM_P_MONTH, FINAM_P_WEEK, FINAM_P_DAY]
+
+TINVESE_PERIODS = [ti.CandleResolution.month, ti.CandleResolution.week, ti.CandleResolution.day, ti.CandleResolution.hour]
 
 ATON_TAX = 0.22 / 100  # 18 % percent of buy/sell
 

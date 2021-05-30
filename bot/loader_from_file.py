@@ -184,6 +184,32 @@ def load_stocks(count=None, upload_files=False):
                 traceback.print_exc()
     return sort_action
 
+def load_stocks_tinvest(stocks):
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = {executor.submit(process_stock_tivest, num, ta): (num, ta)
+                   for (num, ta) in enumerate(stocks)}
+        for future in concurrent.futures.as_completed(futures):
+            data = futures[future]
+            try:
+                num = future.result()
+                print("done:", num)
+            except Exception as exc:
+                LOG.error('%r generated an exception: %s' % (data, exc))
+                traceback.print_exc()
+
+def process_stock_tivest(num, ta):
+    trade_code = ta.ticker
+    LOG.info('Process stock %s in thread %s' % (trade_code, threading.get_ident()))
+    try:
+        stock = db.stock_by_trade_code(trade_code)
+    except db.NotFoundStock as e:
+        stock = s.Stock()
+
+    stock.update_from_tinvest(ta)
+    stock.save()
+    LOG.info("Save stock %s" % str(stock._id))
+    return num
+
 
 def process_stock(a, count, num, sort_action, upload_files):
     if a[4] == property.STOCKS:

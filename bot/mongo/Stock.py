@@ -23,6 +23,7 @@ class Stock(Document):
     inn = IntField()
     nominal = IntField()
     currency = StringField()
+    figi = StringField()
     security_has_default = IntField()
     security_has_tech_default = IntField()
     capitalisation = FloatField()
@@ -79,6 +80,15 @@ class Stock(Document):
         self.day_history = stock_file.day_history
         self.hour_history = stock_file.hour_history
         self.lot = stock_file.lot
+
+    def update_from_tinvest(self, t):
+        # currency=<Currency.usd: 'USD'> figi='BBG000HLJ7M4' isin='US45867G1013' lot=1 min_price_increment=Decimal('0.01') name='InterDigItal Inc' ticker='IDCC' type=<InstrumentType.stock: 'Stock'> min_quantity=None
+        self.currency = t.currency
+        self.figi = t.figi
+        self.lot = t.lot
+        self.emitent_full_name = t.name
+        self.trade_code = t.ticker
+        pass
 
     def shape(self):
         return self.trade_code.upper() + '.ME'

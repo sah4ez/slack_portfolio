@@ -71,8 +71,10 @@ def parallel_solve(all_stocks, type_ga, curr, count):
     duration = time.time() - start
     LOG.info('Duration solved: %s' % duration)
 
-    max_sharpe_port = results_frame.iloc[results_frame['sharpe'].idxmax()]
-    min_vol_port = results_frame.iloc[results_frame['stdev'].idxmin()]
+    sharpe_id_min = results_frame['sharpe'].idxmin()
+    max_sharpe_port = results_frame.iloc[sharpe_id_min]
+    stdev_id_min = results_frame['stdev'].idxmax()
+    min_vol_port = results_frame.iloc[stdev_id_min]
 
     LOG.info('Max Sharpe ratio: %s' % str(max_sharpe_port))
     LOG.info('Min standard deviation: %s' % str(min_vol_port))

@@ -4,6 +4,7 @@ import time
 
 from dateutil import relativedelta
 
+import bot.tinvest_pkg.client as cli
 from bot.config import RSP_FINAM_CODE_ALL
 import bot.mongo.Price as p
 import bot.mongo.mongo as db
@@ -12,12 +13,22 @@ import bot.property as property
 from bot.mongo.mongo import connect, close
 from bot.mongo import Stock as s
 from bot.resources.loader import download_file
+import tinvest as ti
 
 LOG = get_logger("Finam Loader")
 
 
 def set_price(stock, price, period):
-    if period == property.FINAM_P_MONTH:
+    if period == ti.CandleResolution.week:
+        stock.week_history.append(price)
+    elif period == ti.CandleResolution.day:
+        stock.day_history.append(price)
+    elif period == ti.CandleResolution.hour:
+        stock.hour_history.append(price)
+    elif period == ti.CandleResolution.month:
+        stock.month_history.append(price)
+
+    elif period == property.FINAM_P_MONTH:
         stock.month_history.append(price)
     elif period == property.FINAM_P_WEEK:
         stock.week_history.append(price)
@@ -28,7 +39,17 @@ def set_price(stock, price, period):
 
 
 def get_date_from(period):
-    if period == property.FINAM_P_WEEK:
+    # tinvest periods
+    if period == ti.CandleResolution.week:
+        return datetime.datetime.now() - datetime.timedelta(days=property.FINAM_SHIFT_WEEK)
+    elif period == ti.CandleResolution.day:
+        return datetime.datetime.now() - datetime.timedelta(days=property.FINAM_SHIFT_DAY)
+    elif period == ti.CandleResolution.hour:
+        return datetime.datetime.now() - datetime.timedelta(hours=property.FINAM_SHIFT_HOUR)
+    elif period == ti.CandleResolution.month:
+        return datetime.datetime.now() - datetime.timedelta(days=property.FINAM_SHIFT_MONTH)
+    # finam periods
+    elif period == property.FINAM_P_WEEK:
         return datetime.datetime.now() - datetime.timedelta(days=property.FINAM_SHIFT_WEEK)
     elif period == property.FINAM_P_DAY:
         return datetime.datetime.now() - datetime.timedelta(days=property.FINAM_SHIFT_DAY)
@@ -40,26 +61,43 @@ def get_date_from(period):
 
 def shift_date_past(day_from, period, skips):
     date = day_from
-    if period == property.FINAM_P_WEEK:
+    if period == ti.CandleResolution.week:
+        date -= datetime.timedelta(weeks=skips)
+    elif period == ti.CandleResolution.day:
+        date -= datetime.timedelta(days=skips)
+    elif period == ti.CandleResolution.hour:
+        date -= datetime.timedelta(hours=skips)
+    elif period == ti.CandleResolution.month:
+        date -= relativedelta.relativedelta(months=skips)
+
+    elif period == property.FINAM_P_WEEK:
         date -= datetime.timedelta(weeks=skips)
     elif period == property.FINAM_P_DAY:
         date -= datetime.timedelta(days=skips)
     elif period == property.FINAM_P_HOUR:
         date -= datetime.timedelta(hours=skips)
-    else:
+    elif period == property.FINAM_P_MONTH:
         date -= relativedelta.relativedelta(months=skips)
     return date
 
 
 def shift_date_future(day_from, period):
     date = day_from
-    if period == property.FINAM_P_WEEK:
+    if period == ti.CandleResolution.week:
+        date += datetime.timedelta(weeks=1)
+    elif period == ti.CandleResolution.day:
+        date += datetime.timedelta(days=1)
+    elif period == ti.CandleResolution.hour:
+        date += datetime.timedelta(hours=1)
+    elif period == ti.CandleResolution.month:
+        date += relativedelta.relativedelta(months=1)
+    elif period == property.FINAM_P_WEEK:
         date += datetime.timedelta(weeks=1)
     elif period == property.FINAM_P_DAY:
         date += datetime.timedelta(days=1)
     elif period == property.FINAM_P_HOUR:
         date += datetime.timedelta(hours=1)
-    else:
+    elif period == property.FINAM_P_MONTH:
         date += relativedelta.relativedelta(months=1)
     return date
 
@@ -96,7 +134,7 @@ def url_download_history_stock_price(trade_code, finam_em, file_name, period, fr
                     '&sep=1' \
                     '&sep2=1' \
                     '&datf=1' \
-                    '&token=03AGdBq24_3I4vJR8oUB1foObv-kAHUn7aucmya5V-gi5EhtOTj9sPidqafqlnBzL_j8i0i5Eg5zci7r0kiFnDKgQlY0bIs634Ziiy3in_v_80iityYS1diRSLav54fhpI7A8cw7J9dZPK0zhkqg38bh4fpayXZHjbKgCrlzn4yo1E6AAiYfYXUXrhdi1To-fGSqnjKPiIWC5KQ7VeiMFGhPt0ZPAvSw1sZocMtBq57fgqPCF1nkx5DzdpSY6hp63HtDHn_F57BW5WotSdVbBMH6n6yHI3QpwekSxKPi5DG7e_ILDjHLmWoLQuPrcdZlgphmh2GGGHE89C6RRHkMGci_mh2vd8XSwZVi5plbftrBMy5apcJiy-ZCrpSX41ptEhq9jI538NCrEPKWNqls59eWwLhsS62GkvwmufeiVLScSNPbbERcs7m6wO_U4IZECv13zBiJmZ7VRt' \
+                    '&token=03AGdBq25Uml7D27tSwIk0gYfQsm-OTSivnWjm3UaI_K5wGsqy6RW2Q_8W33bHskbcL0zIfd7hlLNRPqpsewRL8TbACzpgdyOQDBPXdnD9pkfLNMi3mlNH3eu-TxLSkhwy3F0dA2BzxIBbR0k6YniksHq7DmpuvIggb5pVrKs85JQGNOt3ko6W4Q9Bi0vb_ssUyqfxsvOQHd_LGvYFwcbgQOIwrNRnq43HRWMadyWm3NarUD5SonzSkuoBk7ERvxBTmHap_RFC-I8WATsLHqm0RXZvhuJq0ioK4F_VRIVLBsTzM4Sg3yNuJVvPogjTs7pvgQ7VD0o--s0Tjo90UW9qrYcCAEoI-lcyYN4dzY32BBftngrkOECNGtOXo5mChWJ67KxdjiJNsYu8NDC-m7rOQXgV7lFGrizQMv-w2UbjQz4gS-VQwMmNcTwC8LK3UC3fhWMlcb-fmhmv' \
                     '&at=1'
 
     return history_stock
@@ -138,7 +176,6 @@ def save_to_db(stock, finance_history, period, day_from):
     if skips != 0:
         save_skip_price(skips, value, date_from, period, stock)
 
-
 def save_skip_price(skips, value, date_from, period, stock):
     for skip in range(skips, -1, -1):
         price = p.Price()
@@ -170,6 +207,20 @@ def process_by_period(stock, period):
         return stock.trade_code, period
 
 
+def process_by_period_tinvest(stock, period):
+    now = datetime.datetime.now()
+    date_from = get_date_from(period)
+
+    candels = cli.process_by_period(stock.trade_code, date_from, now, period)
+
+    LOG.info("Save history %s to DB %s" % (stock.trade_code, period))
+
+    for c in candels:
+        price = p.Price()
+        price.value = float(c.c)
+        price.date = c.time
+        set_price(stock, price, period)
+
 def load_history(trade_code):
     LOG.info('[%s]' % trade_code)
     stock = db.stock_by_trade_code(trade_code)
@@ -185,6 +236,25 @@ def load_history(trade_code):
     return trade_code
 
 
+def load_history_tinvest(trade_code):
+    LOG.info('[%s]' % trade_code)
+    try:
+        stock = db.stock_by_trade_code(trade_code)
+    except db.NotFoundStock as e:
+        return ""
+
+    stock.month_history = list()
+    stock.week_history = list()
+    stock.day_history = list()
+    stock.hour_history = list()
+
+    for period in property.TINVESE_PERIODS:
+        process_by_period_tinvest(stock, period)
+        time.sleep(0.25)
+
+    stock.save()
+    return trade_code
+
 def history_all_stocks():
     LOG.info("Load all stocks")
     connect()
@@ -192,6 +262,18 @@ def history_all_stocks():
     all_stocks = stocks.count()
     for num, stock in enumerate(stocks):
         load_history(stock.trade_code)
+        LOG.info("Load [%d/%d] %s" % (num, all_stocks, stock.trade_code))
+    close()
+    return RSP_FINAM_CODE_ALL
+
+
+def history_all_stocks_tinvest():
+    LOG.info("Load all stocks tinvest")
+    connect()
+    stocks = s.Stock.objects()
+    all_stocks = stocks.count()
+    for num, stock in enumerate(stocks):
+        load_history_tinvest(stock.trade_code)
         LOG.info("Load [%d/%d] %s" % (num, all_stocks, stock.trade_code))
     close()
     return RSP_FINAM_CODE_ALL

@@ -6,6 +6,7 @@ build:
 run:
 	docker run --rm --name ${NAME} -it -e TOKEN_BOT=${TOKEN_BOT} ${NAME}
 
+
 run-dev:
 	docker run --rm \
 		-v $(shell pwd):/home/bot \
@@ -17,7 +18,8 @@ run-dev:
 		-e DB_PORT=27017 \
 		-e DB_USERNAME=user \
 		-e DB_PASSWORD=${DB_PASSWORD} \
-		${NAME}
+		-e TINVEST_TOKEN=${TINVEST_TOKEN} \
+		${NAME} ${CMD}
 
 
 run-compare:
@@ -31,4 +33,5 @@ run-compare:
 		-e DB_PORT=27017 \
 		-e DB_USERNAME=user \
 		-e DB_PASSWORD=${DB_PASSWORD} \
+		-e TINVEST_TOKEN=${TINVEST_TOKEN} \
 		${NAME} python  /home/bot/compare.py
