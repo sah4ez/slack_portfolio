@@ -27,7 +27,7 @@ def get_figi_by_ticker(ticker: str) -> str:
     if ticker == '':
         return ''
     payload = client.get_market_search_by_ticker(ticker)
-    if len(payload.payload.instruments) > 1:
+    if len(payload.payload.instruments) >= 1:
         return payload.payload.instruments[0].figi
     return ''
 

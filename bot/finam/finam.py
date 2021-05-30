@@ -212,8 +212,7 @@ def process_by_period_tinvest(stock, period):
     date_from = get_date_from(period)
 
     candels = cli.process_by_period(stock.trade_code, date_from, now, period)
-
-    LOG.info("Save history %s to DB %s" % (stock.trade_code, period))
+    LOG.info("Save history %s to DB %s, count: %d" % (stock.trade_code, period, len(candels)))
 
     for c in candels:
         price = p.Price()
@@ -250,7 +249,7 @@ def load_history_tinvest(trade_code):
 
     for period in property.TINVESE_PERIODS:
         process_by_period_tinvest(stock, period)
-        time.sleep(0.25)
+        time.sleep(0.5)
 
     stock.save()
     return trade_code
